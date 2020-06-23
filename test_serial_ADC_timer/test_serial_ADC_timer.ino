@@ -1,5 +1,5 @@
 #include <AD7173.h>  // the library for ADC
-
+//test1
 
 /*  Program try 1 for the low-level control of exoskelton
 Version: 1.0 starts from 20200615
