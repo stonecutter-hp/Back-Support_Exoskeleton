@@ -1,4 +1,4 @@
-#include <AD7173.h>  // the library for ADC test
+#include <AD7173.h>  // the library for ADC
 
 
 /*  Program try 1 for the low-level control of exoskelton
