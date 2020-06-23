@@ -1,11 +1,6 @@
 #include <AD7173.h>  // the library for ADC
-<<<<<<< HEAD
 //test1
 //test2
-=======
-
-
->>>>>>> parent of 6ebf91f... Update test_serial_ADC_timer.ino
 /*  Program try 1 for the low-level control of exoskelton
 Version: 1.0 starts from 20200615
 
