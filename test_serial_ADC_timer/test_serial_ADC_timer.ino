@@ -25,35 +25,29 @@ Version: 1.0 starts from 20200615
 // Ch10~Ch15 is for potentiometer with no attenuation
 // --------------------- CH0 CH1 CH2 CH3 CH4 CH5 CH6 CH7 CH8 CH9 CH10 CH11 CH12 CH13 CH14 CH15
 const int attRatio[16] = {1,  1,  1,  1,  11, 2,  2,  2,  2,  2,   1,   1,   1,   1,   1,   1};
-
-
 #define ADC_SS PA4        //SPI1_NSS-CS 
 #define ADC_MISO PA6      //SPI1_MISO-DOUT/RDY
 #define LED0 PB0          //PB0-green light
 #define LED1 PB1          //PB1
-
 #define ENABLED_CH 16     //sum of ADC Channels
-
 #define MotorCurrL 5      //ADC channel assigned for left motor current feedback
 #define MotorCurrR 6      //ADC channel assigned for left motor current feedback
-
 /* ADC conversion data and STATUS register */
 byte ADC_data[ENABLED_CH][4];  // store raw data from ADC
 bool ADC_update = true;        // ADC_update enable flag 
-unsigned long ADC_value[ENABLED_CH];    // store ADC value in raw number  
-double Aver_ADC_value[ENABLED_CH];   // store the transferred ADC value 
-
+unsigned long ADC_value[ENABLED_CH];    // store ADC value in long format  
+double Aver_ADC_value[ENABLED_CH];   // store the transferred ADC value for calculation
 
 /*********************************** Serial communication definition ************************************/
 #define USART_REC_LEN 200   // define the maximum number of received bytes
 #define USART_TX_LEN 200   // define the maximum number of sending bytes
 char USART_RX_BUF[USART_REC_LEN];   // receiving buffer
-int USART_RX_STA = 0; // recieving number flag
+int USART_RX_STA = 0;    // recieving number flag
 bool receiveCompleted = false;  // receiving completing flag
 bool receiveContinuing = false;  // receiving continuous flag to avoid the multiple data format in buffer: xx\r\n+xx\r\n+xx...
 bool SendPC_update = true;      // data sending to PC enable flag
 char USART_TX_BUF[USART_TX_LEN];   // sending buffer
-int USART_TX_STA = 0; // sending number flag
+int USART_TX_STA = 0;   // sending number flag
 
 /*********************************** Communication receiving data definition ************************************/
 float desiredTorqueL;    // desired motor torque of left motor
@@ -99,11 +93,10 @@ typedef struct
   float Tcontrol; // Control period, every Tcontrol MCU update once output command
   
   float Delta_PWM;    // Calculation results
-  
   float currpwm;    // Current PWM duty width
   uint16_t pwm_cycle;  // The whole period of PWM
 }PID;    // PID parameter structure
- 
+
 PID pidL;  // control parameter of left motor
 PID pidR;  // control parameter of right motor
 // the desired torque from PC is defined in communication receiving parameter part
@@ -117,21 +110,19 @@ bool Control_update = true;  // control update flag
 
 
 /* ---------------------------------------- Program ------------------------------------------ */
-
-//Initialization of the program
 void setup() {
   /******************************** Serial Initialization ******************************/
   Serial.begin(115200);   // initialize serial set baurd rate
   
-  /******************************** Control parameter Initialization ******************************/
+  /*************************** Control parameter Initialization ************************/
   Control_Init();  // initialize the control parameters
   
-  /******************************** ADC Initialization ******************************/
+  /******************************* ADC Initialization **********************************/
   afio_cfg_debug_ports(AFIO_DEBUG_NONE);// Stop the debug function
   // initialize the digital pin as an output.
   pinMode(LED0, OUTPUT);
   pinMode(LED1, OUTPUT);
-  pinMode(ADC_SS, OUTPUT);
+  pinMode(ADC_SS, OUTPUT);   
   digitalWrite(ADC_SS, LOW); //enable this device
   /* initialize SPI connection to the ADC */
   AD7173.init();
@@ -195,21 +186,21 @@ void setup() {
   Timer3.init();   // stop the timers before configuring them
   Timer4.init();   // stop the timers before configuring them
   // Configurate timer 3    1khz
-  Timer3.setPrescaleFactor(TIM3preScale);    
-  Timer3.setOverflow(TIM3_OverflowValue);     
-  Timer3.setCompare(TIM3_CH4,TIM3_OverflowValue);
-  Timer3.attachInterrupt(TIM3_CH4,Timer3_4_int);
-  Timer3.refresh();
+  Timer3.setPrescaleFactor(TIM3preScale);      // set pre scale factor 72 -->  72MHz/72=1MHz
+  Timer3.setOverflow(TIM3_OverflowValue);      // set overflow value to determine timer 3 frequency: 1/overflow
+  Timer3.setCompare(TIM3_CH4,TIM3_OverflowValue);  // set compare value within overflow for frequency of timers interrupt
+  Timer3.attachInterrupt(TIM3_CH4,Timer3_4_int);   // attach interrupt to timer3 channel4
+  Timer3.refresh();                            // refresh the timer 3 configuration
   // Configurate timer 4    400hz
-  Timer4.setPrescaleFactor(TIM4preScale); 
-  Timer4.setOverflow(TIM4_OverflowValue);    
-  Timer4.setCompare(TIM4_CH3,TIM4_OverflowValue);
-  Timer4.attachInterrupt(TIM4_CH3,Timer4_3_int);
-  Timer4.refresh();  
+  Timer4.setPrescaleFactor(TIM4preScale);     // set pre scale factor 72 -->  72MHz/72=1MHz
+  Timer4.setOverflow(TIM4_OverflowValue);     // set overflow value to determine timer 4 frequency: 1/overflow
+  Timer4.setCompare(TIM4_CH3,TIM4_OverflowValue);   // set compare value within overflow for frequency of timers interrupt
+  Timer4.attachInterrupt(TIM4_CH3,Timer4_3_int);  // attach interrupt to timer4 channel3
+  Timer4.refresh();                           // refresh the timer 4 configuration
 
 
   /******************************** PWM Initialization ******************************/
-  Timer1.pause();   // stop the timers before configuring them  ???
+  Timer1.pause();   // stop the timers before configuring them  (?)
   Timer2.init();   // stop the timers before configuring them
   pinMode(MotorPWM_L,PWM);    // assign PWM pin mode
   pinMode(MotorPWM_R,PWM);
@@ -232,18 +223,16 @@ void setup() {
 }
 
 
-// Main Loop
 void loop() {
   char c[10];
   receiveDatafromPC();    // receive data from PC
   receivedDataPro();      // decomposite data received from PC
-  getADCaverage(1);
-  Control(1);
-
+  getADCaverage(1);       // get ADC value
+  Control(1);             // calculate controlled command: PWM duty cycles
   sendDatatoPC();         // send sensor data to PC and allow next receiving cycle
   
 
-/********************* for serial test **************************/  
+  /********************* just for serial test **************************/  
   if(receiveCompleted) {
 //    Serial.println("raw:");
 //    for(int t=0;t<USART_RX_STA;t++) {
@@ -251,7 +240,6 @@ void loop() {
 //    }
 //    Serial.println();
 //    Serial.println("number:");
-//--------------- this two should be update after control --------------------------------------------------------------------
     USART_RX_STA = 0;
     receiveCompleted = false;
 //    dtostrf(desiredTorqueL,2,2,c);  // transfer double to char
@@ -271,16 +259,16 @@ void loop() {
 
 /************************************* Receive data from PC *********************************************/
 /*
-Protocol: xxxx\r\n
-*/
+ * PC to MCU Protocol: xxxx\r\n
+ */
 void receiveDatafromPC() {
   while(Serial.available() && receiveContinuing) {
     char inChar = (char)Serial.read();
+    // the string should end with \r\n
     if(inChar == '\n') {
       USART_RX_STA--;
       if(USART_RX_BUF[USART_RX_STA] != '\r') {
         USART_RX_STA = 0;
-//        while(Serial.available() && Serial.read());   // release the buffer for next correct receiving cycle
         receiveCompleted = false;  // incorrect receiving cycle
       }
       else {
@@ -293,10 +281,10 @@ void receiveDatafromPC() {
         USART_RX_BUF[USART_RX_STA] = inChar;
         USART_RX_STA++;
       }
+      // exceed the buffer size
       else {
         USART_RX_STA = 0;
-//        while(Serial.available() && Serial.read());   // release the buffer for next correct receiving cycle
-        receiveCompleted = false;  // incorrect receiving cycle
+        receiveCompleted = false;    // incorrect receiving cycle
         receiveContinuing = false;   //finish this receiving cycle
       }
     }
@@ -306,7 +294,7 @@ void receiveDatafromPC() {
 
 /************************************* split the data from PC to numbers *********************************************/
 /*
- * protocol:
+ * PC to MCU Protocol: xxxx\r\n
  */
 
 void receivedDataPro() {
@@ -344,7 +332,7 @@ void receivedDataPro() {
 
 /************************************* send data to PC *********************************************/
 /*
- * protocol:AxxxxSxxxxRxxxxPxxxxYxxxx\r\n
+ * @ MCU to PC protocol: AxxxxSxxxxRxxxxPxxxxYxxxx\r\n
  */ 
 void sendDatatoPC() {
   unsigned int dec;
@@ -356,7 +344,7 @@ void sendDatatoPC() {
       if(i==0)
       {
         USART_TX_BUF[0] = 'A';
-        dec = Aver_ADC_value[5]*Calcu_Pow(10,3);  // t<4 means here count for 0.001 precision
+        dec = Aver_ADC_value[5]*Calcu_Pow(10,3);     // t<4 means here count for 0.001 precision
       }
       else if(i==1)
       {
@@ -390,13 +378,16 @@ void sendDatatoPC() {
       Serial.flush();
     }
   }
+  // mark this sending cycle is finished
   SendPC_update = false;
   // after sending the data to PC, allow next receiving cycle
   receiveContinuing = true;
 }
 
-//calculate m^n
-//reture the results of m^n
+/*
+ * calculate m^n
+ * @return: the results of m^n
+ */
 uint32_t Calcu_Pow(uint8_t m,uint8_t n)
 {
   uint32_t result=1;  
@@ -404,7 +395,9 @@ uint32_t Calcu_Pow(uint8_t m,uint8_t n)
   return result;
 }
 
-//return the sign of the value
+/*
+ * @return: the sign of the value
+ */
 double Value_sign(double data)
 {
   if(data >= 0)
@@ -414,6 +407,10 @@ double Value_sign(double data)
 }
 
 /************************************* get value from ADC *********************************************/
+/*
+ * Get the ADC value of certain channels
+ * 
+ */
 void getADC() {
   for(int i=0;i<ENABLED_CH;i++) {
     while(digitalRead(ADC_MISO) == HIGH) {
@@ -423,7 +420,7 @@ void getADC() {
   }
   // reorder the rank 0~F
   for(int i=0;i<ENABLED_CH;i++) {
-    char tempValue[6];  // store the ADC daata
+    char tempValue[6];  // store the ADC data
     char tempState[2];  // store the ADC status
     for(int j=0;j<3;j++) {
       sprintf(tempValue+2*j, "%.2X", ADC_data[i][j]);
@@ -480,8 +477,8 @@ void getADC() {
   }
 }
 
-/************************************* get average value from ADC for cycles *********************************************/
-/*
+/* 
+ * Get average value from ADC for cycles
  * @para times: the cycles ADC go through before give you the detected value
  */
 void getADCaverage(int times) {
@@ -505,13 +502,15 @@ void getADCaverage(int times) {
 }
 
 /************************************* lower-level control functions *********************************************/
-// control parameter initialization
+/*
+ * Control parameter initialization
+ */
 void Control_Init() {
   PWM_commandL = 0;
   PWM_commandR = 0;
   desiredTorqueL = 0;
   desiredTorqueR = 0;
-// initialize the control parameter of left motor
+  // initialize the control parameter of left motor
   pidL.set = desiredTorqueL;
   pidL.currpwm=0;
   pidL.pwm_cycle=PWMperiod_L;     
@@ -524,7 +523,7 @@ void Control_Init() {
   pidL.Err_p = 0;
   pidL.Err_pp = 0;
 
-// initialize the control parameter of right motor
+  // initialize the control parameter of right motor
   pidR.set = desiredTorqueR;
   pidR.currpwm=0;
   pidR.pwm_cycle=PWMperiod_R;     
@@ -538,6 +537,11 @@ void Control_Init() {
   pidR.Err_pp = 0;
 }
 
+/*
+ * Calculate control command (PWM duty cycle) accroding to command received from PC
+ * and information received from ADC and IMU
+ * @para mode: 1-PID control, 2-Open loop control
+ */
 void Control(uint8_t mode) {
   float dk1L,dk2L;
   float PoutL,IoutL,DoutL;
@@ -560,9 +564,10 @@ void Control(uint8_t mode) {
       dk2L = pidL.Err+pidL.Err_pp-2*pidL.Err_p;
       DoutL = (pidL.Kp*pidL.Td)/pidL.Tcontrol;
       DoutL = DoutL*dk2L;
-
+      // calculate the delta value of this time
       pidL.Delta_PWM = PoutL+IoutL+DoutL;
       pidL.currpwm += pidL.Delta_PWM;      //update pwm pulse
+      // avoid overflow of PWM
       if(pidL.currpwm > pidL.pwm_cycle) {
         pidL.currpwm = pidL.pwm_cycle;
       }
@@ -588,10 +593,10 @@ void Control(uint8_t mode) {
       dk2R = pidR.Err+pidR.Err_pp-2*pidR.Err_p;
       DoutR = (pidR.Kp*pidR.Td)/pidR.Tcontrol;
       DoutR = DoutR*dk2R;
-    
+      // calculate the delta value of this time
       pidR.Delta_PWM = PoutR+IoutR+DoutR;
       pidR.currpwm += pidR.Delta_PWM;
-    
+      // avoid overflow of PWM
       if(pidR.currpwm > pidR.pwm_cycle)
       {
         pidR.currpwm = pidR.pwm_cycle;
@@ -601,11 +606,11 @@ void Control(uint8_t mode) {
         pidR.currpwm = 0;
       }
       PWM_commandR = pidR.currpwm;
-    
       //update the error
       pidR.Err_pp = pidR.Err_p;
       pidR.Err_p = pidR.Err;
     }
+    // Open-loop control
     else if(mode == 2) {
       PWM_commandL = PWMperiod_L*desiredTorqueL/(MotorCurrentConstant*MotorMaximumCurrent);
       PWM_commandR = PWMperiod_R*desiredTorqueR/(MotorCurrentConstant*MotorMaximumCurrent);
@@ -624,6 +629,7 @@ void Control(uint8_t mode) {
         PWM_commandR = 0;
       }
     }
+    // set the pwm duty cycle
     MotorPWMoutput(PWM_commandL,PWM_commandR);        
   }
   Control_update = false;     // allow next control cycle
@@ -632,7 +638,11 @@ void Control(uint8_t mode) {
   receiveCompleted = false;
 }
 
-
+/*
+ * Set the pwm duty cycle for both of the motors
+ * @para PWMcommandL/PWMcommandR: compared value
+ *       range in 0~PWMperiod_L/PWMperiod_R
+ */
 void MotorPWMoutput(uint16_t PWMcommandL, uint16_t PWMcommandR) {
   Timer1.setCompare(TIM1_CH1,PWM_commandL);
   delay(1);
@@ -640,7 +650,10 @@ void MotorPWMoutput(uint16_t PWMcommandL, uint16_t PWMcommandR) {
 }
 
 /************************************* Interrupt handling function of timer3 and timer4 *********************************************/
-// timer3 is for ADC update and Control update
+/*
+ * Interruption of timer3 is for ADC update and Control update
+ * Frequency = 72/TIM3preScale/TIM3_OverflowValue = 72MHz/72/1000 = 1kHz
+ */
 void Timer3_4_int() {
   if(ADC_update == false) {
     ADC_update = true;
@@ -648,10 +661,12 @@ void Timer3_4_int() {
   if(Control_update == false) {
     Control_update = true;
   }
-  
 }
 
-// timer4 is for data sending to PC 
+/*
+ * Interruption timer4 is for data sending to PC
+ * Frequency = 72/TIM4preScale/TIM4_OverflowValue = 72MHz/72/2500 = 400Hz
+ */
 void Timer4_3_int() {
   if(SendPC_update == false) {
     SendPC_update = true;
