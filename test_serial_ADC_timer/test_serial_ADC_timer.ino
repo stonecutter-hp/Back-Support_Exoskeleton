@@ -1,5 +1,5 @@
 #include <AD7173.h>  // the library for ADC
-
+#include "IIC.h"    // IIC library for IMU
 
 /*  Program try 1 for the low-level control of exoskelton
 Version: 1.0 starts from 20200615
@@ -108,6 +108,12 @@ bool Control_update = true;  // control update flag
 #define MotorCurrentConstant 1   //motor current constant
 #define MotorMaximumCurrent 1    //motor norminal current
 
+/**************************************** IMU parameters definition ********************************/
+unsigned char angleTempA[6];   // store the raw data get from IMU A(addr 0x50)
+unsigned char angleTempB[6];   // store the raw data get from IMU B(addr 0x51)
+float angleActualA[3];         // store the angle of IMU A(addr 0x50) for calculation
+float angleActualB[3];         // store the angle of IMU B(addr 0x51) for calculation
+
 
 /* ---------------------------------------- Program ------------------------------------------ */
 void setup() {
@@ -181,7 +187,10 @@ void setup() {
   delay(10);
 
   digitalWrite(LED0,HIGH);  // finish setup and light the green light
-
+  
+  /******************************** IIC Initialization ******************************/
+  IIC_Init();   //IIC initialization for IMU communication
+  
   /******************************** Timer Initialization ******************************/
   Timer3.init();   // stop the timers before configuring them
   Timer4.init();   // stop the timers before configuring them
@@ -228,6 +237,7 @@ void loop() {
   receiveDatafromPC();    // receive data from PC
   receivedDataPro();      // decomposite data received from PC
   getADCaverage(1);       // get ADC value
+  getIMUangle();
   Control(1);             // calculate controlled command: PWM duty cycles
   sendDatatoPC();         // send sensor data to PC and allow next receiving cycle
   
@@ -372,6 +382,20 @@ void sendDatatoPC() {
       }
       Serial.print(USART_TX_BUF);
       Serial.flush();
+      Serial.print('R');
+      Serial.print((float)angleActualA[0]);   
+      Serial.print('P');
+      Serial.print((float)angleActualA[1]);
+      Serial.print('Y');
+      Serial.print((float)angleActualA[2]);
+
+      Serial.print('R');
+      Serial.print((float)angleActualB[0]);   
+      Serial.print('P');
+      Serial.print((float)angleActualB[1]);
+      Serial.print('Y');
+      Serial.print((float)angleActualB[2]);
+      
       Serial.print('\r');
       Serial.flush();
       Serial.print('\n');
@@ -500,6 +524,24 @@ void getADCaverage(int times) {
   }
   ADC_update = false;  
 }
+
+/************************************* get value from IMU *********************************************/
+/*
+ * Get euler angle from two IMU
+ */
+void getIMUangle() {
+  IICreadBytes(0x50,0x3d,6,&angleTempA[0]);  // read angle from IMUA
+  delay(1);
+  IICreadBytes(0x51,0x3d,6,&angleTempB[0]);  // read angle from IMUB
+  // transfer cahr format to float format for the convenience of calculation
+  angleActualA[0] = (float)CharToShort(&angleTempA[0])/32768*180;   // roll A
+  angleActualA[1] = (float)CharToShort(&angleTempA[2])/32768*180;   // pitch A
+  angleActualA[2] = (float)CharToShort(&angleTempA[4])/32768*180;   // yaw A
+  angleActualB[0] = (float)CharToShort(&angleTempB[0])/32768*180;   // roll B
+  angleActualB[1] = (float)CharToShort(&angleTempB[2])/32768*180;   // pitch B
+  angleActualB[2] = (float)CharToShort(&angleTempB[4])/32768*180;   // yaw B
+}
+
 
 /************************************* lower-level control functions *********************************************/
 /*
