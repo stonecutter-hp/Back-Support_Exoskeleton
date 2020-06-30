@@ -37,6 +37,8 @@ byte ADC_data[ENABLED_CH][4];  // store raw data from ADC
 bool ADC_update = true;        // ADC_update enable flag 
 unsigned long ADC_value[ENABLED_CH];    // store ADC value in long format  
 double Aver_ADC_value[ENABLED_CH];   // store the transferred ADC value for calculation
+/* load cell force transfer */
+double LoadCell[4];      // store the transferred force value
 
 /*********************************** Serial communication definition ************************************/
 #define USART_REC_LEN 200   // define the maximum number of received bytes
@@ -354,12 +356,12 @@ void sendDatatoPC() {
       if(i==0)
       {
         USART_TX_BUF[0] = 'A';
-        dec = Aver_ADC_value[5]*Calcu_Pow(10,3);     // t<4 means here count for 0.001 precision
+        dec = Aver_ADC_value[0]*Calcu_Pow(10,3);     // t<4 means here count for 0.001 precision
       }
       else if(i==1)
       {
         USART_TX_BUF[5] = 'S';
-        dec = Aver_ADC_value[6]*Calcu_Pow(10,3);  // t<4 means here count for 0.001 precision
+        dec = Aver_ADC_value[1]*Calcu_Pow(10,3);  // t<4 means here count for 0.001 precision
       }
       else if(i==2)
       {
@@ -521,6 +523,12 @@ void getADCaverage(int times) {
       tempADCvalue[i] = tempADCvalue[i]/times;
       Aver_ADC_value[i] = (double)(tempADCvalue[i]*attRatio[i]*2.5)/16777251;  //24 bits
     }
+    // 0~3 load cell channel
+//    for(int i=0;i<4;i++) {
+//      tempADCvalue[i] = tempADCvalue[i]/times;
+//      Aver_ADC_value[i] = (double)(tempADCvalue[i]*160*4)/16777251;  //24 bits
+////      LoadCell[i] = Aver_ADC_value[i]/resolution;
+//    }
   }
   ADC_update = false;  
 }
