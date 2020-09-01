@@ -3,7 +3,6 @@
 
 /*  Program try 1 for the low-level control of exoskelton
 Version: 1.0 starts from 20200615
-
 ***Program logic***
 1) read desired torque command from PC --> 
 2) read sensor feedback including: 
@@ -23,8 +22,8 @@ Version: 1.0 starts from 20200615
 // Ch4 is for battery voltage detection with attenuation ratio 1:11
 // Ch5~Ch9 is for motor driver signal detection with attenuation ratio 1:2
 // Ch10~Ch15 is for potentiometer with no attenuation
-// --------------------- CH0 CH1 CH2 CH3 CH4 CH5 CH6 CH7 CH8 CH9 CH10 CH11 CH12 CH13 CH14 CH15
-const int attRatio[16] = {1,  1,  1,  1,  11, 2,  2,  2,  2,  2,   1,   1,   1,   1,   1,   1};
+// --------------------- CH0 CH1 CH2 CH3   CH4   CH5 CH6 CH7 CH8 CH9 CH10 CH11 CH12 CH13 CH14 CH15
+const int attRatio[16] = {1,  1,  1,  1,  22.5,   2,  2,  2,  2,  2,   1,   1,   1,   1,   1,   1};
 #define ADC_SS PA4        //SPI1_NSS-CS 
 #define ADC_MISO PA6      //SPI1_MISO-DOUT/RDY
 #define LED0 PB0          //PB0-green light
@@ -382,6 +381,7 @@ void sendDatatoPC() {
         inter = (dec/Calcu_Pow(10,3-t))%10;              //Seperate every single number 
         USART_TX_BUF[i*5+t+1] = inter+48;
       }
+    }
       Serial.print(USART_TX_BUF);
       Serial.flush();
       Serial.print('R');
@@ -402,7 +402,6 @@ void sendDatatoPC() {
       Serial.flush();
       Serial.print('\n');
       Serial.flush();
-    }
   }
   // mark this sending cycle is finished
   SendPC_update = false;
