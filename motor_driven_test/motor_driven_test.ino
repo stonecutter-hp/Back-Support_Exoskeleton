@@ -273,7 +273,8 @@ void loop() {
 
 /************************************* Receive data from PC *********************************************/
 /*
- * PC to MCU Protocol: xx.xxx\r
+ * PC to MCU Protocol: xx.xxxX\r 
+ * The final digital is for motor enable control, 1 is enable, 0 is disable
  */
 void receiveDatafromPC() {
   while(Serial.available() && receiveContinuing) {
