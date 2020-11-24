@@ -2,7 +2,7 @@ function P = Set_Parameters()
 %% Main program setting information
 P.McuPort = 'COM4';  % serial port of MCU&PC communication
 P.MainFreq = 200;   % main program running frequency (Hz)
-P.MaxRunTime = 5;   % main program running time
+P.MaxRunTime = 5;   % main program running time (s)
 
 %% Configuration information
 % P.config{1,1} for serial port configuration
@@ -10,7 +10,7 @@ P.MaxRunTime = 5;   % main program running time
 P.config = cell(2,1);     
 
 %% For time information saving in TimerCallback
-P.TransTime = 0;
+P.TransTime = 0;   % transition variable for record the starting time of every timecallback running loop
 P.TimeAll = [];
 
 %% For sensor information saving from MCU

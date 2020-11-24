@@ -1,7 +1,8 @@
 clear all
 clc
 % The high-level flow: Initialization --> Receieve data from MCU
-% --> Control calcualtion --> Send data to MCU
+%                      --> Control calcualtion --> Send data to MCU
+% The low-level controller should keep sending data to PC
 global P;
 disp('Program Starts !');
 

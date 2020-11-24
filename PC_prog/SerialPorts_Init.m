@@ -2,7 +2,8 @@ function SerialPorts_Init(McuPort)
 global P;
 delete(instrfindall('Type','serial'));         % delete the last configuration for serial ports
 
-McuSerial = instrfind('Type','serial','Port',McuPort,'Tag','');  % find if there have serial port for MCU port
+% find if there have serial port for MCU port
+McuSerial = instrfind('Type','serial','Port',McuPort,'Tag','');  
 if isempty(McuSerial)                          % if there do not have one
     McuSerial = serial(McuPort);               % create one
 else                                           % if there exists one
@@ -21,7 +22,7 @@ P.config{1,1} = McuSerial;
 % try to open the assigned MCU&PC communication port
 try
     fopen(McuSerial);
-    fscanf(McuSerial);
+    fscanf(McuSerial);   % as the MCU keep sending data
     disp('MCU COM opened !');
 catch
     msgbox('Can not open MCU COM !');
