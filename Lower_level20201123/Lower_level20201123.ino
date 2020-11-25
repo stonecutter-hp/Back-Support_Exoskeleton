@@ -396,12 +396,13 @@ void receivedDataPro() {
 
 
 /************************************* send data to PC *********************************************/
-/*
- * @ MCU to PC protocol: ALxxxxLLxxxxTLxxxxARxxxxLRxxxxTRxxxxPxxxxYxxxxx\r\n
+/**
+ * @ MCU to PC protocol: ALxxxxLLxxxxTLxxxxxARxxxxLRxxxxTRxxxxxPxxxxxYxxxxx\r\n
  * AL/Rxxxx: Support beam angle for left/right transmission system 
  * LL/Rxxxx: Load cell for cable force of left/right transmission system
- * TL/Rxxxx: Potentiometer/IMU feedback for angle between left/right thigh and trunk
- * Pxxxx: Pitch angle for trunk
+ * TL/Rxxxxx: Potentiometer/IMU feedback for angle between left/right thigh and trunk
+ *            first number indicate sign: 0 for -, 1 for +
+ * Pxxxxx: Pitch angle for trunk
  * Yxxxxx: Yaw angle for trunk
  *         first number indicate sign: 0 for -, 1 for + 
  * Notice: The last two is end character for PC receiveing '\r\n'

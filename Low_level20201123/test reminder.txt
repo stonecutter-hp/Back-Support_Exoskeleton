@@ -1,1 +1,3 @@
 test timer interrupt
+test velocity quality
+test reference torque generation

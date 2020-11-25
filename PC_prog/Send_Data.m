@@ -1,11 +1,12 @@
 function Send_Data()
 % Since program running to here, the necessary information of last time
 % have stroed in P
+% PC to MCU Protocol: TLxxxxTRxxxxMxx\r (0x0D)
 global P;
 % Here we mainly want to send mode and desired torque to MCU
 McuPort = P.config{1,1};
-% MotionMode = P.MotionMode(end,:); 
-DesiredTorque = roundn(P.DesiredTorque(end,:),-2);  % Keep it to two decimal places
+MotionMode = P.MotionMode(:,end); 
+DesiredTorque = roundn(P.DesiredTorque(:,end),-2);  % Keep it to two decimal places
 
 %% Combining the sending data
 % Here the specific form for sending data is designed as: "TLxxxxTRxxxx"
@@ -25,7 +26,8 @@ elseif DesiredTorque(2) >=1 && DesiredTorque(2) < 10
 else
     TransState = [TransState,num2str(DesiredTorque(2)*100)];
 end
-TransState = [TransState,'\r\n'];
+
+TransState = [TransState,'M',num2str(MotionMode(1)),num2str(MotionMode(2)),char(13)];
 
 %% Send data to serial port
 flushoutput(McuPort);      % flush the output buffer

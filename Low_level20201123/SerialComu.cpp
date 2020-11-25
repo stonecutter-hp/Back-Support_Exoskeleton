@@ -16,15 +16,20 @@ int USART_TX_STA = 0;                 // sending number flag
 /*********************************** Communication receiving data definition ************************************/
 float desiredTorqueL;    // desired motor torque of left motor
 float desiredTorqueR;    // desired motor torque of right motor
+// motion type: 1-other motion;       2-Symmetric Holding; 
+//              3-Asymmetric Holding; 4-Asymmetric Lowering;
+//              5-Asymmetric Lifting; 6-Symmetric Lowering;
+//              7-Symmetric Lifting;  0-Stop state
+uint8_t mode;            // detected motion mode
+// 1-left; 2-right; 0-none
+uint8_t side;            // Asymmetric side
 int inChar;
 
 
 /**
- * @ PC to MCU Protocol: TLxxxxxTRxxxxxMxx\r (0x0D)
- * TLxxxxx: Reference torque for left transmission system, 
- *          first number indicate sign: 0 for -, 1 for + 
- * TRxxxxx: Reference torque for right transmission system,
- *          first number indicate sign: 0 for -, 1 for + 
+ * @ PC to MCU Protocol: TLxxxxTRxxxxMxx\r (0x0D)
+ * TLxxxx: Reference torque for left transmission system
+ * TRxxxx: Reference torque for right transmission system
  * Mxx: Detected user motion mode
  * Notice: With successful receiving process, USART_RX_STA indicates
  *         total reveived char number exclude '\r'; and they are stored
@@ -57,18 +62,18 @@ void receiveDatafromPC(void) {
 
 /**
  * Split the data from PC to number
- * PC to MCU Protocol: TLxxxxxTRxxxxxMxx\r (0x0D)
+ * PC to MCU Protocol: TLxxxxTRxxxxMxx\r (0x0D)
  */
 void receivedDataPro(void) {
   // Remind that the recieved data are stored in receiving buffer USART_RX_BUF[0~USART_RX_STA-1]: TLxxxxTRxxxxMxx
   // if the receiving cycle is correct completed
 
   // Length and first character are checked to esure the command is recieved correctly
-  if(receiveCompleted && USART_RX_STA == 17) {
+  if(receiveCompleted && USART_RX_STA == RevievCharNum) {
     // Check if the character is correct
     if(USART_RX_BUF[0] == 'T' && USART_RX_BUF[1] == 'L') {
       // Calculate reference torque for left system
-      desiredTorqueL = (USART_RX_BUF[3]-48)*10+(USART_RX_BUF[4]-48)*1+(USART_RX_BUF[5]-48)*0.1+(USART_RX_BUF[6]-48)*0.01;
+      desiredTorqueL = (USART_RX_BUF[2]-48)*10+(USART_RX_BUF[3]-48)*1+(USART_RX_BUF[4]-48)*0.1+(USART_RX_BUF[5]-48)*0.01;
       // Check and limit the reasonable torque range 0~LimitInput
       if(desiredTorqueL >= LimitInput) {
         desiredTorqueL = LimitInput;
@@ -77,6 +82,21 @@ void receivedDataPro(void) {
       	desiredTorqueL = 0;
       } 
     }
+    if(USART_RX_BUF[6] == 'T' && USART_RX_BUF[7] == 'R') {
+      // Calculate reference torque for left system
+      desiredTorqueR = (USART_RX_BUF[8]-48)*10+(USART_RX_BUF[9]-48)*1+(USART_RX_BUF[10]-48)*0.1+(USART_RX_BUF[11]-48)*0.01;
+      // Check and limit the reasonable torque range 0~LimitInput
+      if(desiredTorqueR >= LimitInput) {
+        desiredTorqueR = LimitInput;
+      }
+      else if(desiredTorqueR < 0) {
+      	desiredTorqueR = 0;
+      } 
+    }
+    if(USART_RX_BUF[12] == 'M') {
+    	mode = USART_RX_BUF[13]-48;
+    	side = USART_RX_BUF[14]-48;
+    }    
 
     // Here add more process for data decomposition ...
 
@@ -85,11 +105,12 @@ void receivedDataPro(void) {
 }
 
 /**
- * @ MCU to PC protocol: ALxxxxLLxxxxTLxxxxARxxxxLRxxxxTRxxxxPxxxxYxxxxx\r\n
+ * @ MCU to PC protocol: ALxxxxLLxxxxTLxxxxxARxxxxLRxxxxTRxxxxxPxxxxxYxxxxx\r\n
  * AL/Rxxxx: Support beam angle for left/right transmission system 
  * LL/Rxxxx: Load cell for cable force of left/right transmission system
- * TL/Rxxxx: Potentiometer/IMU feedback for angle between left/right thigh and trunk
- * Pxxxx: Pitch angle for trunk
+ * TL/Rxxxxx: Potentiometer/IMU feedback for angle between left/right thigh and trunk
+ *            first number indicate sign: 0 for -, 1 for +
+ * Pxxxxx: Pitch angle for trunk
  * Yxxxxx: Yaw angle for trunk
  *         first number indicate sign: 0 for -, 1 for + 
  * Notice: The last two is end character for PC receiveing '\r\n'

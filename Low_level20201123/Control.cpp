@@ -28,6 +28,12 @@ void Control_Init(void) {
   PWM_commandR = 0;
   desiredTorqueL = 0;
   desiredTorqueR = 0;
+  Estimated_ImuAssistiveTorqueL = 0;
+  Estimated_PoAssistiveTorqueL = 0;
+  Estimated_ImuAssistiveTorqueR = 0;
+  Estimated_PoAssistiveTorqueR = 0;
+  PotentioLP1_InitValue = 0;
+  SupportBeamAngleL_InitValue = 0;
   // initialize the control parameter of left motor
   pidL.set = desiredTorqueL;
   pidL.currTa = 0;
@@ -63,12 +69,24 @@ void Control_Init(void) {
  * Processing sensor feedback for closed-loop control and data sending to PC
  */
 void sensorFeedbackPro(void) {
+  // if high-level command stop state
+  if(mode == 0) {
+  	// Set zero for reference torque
+  	desiredTorqueR = 0;
+  	desiredTorqueL = 0;
+  	// disable motor control
+  	digitalWrite(MotorEnableL,LOW);
+  }
+  else {
+    digitalWrite(MotorEnableL,HIGH); //Enable motor control	
+  }
   // Estimated_ImuAssistiveTorqueL = (angleActualA[0]-SupportBeamAngleL_InitValue)*TorsionStiffnessL;
   Estimated_PoAssistiveTorqueL = (Aver_ADC_value[PotentioLP1]-PotentioLP1_InitValue)/PotentioLP1_Sensitivity*TorsionStiffnessL; 
   // Estimated_PoAssistiveTorqueR = (Aver_ADC_value[PotentioLP2]-PotentioRP1_InitValue)/PotentioRP1_Sensitivity*TorsionStiffnessR; 
   // Aver_ADC_value[MotorCurrL] =  (Aver_ADC_value[MotorCurrL]-2)*9/2;   // here ESCON set 0~4V:-9~9A
   // Aver_ADC_value[MotorVeloL] = Value_sign(Aver_ADC_value[MotorVeloL]-2)*(Aver_ADC_value[MotorVeloL]-2)*4000/2; // here ESCON set 0~4V:-4000~4000rpm
-  // Aver_ADC_value[LoadCellL] = (Aver_ADC_value[LoadCellL]-1.25)/LoadCellL_Sensitivity;
+  // Aver_ADC_value[LoadCellL] = (Aver_ADC_value[LoadCellL]-1.25)/LoadCellL_Sensitivity; 
+
 }
 
 /**
