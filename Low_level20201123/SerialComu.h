@@ -8,11 +8,14 @@
 #include "IIC.h"
 #include "Arduino.h"
 #include "Control.h"
+#include "IMU.h"
 
 /*********************************** Serial communication definition ************************************/
 #define USART_REC_LEN 200                     // define the maximum number of received bytes
 #define USART_TX_LEN 200                      // define the maximum number of sending bytes
 #define RevievCharNum 15                      // correct recieveing char number exclude '\r'
+#define PosSign 1                             // positive sign
+#define NegSign 0                             // negative sign
 extern char USART_RX_BUF[USART_REC_LEN];      // receiving buffer
 extern int USART_RX_STA;                      // recieving number flag
 extern bool receiveCompleted;                 // receiving completing flag
@@ -20,7 +23,7 @@ extern bool receiveContinuing;                // receiving continuous flag to av
 extern bool SendPC_update;                    // data sending to PC enable flag
 extern char USART_TX_BUF[USART_TX_LEN];       // sending buffer
 extern int USART_TX_STA;                      // sending number flag
-
+extern bool SendItemFlag[9];                   // for convinient of adjust feedback item adjust
 /*********************************** Communication receiving data definition ************************************/
 extern float desiredTorqueL;    // desired motor torque of left motor
 extern float desiredTorqueR;    // desired motor torque of right motor
@@ -53,14 +56,16 @@ void receiveDatafromPC(void);
 void receivedDataPro(void);
 
 /**
- * @ MCU to PC protocol: ALxxxxLLxxxxTLxxxxxARxxxxLRxxxxTRxxxxxPxxxxxYxxxxx\r\n
- * AL/Rxxxx: Support beam angle for left/right transmission system 
- * LL/Rxxxx: Load cell for cable force of left/right transmission system
- * TL/Rxxxxx: Potentiometer/IMU feedback for angle between left/right thigh and trunk
- *            first number indicate sign: 0 for -, 1 for +
- * Pxxxxx: Pitch angle for trunk
- * Yxxxxx: Yaw angle for trunk
- *         first number indicate sign: 0 for -, 1 for + 
+ * @ MCU to PC protocol: TLxxxxLLxxxxALxxxxxTRxxxxLRxxxxARxxxxxPxxxxxYxxxxxVxxxxx\r\n
+ * TL/Rxxxx: (Nm) Torsion spring torque for left/right transmission system 
+ * LL/Rxxxx: (N) Load cell for cable force of left/right transmission system
+ * AL/Rxxxxx: (deg) Potentiometer/IMU feedback for angle between left/right thigh and vertical direction
+ *                  first number indicate sign: 0 for -, 1 for +
+ * Pxxxxx: (deg) Pitch angle for trunk
+ * Yxxxxx: (deg) yaw angle for trunk
+ *               first number indicate sign: 0 for -, 1 for + 
+ * Vxxxxx: (deg/s) Pitch angular velocity for trunk
+ *                 first number indicate sign: 0 for -, 1 for +
  * Notice: The last two is end character for PC receiveing '\r\n'
  */
 void sendDatatoPC(void);

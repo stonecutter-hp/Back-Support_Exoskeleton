@@ -5,20 +5,20 @@ global P;
 assignin('base','TimeAll',P.TimeAll);
 
 %% Saving data from MCU
-assignin('base','angleAL',P.angleAL);
+assignin('base','torqueTL',P.torqueTL);
 assignin('base','forceLL',P.forceLL);
-assignin('base','angleTL',P.angleTL);
-assignin('base','angleAR',P.angleAR);
+assignin('base','angleAL',P.angleAL);
+assignin('base','torqueTR',P.torqueTR);
 assignin('base','forceLR',P.forceLR);
-assignin('base','angleTR',P.angleTR);
+assignin('base','angleAR',P.angleAR);
 assignin('base','angleP',P.angleP);
 assignin('base','angleY',P.angleY);
 assignin('base','adotPV',P.adotPV);
 
 %% Saving data used by control
-assignin('base','AngleMean',P.AngleMean);
-assignin('base','AlphaDot',P.AlphaDot);
-assignin('base','BetaMean',P.BetaMean);
+assignin('base','AlphaMean',P.AlphaMean);   % from P.angleP
+assignin('base','AlphaDot',P.AlphaDot);     % calculated based on P.AlphaMean and P.TimeAll
+assignin('base','BetaMean',P.BetaMean);     % from P.angleY
 % more ...
 
 %% Saving data from PC

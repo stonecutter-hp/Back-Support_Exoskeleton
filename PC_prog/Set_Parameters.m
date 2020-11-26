@@ -15,12 +15,13 @@ P.TransTime = 0;   % transition variable for record the starting time of every t
 P.TimeAll = [];
 
 %% For sensor information direct from MCU
-P.angleAL = [];     % angle of left side support beam and torsion spring for torque feedback
+P.RecItem = [1, 1, 1, 1, 1, 1, 1, 1, 1];
+P.torqueTL = [];    % torque feedback of left torsion spring
 P.forceLL = [];     % left cable force feedback
-P.angleTL = [];     % angle of left thigh
-P.angleAR = [];     % angle of right side support beam
+P.angleAL = [];     % angle of left thigh
+P.torqueTR = [];    % torque feedback of right torsion spring
 P.forceLR = [];     % right cable force feedback
-P.angleTR = [];     % angle of right thigh
+P.angleAR = [];     % angle of right thigh
 P.angleP = [];      % pitch angle of turnk bending motion
 P.angleY = [];      % yaw angle of trunk bending motion
 P.adotPV = [];      % angular velocity of trunk motion in pitch direction from MCU

@@ -12,63 +12,113 @@ end
 
 %% Decompose the data from MCU from characters to numbers
 % Here the specific form for recieved data is designed as: 
-% ALxxxxLLxxxxTLxxxxxARxxxxLRxxxxTRxxxxxPxxxxxYxxxxxVxxxxx\r\n
-% AL/Rxxxx: (deg) Support beam angle for left/right transmission system 
+% TLxxxxLLxxxxALxxxxxTRxxxxLRxxxxARxxxxxPxxxxxYxxxxxVxxxxx\r\n
+% TL/Rxxxx: (Nm) Torsion spring torque for left/right transmission system 
 % LL/Rxxxx: (N) Load cell for cable force of left/right transmission system
-% TL/Rxxxxx: (deg) Potentiometer/IMU feedback for angle between left/right thigh and trunk
+% AL/Rxxxxx: (deg) Potentiometer/IMU feedback for angle between left/right
+%                  thigh and vertical direction
 %            first number indicate sign: 0 for -, 1 for +
 % Pxxxxx: (deg) Pitch angle for trunk
+%               first number indicate sign: 0 for -, 1 for +
 % Yxxxxx: (deg) Yaw angle for trunk
-%         first number indicate sign: 0 for -, 1 for +
+%               first number indicate sign: 0 for -, 1 for +
 % Vxxxxx: (deg/s) Pitch angular velocity for trunk
-%         first number indicate sign: 0 for -, 1 for +
-if(TransState(1) == 'A' && TransState(2) == 'L')
-    TransAngleAL = (TransState(3)-48)*10+(TransState(4)-48)*1+(TransState(5)-48)*0.1+(TransState(6)-48)*0.01;
-    P.angleAL = [P.angleAL, TransAngleAL];
-end
-if(TransState(7) == 'L' && TransState(8) == 'L')
-    TransForceLL = (TransState(9)-48)*10+(TransState(10)-48)*1+(TransState(11)-48)*0.1+(TransState(12)-48)*0.01;
-    P.forceLL = [P.forceLL, TransForceLL];
-end
-if(TransState(13) == 'T' && TransState(14) == 'L')
-    TransAngleTL = (TransState(16)-48)*10+(TransState(17)-48)*1+(TransState(18)-48)*0.1+(TransState(19)-48)*0.01;
-    if(TransState(15) == '0')
-        TransAngleTL = -1*TransAngleTL;
+%                 first number indicate sign: 0 for -, 1 for +
+position = 1;
+% TLxxxx
+if(P.RecItem(1) == 1)
+    if(TransState(position) == 'T' && TransState(position+1) == 'L')
+        TransTorqueTL = (TransState(position+2)-48)*10+(TransState(position+3)-48)*1+...
+                        (TransState(position+4)-48)*0.1+(TransState(position+5)-48)*0.01;
+        P.torqueTL = [P.torqueTL, TransTorqueTL];
     end
-    P.angleTL = [P.angleTL, TransAngleTL];
+    position = position+6;
 end
-if(TransState(20) == 'A' && TransState(21) == 'R')
-    TransAngleAR = (TransState(22)-48)*10+(TransState(23)-48)*1+(TransState(24)-48)*0.1+(TransState(25)-48)*0.01;
-    P.angleAR = [P.angleAR, TransAngleAR];
-end
-if(TransState(26) == 'L' && TransState(27) == 'R')
-    TransForceLR = (TransState(28)-48)*10+(TransState(29)-48)*1+(TransState(30)-48)*0.1+(TransState(31)-48)*0.01;
-    P.forceLR = [P.forceLR, TransForceLR];
-end
-if(TransState(32) == 'T' && TransState(33) == 'R')
-    TransAngleTR = (TransState(35)-48)*10+(TransState(36)-48)*1+(TransState(37)-48)*0.1+(TransState(38)-48)*0.01;
-    if(TransState(34) == '0')
-        TransAngleTR = -1*TransAngleTR;
+% LLxxxx
+if(P.RecItem(2) == 1)
+    if(TransState(position) == 'L' && TransState(position+1) == 'L')
+        TransForceLL = (TransState(position+2)-48)*10+(TransState(position+3)-48)*1+...
+                       (TransState(position+4)-48)*0.1+(TransState(position+5)-48)*0.01;
+        P.forceLL = [P.forceLL, TransForceLL];
     end
-    P.angleTR = [P.angleTR, TransAngleTR];
+    position = position+6;
 end
-if(TransState(39) == 'P')
-    TransAngleP = (TransState(40)-48)*100+(TransState(41)-48)*10+(TransState(42)-48)*1+(TransState(43)-48)*0.1+(TransState(44)-48)*0.01;
-    P.angleP = [P.angleP, TransAngleP];
-end
-if(TransState(45) == 'Y')
-    TransAngleY = (TransState(47)-48)*10+(TransState(48)-48)*1+(TransState(49)-48)*0.1+(TransState(50)-48)*0.01;
-    if(TransState(46) == '0')
-        TransAngleY = -1*TransAngleY;
+% ALxxxxx
+if(P.RecItem(3) == 1)
+    if(TransState(position) == 'A' && TransState(position+1) == 'L')
+        TransAngleAL = (TransState(position+3)-48)*10+(TransState(position+4)-48)*1+...
+                       (TransState(position+5)-48)*0.1+(TransState(position+6)-48)*0.01;
+        if(TransState(position+2) == '0')
+            TransAngleAL = -1*TransAngleAL;
+        end
+        P.angleAL = [P.angleAL, TransAngleAL];
     end
-    P.angleY = [P.angleY, TransAngleY];
+    position = position+7;
 end
-if(TransState(51) == 'V')
-    TransVeloV = (TransState(53)-48)*100+(TransState(54)-48)*10+(TransState(55)-48)*1+(TransState(56)-48)*0.1;
-    if(TransState(52) == '0')
-        TransVeloV = -1*TransVeloV;
+% TRxxxx
+if(P.RecItem(4) == 1)
+    if(TransState(position) == 'T' && TransState(position+1) == 'R')
+        TransTorqueTR = (TransState(position+2)-48)*10+(TransState(position+3)-48)*1+...
+                        (TransState(position+4)-48)*0.1+(TransState(position+5)-48)*0.01;
+        P.torqueTR = [P.torqueTR, TransTorqueTR];
     end
-    P.adotPV = [P.adotPV, TransVeloV];
+    position = position+6;
+end
+% LRxxxx
+if(P.RecItem(5) == 1)
+    if(TransState(position) == 'L' && TransState(position+1) == 'R')
+        TransForceLR = (TransState(position+2)-48)*10+(TransState(position+3)-48)*1+...
+                       (TransState(position+4)-48)*0.1+(TransState(position+5)-48)*0.01;
+        P.forceLR = [P.forceLR, TransForceLR];
+    end
+    position = position+6;
+end
+% ARxxxxx
+if(P.RecItem(6) == 1)
+    if(TransState(position) == 'A' && TransState(position+1) == 'R')
+        TransAngleAR = (TransState(position+3)-48)*10+(TransState(position+4)-48)*1+...
+                       (TransState(position+5)-48)*0.1+(TransState(position+6)-48)*0.01;
+        if(TransState(position+2) == '0')
+            TransAngleAR = -1*TransAngleAR;
+        end
+        P.angleAR = [P.angleAR, TransAngleAR];
+    end
+    position = position+7;
+end
+% Pxxxxx
+if(P.RecItem(7) == 1)
+    if(TransState(position) == 'P')
+        TransAngleP = (TransState(position+2)-48)*100+(TransState(position+3)-48)*10+...
+                      (TransState(position+4)-48)*1+(TransState(position+5)-48)*0.1;
+        if(TransState(position+1) == '0')
+            TransAngleP = -1*TransAngleP;
+        end    
+        P.angleP = [P.angleP, TransAngleP];
+    end
+    position = position+6;
+end
+% Yxxxxx
+if(P.RecItem(8) == 1)
+    if(TransState(position) == 'Y')
+        TransAngleY = (TransState(position+2)-48)*10+(TransState(position+3)-48)*1+...
+                      (TransState(position+4)-48)*0.1+(TransState(position+5)-48)*0.01;
+        if(TransState(position+1) == '0')
+            TransAngleY = -1*TransAngleY;
+        end
+        P.angleY = [P.angleY, TransAngleY];
+    end
+    position = position+6;
+end
+%Vxxxxx
+if(P.RecItem(9) == 1)
+    if(TransState(position) == 'V')
+        TransVeloV = (TransState(position+2)-48)*100+(TransState(position+3)-48)*10+...
+                     (TransState(position+4)-48)*1+(TransState(position+5)-48)*0.1;
+        if(TransState(position+1) == '0')
+            TransVeloV = -1*TransVeloV;
+        end
+        P.adotPV = [P.adotPV, TransVeloV];
+    end
 end
 %%%%%%%%%%%%%%% Here can add more data decompostition processing %%%%%%%%%%%%%
 

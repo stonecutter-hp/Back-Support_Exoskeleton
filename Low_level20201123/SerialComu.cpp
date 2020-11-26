@@ -12,6 +12,8 @@ bool receiveContinuing = false;       // receiving continuous flag to avoid the 
 bool SendPC_update = true;            // data sending to PC enable flag
 char USART_TX_BUF[USART_TX_LEN];      // sending buffer
 int USART_TX_STA = 0;                 // sending number flag
+// TLxxxxLLxxxxALxxxxxTRxxxxLRxxxxARxxxxxPxxxxxYxxxxxVxxxxx\r\n
+bool SendItemFlag[9] = [true, true, true, true, true, true, true, true, true,];
 
 /*********************************** Communication receiving data definition ************************************/
 float desiredTorqueL;    // desired motor torque of left motor
@@ -105,18 +107,156 @@ void receivedDataPro(void) {
 }
 
 /**
- * @ MCU to PC protocol: ALxxxxLLxxxxTLxxxxxARxxxxLRxxxxTRxxxxxPxxxxxYxxxxx\r\n
- * AL/Rxxxx: Support beam angle for left/right transmission system 
- * LL/Rxxxx: Load cell for cable force of left/right transmission system
- * TL/Rxxxxx: Potentiometer/IMU feedback for angle between left/right thigh and trunk
- *            first number indicate sign: 0 for -, 1 for +
- * Pxxxxx: Pitch angle for trunk
- * Yxxxxx: Yaw angle for trunk
- *         first number indicate sign: 0 for -, 1 for + 
+ * @ MCU to PC protocol: TLxxxxLLxxxxALxxxxxTRxxxxLRxxxxARxxxxxPxxxxxYxxxxxVxxxxx\r\n
+ * TL/Rxxxx: (Nm) Torsion spring torque for left/right transmission system 
+ * LL/Rxxxx: (N) Load cell for cable force of left/right transmission system
+ * AL/Rxxxxx: (deg) Potentiometer/IMU feedback for angle between left/right thigh and vertical direction
+ *                  first number indicate sign: 0 for -, 1 for +
+ * Pxxxxx: (deg) Pitch angle for trunk
+                 first number indicate sign: 0 for -, 1 for +
+ * Yxxxxx: (deg) yaw angle for trunk
+ *               first number indicate sign: 0 for -, 1 for + 
+ * Vxxxxx: (deg/s) Pitch angular velocity for trunk
+ *                 first number indicate sign: 0 for -, 1 for +
  * Notice: The last two is end character for PC receiveing '\r\n'
  */
 void sendDatatoPC(void) {
-  // Here code Sending data according to test/operation requirement
+  int dec;
+  int position;
+  int8_t SignMark;
+  unsigned char inter;
+  position = 0;
+  if(SendPC_update == true) {
+  	// TLxxxx
+  	if(SendItemFlag[1] == true) {
+  	  USART_TX_BUF[position++] = 'T';
+  	  USART_TX_BUF[position++] = 'L';
+  	  dec = Estimated_PoAssistiveTorqueL*Calcu_Pow(10,2);
+  	  for(int t=0; t<4; t++) {
+  	  	inter = (dec/Calcu_Pow(10,3-t))%10;
+  	  	USART_TX_BUF[position++] = inter1+48;
+  	  }
+  	}
+  	// LLxxxx
+  	if(SendItemFlag[2] == true) {
+      USART_TX_BUF[position++] = 'L';
+      USART_TX_BUF[position++] = 'L';
+      dec = Aver_ADC_value[LoadCellL]*Calcu_Pow(10,2);
+  	  for(int t=0; t<4; t++) {
+  	  	inter = (dec/Calcu_Pow(10,3-t))%10;
+  	  	USART_TX_BUF[position++] = inter1+48;
+  	  }      
+  	}
+  	// ALxxxxx
+  	if(SendItemFlag[3] == true) {
+      USART_TX_BUF[position++] = 'A';
+      USART_TX_BUF[position++] = 'L';
+      SignMark = Value_sign(angleActualA[pitchChan]);
+      if(SignMark == PosSign) {
+      	USART_TX_BUF[position++] = PosSign+48;
+      }
+      else {
+        USART_TX_BUF[position++] = NegSign+48;
+      }
+      dec = SignMark*angleActualA[pitchChan]*Calcu_Pow(10,2);
+  	  for(int t=0; t<4; t++) {
+  	  	inter = (dec/Calcu_Pow(10,3-t))%10;
+  	  	USART_TX_BUF[position++] = inter+48;
+  	  }      
+  	}
+  	// TRxxxx
+  	if(SendItemFlag[4] == true) {
+  	  USART_TX_BUF[position++] = 'T';
+  	  USART_TX_BUF[position++] = 'R';
+  	  dec = Estimated_PoAssistiveTorqueR*Calcu_Pow(10,2);
+  	  for(int t=0; t<4; t++) {
+  	  	inter = (dec/Calcu_Pow(10,3-t))%10;
+  	  	USART_TX_BUF[position++] = inter1+48;
+  	  }
+  	}
+  	// LRxxxx
+  	if(SendItemFlag[5] == true) {
+      USART_TX_BUF[position++] = 'L';
+      USART_TX_BUF[position++] = 'R';
+      dec = Aver_ADC_value[LoadCellR]*Calcu_Pow(10,2);
+  	  for(int t=0; t<4; t++) {
+  	  	inter = (dec/Calcu_Pow(10,3-t))%10;
+  	  	USART_TX_BUF[position++] = inter1+48;
+  	  }      
+  	}
+  	// ALxxxxx
+  	if(SendItemFlag[6] == true) {
+      USART_TX_BUF[position++] = 'A';
+      USART_TX_BUF[position++] = 'R';
+      SignMark = Value_sign(angleActualB[pitchChan]);
+      if(SignMark == PosSign) {
+      	USART_TX_BUF[position++] = PosSign+48;
+      }
+      else {
+        USART_TX_BUF[position++] = NegSign+48;
+      }
+      dec = SignMark*angleActualB[pitchChan]*Calcu_Pow(10,2);
+  	  for(int t=0; t<4; t++) {
+  	  	inter = (dec/Calcu_Pow(10,3-t))%10;
+  	  	USART_TX_BUF[position++] = inter+48;
+  	  }      
+  	}
+  	// Pxxxxx
+  	if(SendItemFlag[7] == true) {
+      USART_TX_BUF[position++] = 'P';
+      SignMark = Value_sign(angleActualC[pitchChan]);
+      if(SignMark == PosSign) {
+      	USART_TX_BUF[position++] = PosSign+48;
+      }
+      else {
+        USART_TX_BUF[position++] = NegSign+48;
+      }
+      // ±xxx.x
+      dec = SignMark*angleActualC[pitchChan]*Calcu_Pow(10,1);
+  	  for(int t=0; t<4; t++) {
+  	  	inter = (dec/Calcu_Pow(10,3-t))%10;
+  	  	USART_TX_BUF[position++] = inter+48;
+  	  }      
+  	}
+  	// Yxxxxx
+  	if(SendItemFlag[8] == true) {
+      USART_TX_BUF[position++] = 'Y';
+      SignMark = Value_sign(angleActualC[yawChan]);
+      if(SignMark == PosSign) {
+      	USART_TX_BUF[position++] = PosSign+48;
+      }
+      else {
+        USART_TX_BUF[position++] = NegSign+48;
+      }
+      // ±xx.xx
+      dec = SignMark*angleActualC[pitchChan]*Calcu_Pow(10,2);
+  	  for(int t=0; t<4; t++) {
+  	  	inter = (dec/Calcu_Pow(10,3-t))%10;
+  	  	USART_TX_BUF[position++] = inter+48;
+  	  }      
+  	}
+  	// Vxxxxx
+  	if(SendItemFlag[9] == true) {
+  	  USART_TX_BUF[position++] = 'V';
+  	  SignMark = Value_sign(TrunkFlexionVel);
+      if(SignMark == PosSign) {
+      	USART_TX_BUF[position++] = PosSign+48;
+      }
+      else {
+        USART_TX_BUF[position++] = NegSign+48;
+      }
+      // ±xxx.x
+      dec = SignMark*TrunkFlexionVel*Calcu_Pow(10,1);
+  	  for(int t=0; t<4; t++) {
+  	  	inter = (dec/Calcu_Pow(10,3-t))%10;
+  	  	USART_TX_BUF[position++] = inter+48;
+  	  }         	  
+  	}
+    Serial.print('\r');
+    Serial.flush();
+    Serial.print('\n');
+    Serial.flush();	
+  }
 }
 
 /**

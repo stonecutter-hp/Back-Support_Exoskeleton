@@ -62,7 +62,7 @@ void setup() {
   getADCaverage(1);
   getIMUangleL();
   PotentioLP1_InitValue = Aver_ADC_value[PotentioLP1];
-  SupportBeamAngleL_InitValue = angleActualA[0];
+  SupportBeamAngleL_InitValue = angleActualA[rollChan];
   delay(5); 
 }
 
@@ -71,7 +71,7 @@ void loop() {
   receiveDatafromPC();    // receive data from PC
   receivedDataPro();      // decomposite data received from PC
   if(ADC_update) {
-  	getADCaverage(1);       // get ADC value
+  	getADCaverage(1);     // get ADC value
   	ADC_update = false;
   }
   // getIMUangle();          // get rotation angle of both support beam and human back/link

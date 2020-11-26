@@ -74,7 +74,7 @@ extern float Estimated_ImuAssistiveTorqueR;
 extern float Estimated_PoAssistiveTorqueR;
 extern double PotentioLP1_InitValue;
 extern float SupportBeamAngleL_InitValue;
-
+extern float TrunkFlexionVel;
 /**
  * Control parameter initialization
  * Initial controller including command and controller parameters for PID controller
