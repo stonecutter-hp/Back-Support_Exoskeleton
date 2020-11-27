@@ -28,7 +28,6 @@ void IMU_Init(void)  {
     angleActualA[i] = 0;
     angleActualB[i] = 0;
     angleActualC[i] = 0;
-    angleActualC_p[i] = 0;
     angleTempA[i] = 0;
     angleTempB[i] = 0;
     angleTempC[i] = 0;
@@ -39,6 +38,7 @@ void IMU_Init(void)  {
     }
     for(int j=0; j<3; j++) {
       IMU_value_Prev[i][j] = 0;
+      angleActual_p[i][j] = 0;
     }
   }
 }
@@ -158,5 +158,3 @@ void MovingAverFilterIMUC(int cycles, int channel) {
   // store this time's results for next calculation
   IMU_value_Prev[3][channel] = angleActualC[channel];
 }
-
-

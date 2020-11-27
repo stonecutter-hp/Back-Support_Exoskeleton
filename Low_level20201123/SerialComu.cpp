@@ -13,7 +13,7 @@ bool SendPC_update = true;            // data sending to PC enable flag
 char USART_TX_BUF[USART_TX_LEN];      // sending buffer
 int USART_TX_STA = 0;                 // sending number flag
 // TLxxxxLLxxxxALxxxxxTRxxxxLRxxxxARxxxxxPxxxxxYxxxxxVxxxxx\r\n
-bool SendItemFlag[9] = [true, true, true, true, true, true, true, true, true,];
+bool SendItemFlag[9] = {true, true, true, true, true, true, true, true, true};
 
 /*********************************** Communication receiving data definition ************************************/
 float desiredTorqueL;    // desired motor torque of left motor
@@ -134,7 +134,7 @@ void sendDatatoPC(void) {
   	  dec = Estimated_PoAssistiveTorqueL*Calcu_Pow(10,2);
   	  for(int t=0; t<4; t++) {
   	  	inter = (dec/Calcu_Pow(10,3-t))%10;
-  	  	USART_TX_BUF[position++] = inter1+48;
+  	  	USART_TX_BUF[position++] = inter+48;
   	  }
   	}
   	// LLxxxx
@@ -144,7 +144,7 @@ void sendDatatoPC(void) {
       dec = Aver_ADC_value[LoadCellL]*Calcu_Pow(10,2);
   	  for(int t=0; t<4; t++) {
   	  	inter = (dec/Calcu_Pow(10,3-t))%10;
-  	  	USART_TX_BUF[position++] = inter1+48;
+  	  	USART_TX_BUF[position++] = inter+48;
   	  }      
   	}
   	// ALxxxxx
@@ -171,7 +171,7 @@ void sendDatatoPC(void) {
   	  dec = Estimated_PoAssistiveTorqueR*Calcu_Pow(10,2);
   	  for(int t=0; t<4; t++) {
   	  	inter = (dec/Calcu_Pow(10,3-t))%10;
-  	  	USART_TX_BUF[position++] = inter1+48;
+  	  	USART_TX_BUF[position++] = inter+48;
   	  }
   	}
   	// LRxxxx
@@ -181,7 +181,7 @@ void sendDatatoPC(void) {
       dec = Aver_ADC_value[LoadCellR]*Calcu_Pow(10,2);
   	  for(int t=0; t<4; t++) {
   	  	inter = (dec/Calcu_Pow(10,3-t))%10;
-  	  	USART_TX_BUF[position++] = inter1+48;
+  	  	USART_TX_BUF[position++] = inter+48;
   	  }      
   	}
   	// ALxxxxx
