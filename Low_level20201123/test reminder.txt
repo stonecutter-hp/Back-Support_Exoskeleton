@@ -1,4 +1,5 @@
 test timer interrupt
+test communication frequency
 test velocity quality
 test reference torque generation
 test if communication protocol is correct
