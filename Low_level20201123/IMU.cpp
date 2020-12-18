@@ -9,11 +9,18 @@
 unsigned char angleTempA[6];   // store the raw data get from IMU A(addr 0x50)
 unsigned char angleTempB[6];   // store the raw data get from IMU B(addr 0x51)
 unsigned char angleTempC[6];   // store the raw data get from IMU C(addr 0x52)
+unsigned char velTempA[6];     // store the raw data get from IMU A(addr 0x50)
+unsigned char velTempB[6];     // store the raw data get from IMU B(addr 0x51)
+unsigned char velTempC[6];     // store the raw data get from IMU C(addr 0x52)
 
 float angleActualA[3];         // store the angle of IMU A(addr 0x50) for calculation
 float angleActualB[3];         // store the angle of IMU B(addr 0x51) for calculation
 float angleActualC[3];         // store the angle of IMU C(addr 0x52) for calculation
 float angleActual_p[3][3];     // store the last time angle of IMU C(addr 0x52) for calculation of velocity
+
+float velActualA[3];           // store the velocity of IMU A(addr 0x50)
+float velActualB[3];           // store the velocity of IMU B(addr 0x51)
+float velActualC[3];           // store the velocity of IMU C(addr 0x52)
 
 double IMUA_value_filtered[3][IMUFilterCycles];  // store data from IMUA for filtering
 double IMUB_value_filtered[3][IMUFilterCycles];  // store data from IMUB for filtering
@@ -28,9 +35,11 @@ void IMU_Init(void)  {
     angleActualA[i] = 0;
     angleActualB[i] = 0;
     angleActualC[i] = 0;
-    angleTempA[i] = 0;
-    angleTempB[i] = 0;
-    angleTempC[i] = 0;
+    velActualA[i] = 0;
+    velActualB[i] = 0;
+    velActualC[i] = 0;
+
+
     for(int t=0; t<IMUFilterCycles; t++) {
       IMUA_value_filtered[i][t] = 0;
       IMUB_value_filtered[i][t] = 0;
@@ -40,6 +49,14 @@ void IMU_Init(void)  {
       IMU_value_Prev[i][j] = 0;
       angleActual_p[i][j] = 0;
     }
+  }
+  for(int i=0;i<6;i++) {
+    angleTempA[i] = 0;
+    angleTempB[i] = 0;
+    angleTempC[i] = 0;
+    velTempA[i] = 0;
+    velTempB[i] = 0;
+    velTempC[i] = 0;
   }
 }
 
@@ -55,6 +72,16 @@ void getIMUangleL(void) {
   angleActualA[rollChan] = (float)CharToShort(&angleTempA[0])/32768*180;   // roll A
   angleActualA[pitchChan] = (float)CharToShort(&angleTempA[2])/32768*180;  // pitch A
   angleActualA[yawChan] = (float)CharToShort(&angleTempA[4])/32768*180;    // yaw A
+}
+
+/**
+ * Get angular velocity from first IMU
+ */
+void getIMUvelL(void) {
+  IICreadBytes(AddrIMUA,0x37,6,&velTempA[0]);  // read angular velocity from IMUA 
+  velActualA[rollChan] = (float)CharToShort(&velTempA[0])/32768*2000;   // roll A
+  velActualA[pitchChan] = (float)CharToShort(&velTempA[2])/32768*2000;  // pitch A
+  velActualA[yawChan] = (float)CharToShort(&velTempA[4])/32768*2000;    // yaw A  
 }
 
 /**
@@ -74,6 +101,16 @@ void getIMUangleR(void) {
 }
 
 /**
+ * Get angular velocity from second IMU
+ */
+void getIMUvelR(void) {
+  IICreadBytes(AddrIMUB,0x37,6,&velTempB[0]);  // read angular velocity from IMUB
+  velActualB[rollChan] = (float)CharToShort(&velTempB[0])/32768*2000;   // roll B
+  velActualB[pitchChan] = (float)CharToShort(&velTempB[2])/32768*2000;  // pitch B
+  velActualB[yawChan] = (float)CharToShort(&velTempB[4])/32768*2000;    // yaw B  
+}
+
+/**
  * Get euler angle from third IMU
  */
 void getIMUangleT(void) {
@@ -89,16 +126,38 @@ void getIMUangleT(void) {
   angleActualC[yawChan] = (float)CharToShort(&angleTempC[4])/32768*180;    // yaw A
 }
 
+/**
+ * Get angular velocity from third IMU
+ */
+void getIMUvelT(void) {
+  IICreadBytes(AddrIMUC,0x37,6,&velTempC[0]);  // read angular velocity from IMUC 
+  velActualC[rollChan] = (float)CharToShort(&velTempC[0])/32768*2000;   // roll C
+  velActualC[pitchChan] = (float)CharToShort(&velTempC[2])/32768*2000;  // pitch C
+  velActualC[yawChan] = (float)CharToShort(&velTempC[4])/32768*2000;    // yaw C  
+}
+
 
 /**
- * Get euler angle from two IMU
+ * Get euler angle from all IMUs
  */
 void getIMUangle(void) {
-	getIMUangleL();
-	delay(1);
-	getIMUangleR();
-	delay(1);
-	getIMUangleT();
+  getIMUangleL();
+  delay(1);
+  getIMUangleR();
+  delay(1);
+  getIMUangleT();
+}
+
+/**
+ * Get angular velocity from all IMUs
+ */
+void getIMUvel(void) {
+  getIMUvelL();
+  delay(1);
+  getIMUvelR();
+  delay(1);
+  getIMUvelT();
+  delay(1);
 }
 
 
@@ -114,7 +173,7 @@ void MovingAverFilterIMUA(int cycles, int channel) {
   angleActualA[channel] = IMU_value_Prev[1][channel] + (angleActualA[channel]-IMUA_value_filtered[channel][0])/cycles;
   // update the data in the moving window
   for(int j=0; j<cycles-1; j++) {
-  	IMUA_value_filtered[channel][j] = IMUA_value_filtered[channel][j+1];
+    IMUA_value_filtered[channel][j] = IMUA_value_filtered[channel][j+1];
   }
   IMUA_value_filtered[channel][cycles-1] = interValue;
   // store this time's results for next calculation
@@ -133,7 +192,7 @@ void MovingAverFilterIMUB(int cycles, int channel) {
   angleActualB[channel] = IMU_value_Prev[2][channel] + (angleActualB[channel]-IMUB_value_filtered[channel][0])/cycles;
   // update the data in the moving window
   for(int j=0; j<cycles-1; j++) {
-  	IMUB_value_filtered[channel][j] = IMUB_value_filtered[channel][j+1];
+    IMUB_value_filtered[channel][j] = IMUB_value_filtered[channel][j+1];
   }
   IMUB_value_filtered[channel][cycles-1] = interValue;
   // store this time's results for next calculation
@@ -152,7 +211,7 @@ void MovingAverFilterIMUC(int cycles, int channel) {
   angleActualC[channel] = IMU_value_Prev[3][channel] + (angleActualC[channel]-IMUC_value_filtered[channel][0])/cycles;
   // update the data in the moving window
   for(int j=0; j<cycles-1; j++) {
-  	IMUC_value_filtered[channel][j] = IMUC_value_filtered[channel][j+1];
+    IMUC_value_filtered[channel][j] = IMUC_value_filtered[channel][j+1];
   }
   IMUC_value_filtered[channel][cycles-1] = interValue;
   // store this time's results for next calculation

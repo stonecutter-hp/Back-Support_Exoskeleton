@@ -17,14 +17,22 @@
 #define AddrIMUC  0x52
 #define IMU_UpdateRate 200            // Hz
 #define IMUFilterCycles 6
+
 extern unsigned char angleTempA[6];   // store the raw data get from IMU A(addr 0x50)
 extern unsigned char angleTempB[6];   // store the raw data get from IMU B(addr 0x51)
 extern unsigned char angleTempC[6];   // store the raw data get from IMU C(addr 0x52)
+extern unsigned char velTempA[6];     // store the raw data get from IMU A(addr 0x50)
+extern unsigned char velTempB[6];     // store the raw data get from IMU B(addr 0x51)
+extern unsigned char velTempC[6];     // store the raw data get from IMU C(addr 0x52)
 
 extern float angleActualA[3];         // store the angle of IMU A(addr 0x50) for calculation
 extern float angleActualB[3];         // store the angle of IMU B(addr 0x51) for calculation
 extern float angleActualC[3];         // store the angle of IMU C(addr 0x52) for calculation
 extern float angleActual_p[3][3];     // store the last time angle of IMU C(addr 0x52) for calculation of velocity
+
+extern float velActualA[3];           // store the velocity of IMU A(addr 0x50)
+extern float velActualB[3];           // store the velocity of IMU B(addr 0x51)
+extern float velActualC[3];           // store the velocity of IMU C(addr 0x52)
 
 extern double IMUA_value_filtered[3][IMUFilterCycles];  // store data from IMUA for filtering
 extern double IMUB_value_filtered[3][IMUFilterCycles];  // store data from IMUB for filtering
@@ -52,9 +60,29 @@ void getIMUangleR(void);
 void getIMUangleT(void);
 
 /**
- * Get euler angle from two IMU
+ * Get euler angle from all IMUs
  */
 void getIMUangle(void);
+
+/**
+ * Get angular velocity from first IMU
+ */
+void getIMUvelL(void);
+
+/**
+ * Get angular velocity from second IMU
+ */
+void getIMUvelR(void);
+
+/**
+ * Get angular velocity from third IMU
+ */
+void getIMUvelT(void);
+
+/**
+ * Get angular velocity from all IMUs
+ */
+void getIMUvel(void);
 
 /**
  * Mean Moving filter for the IMUA feedback

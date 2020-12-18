@@ -40,8 +40,8 @@ typedef struct
 extern PID pidL;  // control parameter of left motor
 extern PID pidR;  // control parameter of right motor
 // the desired torque from PC is defined in communication receiving parameter part
-extern uint16_t PWM_commandL;   // range: 0.1*PWMperiod_L~0.9*PWMperiod_L
-extern uint16_t PWM_commandR;   // range: 0.1*PWMperiod_R~0.9*PWMperiod_R
+extern int16_t PWM_commandL;   // range: 0.1*PWMperiod_L~0.9*PWMperiod_L
+extern int16_t PWM_commandR;   // range: 0.1*PWMperiod_R~0.9*PWMperiod_R
 extern bool Control_update;  // control update flag
 // Previously workable Kp/Ki/Kd for test bench with large torsion spring:
 // 0.58/0/0.28  0.68/0/0.3

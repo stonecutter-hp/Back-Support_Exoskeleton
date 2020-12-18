@@ -45,7 +45,7 @@ extern int inChar;
  * Mxx: Detected user motion mode
  * Notice: With successful receiving process, USART_RX_STA indicates
  *         total reveived char number exclude '\r'; and they are stored
- *         in USART_RX_BUF[0~USART_RX_STA-1], i.e., TLxxxxxTRxxxxxMxx 
+ *         in USART_RX_BUF[0~USART_RX_STA-1], i.e., TLxxxxTRxxxxMxx 
  */
 void receiveDatafromPC(void);
 

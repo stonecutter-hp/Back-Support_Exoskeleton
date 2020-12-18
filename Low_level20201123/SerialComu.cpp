@@ -35,7 +35,7 @@ int inChar;
  * Mxx: Detected user motion mode
  * Notice: With successful receiving process, USART_RX_STA indicates
  *         total reveived char number exclude '\r'; and they are stored
- *         in USART_RX_BUF[0~USART_RX_STA-1], i.e., TLxxxxxTRxxxxxMxx 
+ *         in USART_RX_BUF[0~USART_RX_STA-1], i.e., TLxxxxTRxxxxMxx 
  */
 void receiveDatafromPC(void) {
   while(Serial.available() && receiveContinuing) {
@@ -44,7 +44,7 @@ void receiveDatafromPC(void) {
     // the string should end with \r
     if(inChar == '\r') {
       receiveCompleted = true;       // correct receiving cycle
-      receiveContinuing = false;     //finish this receiving cycle
+      receiveContinuing = false;     // finish this receiving cycle
     }
     else {
       if(USART_RX_STA < USART_REC_LEN) {
@@ -101,7 +101,7 @@ void receivedDataPro(void) {
     }    
 
     // Here add more process for data decomposition ...
-
+    
   }
 
 }
@@ -128,7 +128,7 @@ void sendDatatoPC(void) {
   position = 0;
   if(SendPC_update == true) {
   	// TLxxxx
-  	if(SendItemFlag[1] == true) {
+  	if(SendItemFlag[0] == true) {
   	  USART_TX_BUF[position++] = 'T';
   	  USART_TX_BUF[position++] = 'L';
   	  dec = Estimated_PoAssistiveTorqueL*Calcu_Pow(10,2);
@@ -138,7 +138,7 @@ void sendDatatoPC(void) {
   	  }
   	}
   	// LLxxxx
-  	if(SendItemFlag[2] == true) {
+  	if(SendItemFlag[1] == true) {
       USART_TX_BUF[position++] = 'L';
       USART_TX_BUF[position++] = 'L';
       dec = Aver_ADC_value[LoadCellL]*Calcu_Pow(10,2);
@@ -148,7 +148,7 @@ void sendDatatoPC(void) {
   	  }      
   	}
   	// ALxxxxx
-  	if(SendItemFlag[3] == true) {
+  	if(SendItemFlag[2] == true) {
       USART_TX_BUF[position++] = 'A';
       USART_TX_BUF[position++] = 'L';
       SignMark = Value_sign(angleActualA[pitchChan]);
@@ -165,7 +165,7 @@ void sendDatatoPC(void) {
   	  }      
   	}
   	// TRxxxx
-  	if(SendItemFlag[4] == true) {
+  	if(SendItemFlag[3] == true) {
   	  USART_TX_BUF[position++] = 'T';
   	  USART_TX_BUF[position++] = 'R';
   	  dec = Estimated_PoAssistiveTorqueR*Calcu_Pow(10,2);
@@ -175,7 +175,7 @@ void sendDatatoPC(void) {
   	  }
   	}
   	// LRxxxx
-  	if(SendItemFlag[5] == true) {
+  	if(SendItemFlag[4] == true) {
       USART_TX_BUF[position++] = 'L';
       USART_TX_BUF[position++] = 'R';
       dec = Aver_ADC_value[LoadCellR]*Calcu_Pow(10,2);
@@ -185,7 +185,7 @@ void sendDatatoPC(void) {
   	  }      
   	}
   	// ALxxxxx
-  	if(SendItemFlag[6] == true) {
+  	if(SendItemFlag[5] == true) {
       USART_TX_BUF[position++] = 'A';
       USART_TX_BUF[position++] = 'R';
       SignMark = Value_sign(angleActualB[pitchChan]);
@@ -202,7 +202,7 @@ void sendDatatoPC(void) {
   	  }      
   	}
   	// Pxxxxx
-  	if(SendItemFlag[7] == true) {
+  	if(SendItemFlag[6] == true) {
       USART_TX_BUF[position++] = 'P';
       SignMark = Value_sign(angleActualC[pitchChan]);
       if(SignMark == PosSign) {
@@ -219,7 +219,7 @@ void sendDatatoPC(void) {
   	  }      
   	}
   	// Yxxxxx
-  	if(SendItemFlag[8] == true) {
+  	if(SendItemFlag[7] == true) {
       USART_TX_BUF[position++] = 'Y';
       SignMark = Value_sign(angleActualC[yawChan]);
       if(SignMark == PosSign) {
@@ -236,7 +236,7 @@ void sendDatatoPC(void) {
   	  }      
   	}
   	// Vxxxxx
-  	if(SendItemFlag[9] == true) {
+  	if(SendItemFlag[8] == true) {
   	  USART_TX_BUF[position++] = 'V';
   	  SignMark = Value_sign(TrunkFlexionVel);
       if(SignMark == PosSign) {
@@ -252,6 +252,8 @@ void sendDatatoPC(void) {
   	  	USART_TX_BUF[position++] = inter+48;
   	  }         	  
   	}
+    Serial.print(USART_TX_BUF);
+    Serial.flush();
     Serial.print('\r');
     Serial.flush();
     Serial.print('\n');

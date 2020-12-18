@@ -1,6 +1,19 @@
-test timer interrupt
-test communication frequency
-test velocity quality
-test reference torque generation
+test timer interrupt   √
 test if communication protocol is correct
+  MCU sending √
+  MCU receiving √
+  PC sending 
+  PC recieving
+test PWM producing  √
+test communication frequency
+test reference torque generation
 test direct acquire angular velocity from IMU
+test velocity quality
+
+Testing Log:
+20201217
+Problem
+  limit PWM duty cycle  
+  The PWM duty cycle (defined as a uint16_t) for 0-500 will turn to be a very large number, so the -500 actually >> 500
+Solution
+  Define PWM_commandL/PWM_commandR as int16_t

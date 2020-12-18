@@ -8,8 +8,8 @@
 PID pidL;  // control parameter of left motor
 PID pidR;  // control parameter of right motor
 // the desired torque from PC is defined in communication receiving parameter part
-uint16_t PWM_commandL;   // range: 0.1*PWMperiod_L~0.9*PWMperiod_L
-uint16_t PWM_commandR;   // range: 0.1*PWMperiod_R~0.9*PWMperiod_R
+int16_t PWM_commandL;   // range: 0.1*PWMperiod_L~0.9*PWMperiod_L
+int16_t PWM_commandR;   // range: 0.1*PWMperiod_R~0.9*PWMperiod_R
 bool Control_update = true;  // control update flag
 
 float Estimated_ImuAssistiveTorqueL;
@@ -44,7 +44,7 @@ void Control_Init(void) {
   pidL.Tcontrol = TIM3_OverflowValue;  // corresopnding to timer3, unit:us while prescale coefficient = 72
   pidL.Kp = KP_L;                      // should be adjusted
   pidL.Td = pidL.Tcontrol*KD_L/KP_L;   // should be adjusted, unit:us
-  pidL.Ti = pidL.Tcontrol*KP_L/KI_R;   // should be adjusted, unit:us
+  pidL.Ti = pidL.Tcontrol*KP_L/KI_L;   // should be adjusted, unit:us
   
   pidL.Err = 0;
   pidL.Err_p = 0;
@@ -122,7 +122,7 @@ void Control(uint8_t mode) {
     PoutL = pidL.Kp*dk1L;
     // I
     IoutL = (pidL.Kp*pidL.Tcontrol)/pidL.Ti;
-    IoutL = IoutL*pidL.Err;
+    IoutL = IoutL*pidL.Err*0;
     // D
     dk2L = pidL.Err+pidL.Err_pp-2*pidL.Err_p;
     DoutL = (pidL.Kp*pidL.Td)/pidL.Tcontrol;
@@ -140,6 +140,13 @@ void Control(uint8_t mode) {
     }
     pidL.currCurrent = Value_sign(pidL.currTa)*pidL.currTa/GearRatio/MotorCurrentConstant;
     pidL.currpwm = pidL.pwm_cycle*(pidL.currCurrent*0.8/MotorMaximumCurrent+0.1);
+    // set limitation of PWM duty cycle
+    if(pidL.currpwm > 0.9*pidL.pwm_cycle) {
+      pidL.currpwm = 0.9*pidL.pwm_cycle;
+    }
+    else if(pidL.currpwm < 0.1*pidL.pwm_cycle) {
+      pidL.currpwm = 0.1*pidL.pwm_cycle;
+    }
     // determine motor rotation direction
     if(pidL.currTa >= 0) {
     	digitalWrite(MotorRotationL,LOW);
@@ -179,6 +186,13 @@ void Control(uint8_t mode) {
     }
     pidR.currCurrent = Value_sign(pidR.currTa)*pidR.currTa/GearRatio/MotorCurrentConstant;
     pidR.currpwm = pidR.pwm_cycle*(pidR.currCurrent*0.8/MotorMaximumCurrent+0.1);
+    // set limitation of PWM duty cycle
+    if(pidR.currpwm > 0.9*pidR.pwm_cycle) {
+      pidR.currpwm = 0.9*pidR.pwm_cycle;
+    }
+    else if(pidR.currpwm < 0.1*pidR.pwm_cycle) {
+      pidR.currpwm = 0.1*pidR.pwm_cycle;
+    }
     // determine motor rotation direction
     if(pidR.currTa >= 0) {
     	digitalWrite(MotorRotationR,LOW);

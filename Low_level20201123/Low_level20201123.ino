@@ -68,22 +68,25 @@ void setup() {
 
 
 void loop() {
-  receiveDatafromPC();    // receive data from PC
-  receivedDataPro();      // decomposite data received from PC
+  receiveDatafromPC();         // receive data from PC
+  receivedDataPro();           // decomposite data received from PC
   if(ADC_update) {
-  	getADCaverage(1);     // get ADC value
+  	getADCaverage(1);          // get ADC value
   	ADC_update = false;
   }
-  // getIMUangle();          // get rotation angle of both support beam and human back/link
-  getIMUangleL();         // get support beam rotation angle from IMU
-  sensorFeedbackPro();    // processing sensor feedback for closed-loop control 
-  // MovingAverageFilter(2);  // Averaged moving filtered
+  // getIMUangle();            // get rotation angle of both support beam and human back/link
+  getIMUangleL();              // get support beam rotation angle from IMU
+  sensorFeedbackPro();         // processing sensor feedback for closed-loop control 
+  // MovingAverageFilter(2);   // Averaged moving filtered
   if(Control_update) {
-  	Control(1);           // calculate controlled command: PWM duty cycles
+  	Control(1);                // calculate controlled command: PWM duty cycles
   	Control_update = false;
   }
   if(SendPC_update) {
-  	sendDatatoPC();       // send sensor data to PC and allow next receiving cycle
-  	SendPC_update = false;
+  	sendDatatoPC();            // send sensor data to PC and allow next receiving cycle
+    SendPC_update = false;
+    receiveContinuing = true;  // Enable next time's recieving
+    USART_RX_STA = 0;          // Return to zero for receiving buffer
+    receiveCompleted = false;  // Mark this correct receiving infomation is used up 
   } 
 }
