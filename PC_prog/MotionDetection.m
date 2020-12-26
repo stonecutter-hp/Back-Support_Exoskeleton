@@ -29,7 +29,7 @@ end
 % PC calculation results
 AlphaDot = (P.AlphaDot(end) + P.adotPV(end))/2; 
 % yaw angle
-P.BetaMean = movemean(P.angleY,5);    % First moving mean is acquired for raw data
+P.BetaMean = movmean(P.angleY,5);    % First moving mean is acquired for raw data
 Beta = P.BetaMean(end);               % Obtain the beta for this time's detection
 
 
