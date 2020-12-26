@@ -17,6 +17,10 @@ McuSerial.OutputBufferSize = 512;
 McuSerial.Terminator = 'CR/LF';
 McuSerial.DataTerminalReady='on';
 McuSerial.RequestToSend='off';
+
+% McuSerial.BytesAvailableFcnMode = 'terminator';    %中断触发事件
+% McuSerial.BytesAvailableFcnCount = 6;              %当缓冲区数据
+% McuSerial.BytesAvailableFcn = @ReceiveData;        %调用回调函数
 % store the serial port configuration
 P.config{1,1} = McuSerial;
 % try to open the assigned MCU&PC communication port
