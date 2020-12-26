@@ -3,7 +3,7 @@ function DataSaving()
 global P;
 %% Saving program time information
 assignin('base','TimeAll',P.TimeAll);
-
+assignin('base','TimeTrans',P.TransTime);
 %% Saving data from MCU
 assignin('base','torqueTL',P.torqueTL);
 assignin('base','forceLL',P.forceLL);

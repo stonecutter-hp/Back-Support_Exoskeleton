@@ -2,7 +2,7 @@ function P = Set_Parameters()
 % Notice to ensure the unit of angle is rad/deg first
 %% Main program setting information
 P.McuPort = 'COM4';     % serial port of MCU&PC communication
-P.MainFreq = 200;       % main program running frequency (Hz)
+P.MainFreq = 100;       % main program running frequency (Hz)
 P.MaxRunTime = 5;       % main program running time (s)
 P.d2r = pi/180;         % deg to rad 
 %% Configuration information
@@ -11,8 +11,8 @@ P.d2r = pi/180;         % deg to rad
 P.config = cell(2,1);     
 
 %% For time information saving in TimerCallback
-P.TransTime = 0;   % transition variable for record the starting time of every timecallback running loop
-P.TimeAll = [];
+P.TransTime = [];   % time of every send running loop
+P.TimeAll = [];     % time point of every loop
 
 %% For sensor information direct from MCU
 P.RecItem = [1, 1, 1, 1, 1, 1, 1, 1, 1];
@@ -24,6 +24,7 @@ P.forceLR = [];     % right cable force feedback
 P.angleAR = [];     % angle of right thigh
 P.angleP = [];      % pitch angle of turnk bending motion
 P.angleY = [];      % yaw angle of trunk bending motion
+% Can be obtained directly from IMU, can also be calculated on PC or on MCU
 P.adotPV = [];      % angular velocity of trunk motion in pitch direction from MCU
 
 %% For high-level strategy of motion phase detection and desired torque generation information saving
@@ -58,8 +59,18 @@ P.VirAlphadot0 = 0*P.d2r;   % deg/s*d2r ->rad/s Virtual alpha0 dot
 % P.VirAlphadot0 = P.AlphaDot_Thre*P.d2r;
 
 %% For communication protocol
+% Delay feedback refers to the feedback which is not following a recieving
+% process from PC to MCU
+% When enable delay feedback, the control and send loop will run as long as
+% PC recieve correct feedback, otherwise, the control/send loop will only
+% run when MCU just recieved the last times' PC command and control/send
+% loop will run if over P.MaxDelay loop no command is recieved from PC
 P.ReceiveDataNum = 58;   % total number of char receive from MCU
 P.SendDataNum = 14;      % total number of char send to MCU 
+P.SwitchFlag = '1';      % mark if new recieving is after recieving newest command from PC
+P.DelayNumber = 0;       % number of no-newest feedback cycle to guarantee communication correction
+P.MaxDelay = 5;          % maximum allowable number of allowable no-newest feedback cycle 
+P.DelayEnable = 1;       % enable flag of delay feedback detection
 
 %% For biomechanical model parameter setting
 % refer to the P1 draft   2020-0331

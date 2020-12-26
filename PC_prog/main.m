@@ -9,10 +9,8 @@ global P;
 disp('Program Starts !');
 
 P = Set_Parameters();              % set necessary parameters
-McuPort = P.McuPort;               % Serial Port number for MCU and PC communication
-SerialPorts_Init(McuPort);       % Initialize Serial Port
 MainFreq = P.MainFreq;             % Set program frequency
-Timer_Init(MainFreq);            % Initialize timer
+Timer_Init(MainFreq);              % Initialize timer
 
 
 

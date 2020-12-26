@@ -14,14 +14,15 @@ AlphaDot_Thre = P.AlphaDot_Thre;     % deg/s
 Beta_Thre = P.Beta_Thre;             % deg
 %% Calculate the referenced information for both motion detection and desired torque generation
 % Flexion bending angle of trunk
-P.AlphaMean = movemean(P.angleP,5);   % First moving mean is acquired for raw data
+% P.AlphaMean = movmean(P.angleP,5);    % First moving mean is acquired for raw data
+P.AlphaMean = P.angleP;
 Alpha = P.AlphaMean(end);             % Obtain the alpha for this time's detection
 % Flexion bending angular velocity of trunk
 if (size(P.adotPV,2) == 1)
     P.AlphaDot = P.adotPV;            % Fisrt cycle's alpha dot
 else
     % Calculate the alpha dot again in PC
-    TransAlphaDot = (P.AlphaMean(end)-P.AlphaMean(end-1))/(P.TimeAll(end)-P.TimeAll(end-1));
+    TransAlphaDot = (P.AlphaMean(end)-P.AlphaMean(end-1))/(P.TransTime(end)-P.TransTime(end-1));
     P.AlphaDot = [P.AlphaDot, TransAlphaDot];
 end
 % Obtain the alpha dot for this time's detection based on MCU feedback and

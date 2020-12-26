@@ -4,7 +4,7 @@ function Send_Data()
 % PC to MCU Protocol: TLxxxxTRxxxxMxx\r (0x0D)
 global P;
 % Here we mainly want to send mode and desired torque to MCU
-McuPort = P.config{1,1};
+McuSerial = P.config{1,1};
 MotionMode = P.MotionMode(:,end); 
 DesiredTorque = roundn(P.DesiredTorque(:,end),-2);  % Keep it to two decimal places
 
@@ -27,13 +27,13 @@ else
     TransState = [TransState,num2str(DesiredTorque(2)*100)];
 end
 
-TransState = [TransState,'M',num2str(MotionMode(1)),num2str(MotionMode(2)),char(13)];
+TransState = [TransState,'M',num2str(MotionMode(1)),num2str(MotionMode(2))];
 
 %% Send data to serial port
-flushoutput(McuPort);      % flush the output buffer
-fprintf(McuPort,TransState);    % send the data
+flushoutput(McuSerial);      % flush the output buffer
+fprintf(McuSerial,TransState);    % send the data
 % wait until data are all sent
-while McuPort.BytesToOutput ~= 0  
+while McuSerial.BytesToOutput ~= 0  
 end
 
 end

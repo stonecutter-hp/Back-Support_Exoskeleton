@@ -66,5 +66,4 @@ Alpha0 = P.VirAlpha0;
 AlphaDot0 = P.VirAlphadot0;
 DesiredTorque = [0.5; 0.5]*(Kp*(Alpha-Alpha0)+Kv*(AlphaDot-AlphaDot0));
 
-
 end

@@ -12,7 +12,7 @@ else                                           % if there exists one
 end
 % set the properties of the serial port
 McuSerial.BaudRate = 115200;
-McuSerial.InputBufferSize = 100000;
+McuSerial.InputBufferSize = 512;
 McuSerial.OutputBufferSize = 512;
 McuSerial.Terminator = 'CR/LF';
 McuSerial.DataTerminalReady='on';
