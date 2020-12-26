@@ -18,7 +18,7 @@
 #define TIM3_OverflowValue 1000  // 1Mhz/1000 = 1kHz
 #define TIM4_CH3 3               // timer4 channel3
 #define TIM4preScale 72          // 72MHz/72 = 1MHz
-#define TIM4_OverflowValue 2500  // 1Mhz/5000 = 400Hz
+#define TIM4_OverflowValue 2500  // 1Mhz/5000 = 200Hz
 
 /**************************************** PWM related timers parameter definition ********************************/
 // Timer1_CH1(PA8) is assigned for the first channel PWM for left motor

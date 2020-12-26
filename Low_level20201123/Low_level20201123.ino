@@ -85,8 +85,8 @@ void loop() {
   if(SendPC_update) {
   	sendDatatoPC();            // send sensor data to PC and allow next receiving cycle
     SendPC_update = false;
-    receiveContinuing = true;  // Enable next time's recieving
-    USART_RX_STA = 0;          // Return to zero for receiving buffer
     receiveCompleted = false;  // Mark this correct receiving infomation is used up 
-  } 
+  }
+    receiveContinuing = true;  // Enable next time's recieving
+    USART_RX_STA = 0;          // Return to zero for receiving buffer 
 }

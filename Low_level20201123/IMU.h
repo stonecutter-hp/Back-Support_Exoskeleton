@@ -18,6 +18,8 @@
 #define IMU_UpdateRate 200            // Hz
 #define IMUFilterCycles 6
 
+extern unsigned char yaw2zero[2];  // The command for IMU yaw angle return to zero (only for 6-axis algorithm)
+
 extern unsigned char angleTempA[6];   // store the raw data get from IMU A(addr 0x50)
 extern unsigned char angleTempB[6];   // store the raw data get from IMU B(addr 0x51)
 extern unsigned char angleTempC[6];   // store the raw data get from IMU C(addr 0x52)
@@ -83,6 +85,21 @@ void getIMUvelT(void);
  * Get angular velocity from all IMUs
  */
 void getIMUvel(void);
+
+/**
+ * Yaw angle set to zero for first IMU
+ */
+void set2zeroL(void);
+
+/**
+ * Yaw angle set to zero for second IMU
+ */
+void set2zeroR(void);
+
+/**
+ * Yaw angle set to zero for third IMU
+ */
+void set2zeroT(void);
 
 /**
  * Mean Moving filter for the IMUA feedback

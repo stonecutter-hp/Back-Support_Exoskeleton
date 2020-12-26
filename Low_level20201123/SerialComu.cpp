@@ -10,6 +10,7 @@ int USART_RX_STA = 0;                 // recieving number flag
 bool receiveCompleted = false;        // receiving completing flag
 bool receiveContinuing = false;       // receiving continuous flag to avoid the multiple data format in buffer: xx\r\n+xx\r\n+xx...
 bool SendPC_update = true;            // data sending to PC enable flag
+char SwitchFlag = '0';                // mark if new command have recieved before sending data to PC
 char USART_TX_BUF[USART_TX_LEN];      // sending buffer
 int USART_TX_STA = 0;                 // sending number flag
 // TLxxxxLLxxxxALxxxxxTRxxxxLRxxxxARxxxxxPxxxxxYxxxxxVxxxxx\r\n
@@ -25,37 +26,46 @@ float desiredTorqueR;    // desired motor torque of right motor
 uint8_t mode;            // detected motion mode
 // 1-left; 2-right; 0-none
 uint8_t side;            // Asymmetric side
-int inChar;
+char inChar1;
+char inChar2;
 
 
 /**
- * @ PC to MCU Protocol: TLxxxxTRxxxxMxx\r (0x0D)
+ * @ PC to MCU Protocol: TLxxxxTRxxxxMxx\r\n (0x0D,0x0A)
  * TLxxxx: Reference torque for left transmission system
  * TRxxxx: Reference torque for right transmission system
  * Mxx: Detected user motion mode
  * Notice: With successful receiving process, USART_RX_STA indicates
- *         total reveived char number exclude '\r'; and they are stored
+ *         total reveived char number exclude '\r\n'; and they are stored
  *         in USART_RX_BUF[0~USART_RX_STA-1], i.e., TLxxxxTRxxxxMxx 
  */
 void receiveDatafromPC(void) {
   while(Serial.available() && receiveContinuing) {
-    inChar = Serial.read();
+    inChar1 = Serial.read();
     delayMicroseconds(20);  // delay to guarantee recieving correction under high buardrate
     // the string should end with \r
-    if(inChar == '\r') {
-      receiveCompleted = true;       // correct receiving cycle
-      receiveContinuing = false;     // finish this receiving cycle
+    if(inChar1 == '\r') {
+      inChar2 = Serial.read();
+      if(inChar2 == '\n') {
+        receiveCompleted = true;       // correct receiving cycle
+        receiveContinuing = false;     // finish this receiving cycle
+      }
+      else {
+        USART_RX_STA = 0;
+        receiveCompleted = false;    // incorrect receiving cycle
+        receiveContinuing = false;   // finish this receiving cycle
+      }      
     }
     else {
       if(USART_RX_STA < USART_REC_LEN) {
-        USART_RX_BUF[USART_RX_STA] = inChar;
+        USART_RX_BUF[USART_RX_STA] = inChar1;
         USART_RX_STA++;
       }
       // exceed the buffer size
       else {
         USART_RX_STA = 0;
         receiveCompleted = false;    // incorrect receiving cycle
-        receiveContinuing = false;   //finish this receiving cycle
+        receiveContinuing = false;   // finish this receiving cycle
       }
     }
   }
@@ -64,7 +74,7 @@ void receiveDatafromPC(void) {
 
 /**
  * Split the data from PC to number
- * PC to MCU Protocol: TLxxxxTRxxxxMxx\r (0x0D)
+ * PC to MCU Protocol: TLxxxxTRxxxxMxx\r\n (0x0D,0x0A)
  */
 void receivedDataPro(void) {
   // Remind that the recieved data are stored in receiving buffer USART_RX_BUF[0~USART_RX_STA-1]: TLxxxxTRxxxxMxx
@@ -99,25 +109,28 @@ void receivedDataPro(void) {
     	mode = USART_RX_BUF[13]-48;
     	side = USART_RX_BUF[14]-48;
     }    
-
     // Here add more process for data decomposition ...
     
+  }
+  // Mark unsuccessful command receive from PC
+  else if(USART_RX_STA != RevievCharNum) {
+    receiveCompleted = false;
   }
 
 }
 
 /**
- * @ MCU to PC protocol: TLxxxxLLxxxxALxxxxxTRxxxxLRxxxxARxxxxxPxxxxxYxxxxxVxxxxx\r\n
+ * @ MCU to PC protocol: MxTLxxxxLLxxxxALxxxxxTRxxxxLRxxxxARxxxxxPxxxxxYxxxxxVxxxxx\r\n
  * TL/Rxxxx: (Nm) Torsion spring torque for left/right transmission system 
  * LL/Rxxxx: (N) Load cell for cable force of left/right transmission system
  * AL/Rxxxxx: (deg) Potentiometer/IMU feedback for angle between left/right thigh and vertical direction
  *                  first number indicate sign: 0 for -, 1 for +
  * Pxxxxx: (deg) Pitch angle for trunk
-                 first number indicate sign: 0 for -, 1 for +
  * Yxxxxx: (deg) yaw angle for trunk
  *               first number indicate sign: 0 for -, 1 for + 
  * Vxxxxx: (deg/s) Pitch angular velocity for trunk
  *                 first number indicate sign: 0 for -, 1 for +
+ * Mx: Marking flag to show if the MCU data is real-time with successful receiving last command from PC
  * Notice: The last two is end character for PC receiveing '\r\n'
  */
 void sendDatatoPC(void) {
@@ -127,6 +140,18 @@ void sendDatatoPC(void) {
   unsigned char inter;
   position = 0;
   if(SendPC_update == true) {
+    // Judge if the command is recieved
+    if(receiveCompleted) {
+      if(SwitchFlag == '0') {
+        SwitchFlag = '1';
+      }
+      else {
+        SwitchFlag = '0';
+      }
+    }
+    // Mx
+    USART_TX_BUF[position++] = 'M';
+    USART_TX_BUF[position++] = SwitchFlag;
   	// TLxxxx
   	if(SendItemFlag[0] == true) {
   	  USART_TX_BUF[position++] = 'T';

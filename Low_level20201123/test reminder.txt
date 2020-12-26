@@ -5,10 +5,13 @@ test if communication protocol is correct
   PC sending 
   PC recieving
 test PWM producing  √
-test communication frequency
-test reference torque generation
-test direct acquire angular velocity from IMU
+test direct acquire angular velocity from IMU   √
+test communication frequency    √
 test velocity quality
+test reference torque generation
+test if the direction and unit of sensor feedback coincides to high-level assumed
+
+
 
 Testing Log:
 20201217
@@ -17,3 +20,19 @@ Problem
   The PWM duty cycle (defined as a uint16_t) for 0-500 will turn to be a very large number, so the -500 actually >> 500
 Solution
   Define PWM_commandL/PWM_commandR as int16_t
+
+20201219
+Problem
+  The yaw angle from IMU for asymmetric motion detection is easy to drift
+Solution 
+  According to practical scenario, the yaw angle need to be set to zero from time to time
+
+20201220
+Problem 
+   The PC sending/MCU recieving correction rate is not good for casual combination
+Solution
+   The buradrate should be carefully choose with MCU main frequency, like 460800 for 500HzMCU+100HzPC; 
+   Use the logic of id_method 3 can promise the correction of receive but the frequency is about 60Hz, with MCU run about 250Hz
+   For practical use, the PC should have timer and for user intention detection which is requiring high frequency, maybe the PC can run without a timer
+
+receiveCompleted || !PC_started

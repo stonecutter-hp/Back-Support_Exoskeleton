@@ -27,6 +27,7 @@ double IMUB_value_filtered[3][IMUFilterCycles];  // store data from IMUB for fil
 double IMUC_value_filtered[3][IMUFilterCycles];  // store data from IMUC for filtering
 double IMU_value_Prev[3][3];                     // store last time filtered angle of 3 IMU * 3 channel
 
+unsigned char yaw2zero[2] = {0x04, 0x10};  // The command for IMU yaw angle return to zero (only for 6-axis algorithm)
 /**
  * IMU angle feedback return to zero
  */
@@ -85,6 +86,13 @@ void getIMUvelL(void) {
 }
 
 /**
+ * Yaw angle set to zero for first IMU
+ */
+void set2zeroL(void) {
+  IICwriteBytes(AddrIMUA,0x01,2,&yaw2zero[0]);
+}
+
+/**
  * Get euler angle from second IMU
  */
 void getIMUangleR(void) {
@@ -108,6 +116,13 @@ void getIMUvelR(void) {
   velActualB[rollChan] = (float)CharToShort(&velTempB[0])/32768*2000;   // roll B
   velActualB[pitchChan] = (float)CharToShort(&velTempB[2])/32768*2000;  // pitch B
   velActualB[yawChan] = (float)CharToShort(&velTempB[4])/32768*2000;    // yaw B  
+}
+
+/**
+ * Yaw angle set to zero for second IMU
+ */
+void set2zeroR(void) {
+  IICwriteBytes(AddrIMUB,0x01,2,&yaw2zero[0]);
 }
 
 /**
@@ -136,6 +151,12 @@ void getIMUvelT(void) {
   velActualC[yawChan] = (float)CharToShort(&velTempC[4])/32768*2000;    // yaw C  
 }
 
+/**
+ * Yaw angle set to zero for third IMU
+ */
+void set2zeroT(void) {
+  IICwriteBytes(AddrIMUC,0x01,2,&yaw2zero[0]);
+}
 
 /**
  * Get euler angle from all IMUs

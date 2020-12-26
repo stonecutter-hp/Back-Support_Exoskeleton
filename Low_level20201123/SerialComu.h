@@ -21,6 +21,7 @@ extern int USART_RX_STA;                      // recieving number flag
 extern bool receiveCompleted;                 // receiving completing flag
 extern bool receiveContinuing;                // receiving continuous flag to avoid the multiple data format in buffer: xx\r\n+xx\r\n+xx...
 extern bool SendPC_update;                    // data sending to PC enable flag
+extern char SwitchFlag;                       // mark if new command have recieved before sending data to PC
 extern char USART_TX_BUF[USART_TX_LEN];       // sending buffer
 extern int USART_TX_STA;                      // sending number flag
 extern bool SendItemFlag[9];                   // for convinient of adjust feedback item adjust
@@ -34,29 +35,30 @@ extern float desiredTorqueR;    // desired motor torque of right motor
 extern uint8_t mode;            // detected motion mode
 // 1-left; 2-right; 0-none
 extern uint8_t side;            // Asymmetric side
-extern int inChar;
+extern char inChar1;
+extern char inChar2;
 
 
 
 /**
- * @ PC to MCU Protocol: TLxxxxTRxxxxMxx\r (0x0D)
+ * @ PC to MCU Protocol: TLxxxxTRxxxxMxx\r\n (0x0D,0x0A)
  * TLxxxx: Reference torque for left transmission system
  * TRxxxx: Reference torque for right transmission system
  * Mxx: Detected user motion mode
  * Notice: With successful receiving process, USART_RX_STA indicates
- *         total reveived char number exclude '\r'; and they are stored
+ *         total reveived char number exclude '\r\n'; and they are stored
  *         in USART_RX_BUF[0~USART_RX_STA-1], i.e., TLxxxxTRxxxxMxx 
  */
 void receiveDatafromPC(void);
 
 /**
  * Split the data from PC to number
- * @ PC to MCU Protocol: TLxxxxTRxxxxMxx\r (0x0D)
+ * @ PC to MCU Protocol: TLxxxxTRxxxxMxx\r\n (0x0D,0x0A)
  */
 void receivedDataPro(void);
 
 /**
- * @ MCU to PC protocol: TLxxxxLLxxxxALxxxxxTRxxxxLRxxxxARxxxxxPxxxxxYxxxxxVxxxxx\r\n
+ * @ MCU to PC protocol: MxTLxxxxLLxxxxALxxxxxTRxxxxLRxxxxARxxxxxPxxxxxYxxxxxVxxxxx\r\n
  * TL/Rxxxx: (Nm) Torsion spring torque for left/right transmission system 
  * LL/Rxxxx: (N) Load cell for cable force of left/right transmission system
  * AL/Rxxxxx: (deg) Potentiometer/IMU feedback for angle between left/right thigh and vertical direction
@@ -66,6 +68,7 @@ void receivedDataPro(void);
  *               first number indicate sign: 0 for -, 1 for + 
  * Vxxxxx: (deg/s) Pitch angular velocity for trunk
  *                 first number indicate sign: 0 for -, 1 for +
+ * Mx: Marking flag to show if the MCU data is real-time with successful receiving last command from PC
  * Notice: The last two is end character for PC receiveing '\r\n'
  */
 void sendDatatoPC(void);
