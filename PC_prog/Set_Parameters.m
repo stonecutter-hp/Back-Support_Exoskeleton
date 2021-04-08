@@ -65,13 +65,13 @@ P.VirAlphadot0 = 0*P.d2r;   % deg/s*d2r ->rad/s Virtual alpha0 dot
 % PC recieve correct feedback, otherwise, the control/send loop will only
 % run when MCU just recieved the last times' PC command and control/send
 % loop will run if over P.MaxDelay loop no command is recieved from PC
-P.ReceiveDataNum = 58;   % total number of char receive from MCU
+P.ReceiveDataNum = 60;   % total number of char receive from MCU
 P.SendDataNum = 14;      % total number of char send to MCU 
 P.SwitchFlag = '1';      % mark if new recieving is after recieving newest command from PC
 P.DelayNumber = 0;       % number of no-newest feedback cycle to guarantee communication correction
 P.MaxDelay = 5;          % maximum allowable number of allowable no-newest feedback cycle 
 P.DelayEnable = 1;       % enable flag of delay feedback detection
-
+P.DelayMark = [];        % store the delay mark Mx from MCU
 %% For biomechanical model parameter setting
 % refer to the P1 draft   2020-0331
 P.TrunkM = 41;           % unit: kg

@@ -11,7 +11,7 @@ else                                           % if there exists one
     McuSerial = McuSerial(1);                  % use the first one
 end
 % set the properties of the serial port
-McuSerial.BaudRate = 115200;
+McuSerial.BaudRate = 460800;
 McuSerial.InputBufferSize = 512;
 McuSerial.OutputBufferSize = 512;
 McuSerial.Terminator = 'CR/LF';

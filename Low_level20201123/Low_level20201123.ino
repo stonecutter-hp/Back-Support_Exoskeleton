@@ -28,7 +28,7 @@ Log
 
 void setup() {
   /******************************** Serial Initialization ******************************/
-  Serial.begin(115200);   // initialize serial set baurd rate
+  Serial.begin(460800);   // initialize serial set baurd rate
 
   /*************************** Control parameter Initialization ************************/
   Control_Init();  // initialize the control parameters
@@ -68,6 +68,10 @@ void setup() {
 
 
 void loop() {
+//  unsigned long starttime;
+//  unsigned long stoptime;
+//  unsigned long looptime;
+//  starttime = millis();
   receiveDatafromPC();         // receive data from PC
   receivedDataPro();           // decomposite data received from PC
   if(ADC_update) {
@@ -89,4 +93,8 @@ void loop() {
   }
     receiveContinuing = true;  // Enable next time's recieving
     USART_RX_STA = 0;          // Return to zero for receiving buffer 
+//  stoptime = millis();
+//  looptime = stoptime - starttime;
+//  Serial.println(looptime);
+//  while(1);
 }

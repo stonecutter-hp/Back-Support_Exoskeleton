@@ -29,24 +29,30 @@ end
 position = 3;
 % Also some security operation can be added if over P.MaxDelay loop no 
 % command is recieved from PC like: stop(P.config{2,1});
-if(~(P.DelayEnable) && P.DelayNumber < P.MaxDelay)
-% Mx
-    if(TransState(position-2) == 'M')
-        if(TransState(position-1) ~= P.SwitchFlag)
+
+if(TransState(position-2) == 'M')
+    % Store this time's delay flag
+    P.DelayMark = [P.DelayMark, TransState(position-1)];
+    if(~(P.DelayEnable) && P.DelayNumber < P.MaxDelay)
+        if(P.DelayMark(end) ~= P.SwitchFlag)
             Control_Update = 1;
             Send_Update = 1;
-            P.SwitchFlag = TransState(position-1);
+            P.SwitchFlag = P.DelayMark(end);
             P.DelayNumber = 0;
         else
             Control_Update = 0;
             Send_Update = 0;
             P.DelayNumber = P.DelayNumber+1;
         end
+    else
+        Control_Update = 1;
+        Send_Update = 1;
+        P.DelayNumber = 0;
     end
 else
-    Control_Update = 1;
-    Send_Update = 1;
-    P.DelayNumber = 0;
+    % False recieve cycle
+    Control_Update = 0;
+    Send_Update = 0;        
 end
 
 % if 

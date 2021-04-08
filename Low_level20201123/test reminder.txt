@@ -35,4 +35,8 @@ Solution
    Use the logic of id_method 3 can promise the correction of receive but the frequency is about 60Hz, with MCU run about 250Hz
    For practical use, the PC should have timer and for user intention detection which is requiring high frequency, maybe the PC can run without a timer
 
+20210323
+Notice
+   The ID gain of PID controller are set under the intrinsic assumption of Tcontrol = 1s instead of real control period for de/dt = (e(k) - e(k-1))/Tcontrol.
+
 receiveCompleted || !PC_started

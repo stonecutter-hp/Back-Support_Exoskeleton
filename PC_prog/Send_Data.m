@@ -27,8 +27,10 @@ else
     TransState = [TransState,num2str(DesiredTorque(2)*100)];
 end
 
-TransState = [TransState,'M',num2str(MotionMode(1)),num2str(MotionMode(2))];
+% TransState = [TransState,'M',num2str(MotionMode(1)),num2str(MotionMode(2))];
 
+% For test only
+TransState = 'TL0000TR0000M00';
 %% Send data to serial port
 flushoutput(McuSerial);      % flush the output buffer
 fprintf(McuSerial,TransState);    % send the data
