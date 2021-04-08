@@ -14,6 +14,8 @@ end
 McuSerial.BaudRate = 460800;
 McuSerial.InputBufferSize = 512;
 McuSerial.OutputBufferSize = 512;
+% Notice when use fprintf(obj,'cmd') the default format is %s\n with '\n'
+% automatically replaced by assigned terminator
 McuSerial.Terminator = 'CR/LF';
 McuSerial.DataTerminalReady='on';
 McuSerial.RequestToSend='off';

@@ -1,0 +1,3 @@
+20210408
+  The serial buffer is defined in core head file '\\....\Arduino\hardware\Arduino_STM32\STM32F1\system\libmaple\include\libmaple\usart.h'.
+  There may occurs data overflow in MCU recieve buffer if high-level control frequency does not match the low-leve control buffer

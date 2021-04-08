@@ -1,7 +1,7 @@
 function Send_Data()
 % Since program running to here, the necessary information of last time
 % have stroed in P
-% PC to MCU Protocol: TLxxxxTRxxxxMxx\r (0x0D)
+% PC to MCU Protocol: TLxxxxTRxxxxMxx\r\n (0x0D,0x0A)
 global P;
 % Here we mainly want to send mode and desired torque to MCU
 McuSerial = P.config{1,1};
