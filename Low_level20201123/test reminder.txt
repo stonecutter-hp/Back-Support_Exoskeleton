@@ -4,12 +4,15 @@ test if communication protocol is correct
   MCU receiving √
   PC sending 
   PC recieving
+  Semi-close loop communication
 test PWM producing  √
 test direct acquire angular velocity from IMU   √
 test communication frequency    √
 test terminator of PC2MCU
 test serialport effect
 test MCU recieve while(serial.available()) inchar2 = '\r' for terminor read
+test PC decomposite program is correct or not
+
 test velocity quality
 test reference torque generation
 test if the direction and unit of sensor feedback coincides to high-level assumed

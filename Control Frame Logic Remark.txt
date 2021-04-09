@@ -1,0 +1,10 @@
+For PC High-level controller:
+  Setup all the control parameters 
+  --> Configure Timer 
+  --> As Timer is started, the Serial Port is configured and opened in StartFcn of the Timer. Meanwhile, the program running time is recorded from this stage with 'tic' command
+  --> Before call functional functions in TimeCallback Fcn, the time of calling TimeCallback is recorded with 'toc' command
+  --> Inside TimeCallback Fcn, First functional function is to receive data from MCU: Read data from MCU: With enabling flag of delay info package feedback detection: True - Enable next Control and Command Sending program as long as info package from MCU is correctly received; False - Detect if the info package is real-time or not, if it is, enable Control and Command Sending, if it is not, wait until real-time pacakge is received or delay receiving cycle exceed maximum allowable cycles P.MaxDelay -> Decomposite data
+  --> Control.m for motion detection and reference torque generation
+  --> Send_Data for data sending for PC to MCU
+  --> Check if running time is exceed maximum allowable time, if it is, then stop timer
+  --> When stop timer for high-level controller, timer object is deleted; Stop command for low-level controller is sended; Stop and delete PC Serial port object; finally saving experiment data

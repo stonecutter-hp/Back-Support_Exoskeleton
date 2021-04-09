@@ -18,18 +18,19 @@ Beta_Thre = P.Beta_Thre;             % deg
 P.AlphaMean = P.angleP;
 Alpha = P.AlphaMean(end);             % Obtain the alpha for this time's detection
 % Flexion bending angular velocity of trunk
-if (size(P.adotPV,2) == 1)
+cycles = size(P.adotPV,1);
+if cycles == 1
     P.AlphaDot = P.adotPV;            % Fisrt cycle's alpha dot
-else
+elseif cycles > 1
     % Calculate the alpha dot again in PC
     TransAlphaDot = (P.AlphaMean(end)-P.AlphaMean(end-1))/(P.TransTime(end)-P.TransTime(end-1));
-    P.AlphaDot = [P.AlphaDot, TransAlphaDot];
+    P.AlphaDot = [P.AlphaDot; TransAlphaDot];
 end
 % Obtain the alpha dot for this time's detection based on MCU feedback and
 % PC calculation results
 AlphaDot = (P.AlphaDot(end) + P.adotPV(end))/2; 
 % yaw angle
-P.BetaMean = movmean(P.angleY,5);    % First moving mean is acquired for raw data
+P.BetaMean = movmean(P.angleY,5);     % First moving mean is acquired for raw data
 Beta = P.BetaMean(end);               % Obtain the beta for this time's detection
 
 
@@ -63,16 +64,16 @@ end
 
 % initial classification of left/right asymmetric
 if sign(Beta) == 0 
-    mode(2,1) = 0;     % no aysmmetric
+    mode(1,2) = 0;     % no aysmmetric
 elseif sign(Beta) > 0
-    mode(2,1) = 1;     % left
+    mode(1,2) = 1;     % left
 else
-    mode(2,1) = 2;     % right
+    mode(1,2) = 2;     % right
 end
 
 %% Necessary information for torque generation
 % refer to Presentation_20200828
-ConInf(1) = Alpha;      % alpha
-ConInf(2) = AlphaDot;   % alpha_dot
-ConInf(3) = Beta;       % beta
+ConInf(1,1) = Alpha;      % alpha
+ConInf(2,1) = AlphaDot;   % alpha_dot
+ConInf(3,1) = Beta;       % beta
 end

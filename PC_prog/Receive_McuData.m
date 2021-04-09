@@ -32,7 +32,7 @@ position = 3;
 
 if(TransState(position-2) == 'M')
     % Store this time's delay flag
-    P.DelayMark = [P.DelayMark, TransState(position-1)];
+    P.DelayMark = [P.DelayMark; TransState(position-1)];
     if(~(P.DelayEnable) && P.DelayNumber < P.MaxDelay)
         if(P.DelayMark(end) ~= P.SwitchFlag)
             Control_Update = 1;
@@ -57,13 +57,13 @@ end
 
 % if 
 if(Control_Update)
-    P.TransTime = [P.TransTime toc];
+    P.TransTime = [P.TransTime; toc];
     % TLxxxx
     if(P.RecItem(1) == 1)
         if(TransState(position) == 'T' && TransState(position+1) == 'L')
             TransTorqueTL = (TransState(position+2)-48)*10+(TransState(position+3)-48)*1+...
                             (TransState(position+4)-48)*0.1+(TransState(position+5)-48)*0.01;
-            P.torqueTL = [P.torqueTL, TransTorqueTL];
+            P.torqueTL = [P.torqueTL; TransTorqueTL];
         end
         position = position+6;
     end
@@ -72,7 +72,7 @@ if(Control_Update)
         if(TransState(position) == 'L' && TransState(position+1) == 'L')
             TransForceLL = (TransState(position+2)-48)*10+(TransState(position+3)-48)*1+...
                            (TransState(position+4)-48)*0.1+(TransState(position+5)-48)*0.01;
-            P.forceLL = [P.forceLL, TransForceLL];
+            P.forceLL = [P.forceLL; TransForceLL];
         end
         position = position+6;
     end
@@ -84,7 +84,7 @@ if(Control_Update)
             if(TransState(position+2) == '0')
                 TransAngleAL = -1*TransAngleAL;
             end
-            P.angleAL = [P.angleAL, TransAngleAL];
+            P.angleAL = [P.angleAL; TransAngleAL];
         end
         position = position+7;
     end
@@ -93,7 +93,7 @@ if(Control_Update)
         if(TransState(position) == 'T' && TransState(position+1) == 'R')
             TransTorqueTR = (TransState(position+2)-48)*10+(TransState(position+3)-48)*1+...
                             (TransState(position+4)-48)*0.1+(TransState(position+5)-48)*0.01;
-            P.torqueTR = [P.torqueTR, TransTorqueTR];
+            P.torqueTR = [P.torqueTR; TransTorqueTR];
         end
         position = position+6;
     end
@@ -102,7 +102,7 @@ if(Control_Update)
         if(TransState(position) == 'L' && TransState(position+1) == 'R')
             TransForceLR = (TransState(position+2)-48)*10+(TransState(position+3)-48)*1+...
                            (TransState(position+4)-48)*0.1+(TransState(position+5)-48)*0.01;
-            P.forceLR = [P.forceLR, TransForceLR];
+            P.forceLR = [P.forceLR; TransForceLR];
         end
         position = position+6;
     end
@@ -114,7 +114,7 @@ if(Control_Update)
             if(TransState(position+2) == '0')
                 TransAngleAR = -1*TransAngleAR;
             end
-            P.angleAR = [P.angleAR, TransAngleAR];
+            P.angleAR = [P.angleAR; TransAngleAR];
         end
         position = position+7;
     end
@@ -126,7 +126,7 @@ if(Control_Update)
             if(TransState(position+1) == '0')
                 TransAngleP = -1*TransAngleP;
             end    
-            P.angleP = [P.angleP, TransAngleP];
+            P.angleP = [P.angleP; TransAngleP];
         end
         position = position+6;
     end
@@ -138,7 +138,7 @@ if(Control_Update)
             if(TransState(position+1) == '0')
                 TransAngleY = -1*TransAngleY;
             end
-            P.angleY = [P.angleY, TransAngleY];
+            P.angleY = [P.angleY; TransAngleY];
         end
         position = position+6;
     end
@@ -150,7 +150,7 @@ if(Control_Update)
             if(TransState(position+1) == '0')
                 TransVeloV = -1*TransVeloV;
             end
-            P.adotPV = [P.adotPV, TransVeloV];
+            P.adotPV = [P.adotPV; TransVeloV];
         end
     end
     

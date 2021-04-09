@@ -14,15 +14,24 @@ end
 McuSerial.BaudRate = 460800;
 McuSerial.InputBufferSize = 512;
 McuSerial.OutputBufferSize = 512;
-% Notice when use fprintf(obj,'cmd') the default format is %s\n with '\n'
-% automatically replaced by assigned terminator
+% Notice when use fprintf(obj,'cmd') for data sending, the default format
+% is %s\n and '\n' will be automatically replaced by assigned terminator
 McuSerial.Terminator = 'CR/LF';
 McuSerial.DataTerminalReady='on';
 McuSerial.RequestToSend='off';
 
-% McuSerial.BytesAvailableFcnMode = 'terminator';    %中断触发事件
-% McuSerial.BytesAvailableFcnCount = 6;              %当缓冲区数据
-% McuSerial.BytesAvailableFcn = @ReceiveData;        %调用回调函数
+% % ------------ Receiving interruption configuration ------------- %
+% % Specify if the bytes-available event is generated after a specified
+% % number of bytes is available in the input buffer, or after a terminator
+% % is read  
+% McuSerial.BytesAvailableFcnMode = 'terminator';    
+% % Specify the number of bytes that must be available in the input buffer to
+% % generate a bytes-available event 
+% McuSerial.BytesAvailableFcnCount = 6;
+% % Specify the callback function to execute when a specified number of bytes
+% % is available in the input buffer, or a terminator is read 
+% McuSerial.BytesAvailableFcn = @ReceiveData;
+
 % store the serial port configuration
 P.config{1,1} = McuSerial;
 % try to open the assigned MCU&PC communication port

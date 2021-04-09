@@ -1,3 +1,7 @@
 20210408
   The serial buffer is defined in core head file '\\....\Arduino\hardware\Arduino_STM32\STM32F1\system\libmaple\include\libmaple\usart.h'.
+  
   There may occurs data overflow in MCU recieve buffer if high-level control frequency does not match the low-leve control buffer
+
+20210409
+  When high-level controller is stopped with timer object delete, a stop command will be sent to MCU for low-level controller, but no guatantee measurement has be made that MCU can correctly receive this command: Potential measurement-Make sure the main program only stop when info package feedback turn to resume to a safe operation point

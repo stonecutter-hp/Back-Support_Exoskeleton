@@ -84,11 +84,17 @@ P.SendDataNum = 15;
 P.SwitchFlag = '1';      % mark if new recieving is after recieving newest command from PC
 P.DelayNumber = 0;       % number of no-newest feedback cycle to guarantee communication correction
 P.MaxDelay = 5;          % maximum allowable number of allowable no-newest feedback cycle 
-P.DelayEnable = 1;       % enable flag of delay feedback detection
+% Enabling flag of delay info package feedback detection: True - Allow
+% delay info package, i.e. do not detect if info package is real-time or
+% not; False - Detect if the info package is real-time or not, if it is,
+% enable Control and Command Sending, if it is not, wait until real-time
+% pacakge is received or delay receiving cycle exceed maximum allowable
+% cycles P.MaxDelay
+P.DelayEnable = true;       
 P.DelayMark = [];        % store the delay mark Mx from MCU
 
 %% For biomechanical model parameter setting
-% refer to the P1C draft   2020-0331
+% refer to the P1C draft
 P.TrunkM = 41;           % unit: kg
 P.ArmM = 15;             % unit: kg
 P.TrunkHalfL = 0.295;    % unit: m
