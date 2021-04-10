@@ -7,4 +7,8 @@ For PC High-level controller:
   --> Control.m for motion detection and reference torque generation
   --> Send_Data for data sending for PC to MCU
   --> Check if running time is exceed maximum allowable time, if it is, then stop timer
-  --> When stop timer for high-level controller, timer object is deleted; Stop command for low-level controller is sended; Stop and delete PC Serial port object; finally saving experiment data
+  --> When stop timer for high-level controller, timer object is deleted; Stop command for low-level controller is sended; Stop and delete PC Serial port object; finally saving experiment data.
+
+
+For MCU Low-level controller:
+  

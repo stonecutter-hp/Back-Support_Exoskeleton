@@ -208,8 +208,8 @@ void getADCaverage(int times) {
       tempADCvalue[t] += ADC_value[t];
     }
   }
-  for(int i=0;i<ENABLED_CH;i++) {
-    tempADCvalue[i] = tempADCvalue[i]/times;
-    Aver_ADC_value[i] = (double)(tempADCvalue[i]*attRatio[i]*2.5)/16777251;  //24 bits
+  for(int t=0;t<ENABLED_CH;t++) {
+    tempADCvalue[t] = tempADCvalue[t]/times;
+    Aver_ADC_value[t] = (double)(tempADCvalue[t]*attRatio[t]*2.5)/16777251;  //24 bits
   }
 }

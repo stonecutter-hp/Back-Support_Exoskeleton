@@ -89,7 +89,7 @@ void sensorFeedbackPro(void) {
   }
   // Estimated_PoAssistiveTorqueR = (Aver_ADC_value[PotentioLP2]-PotentioRP1_InitValue)/PotentioRP1_Sensitivity*TorsionStiffnessR; 
   // Aver_ADC_value[MotorCurrL] =  (Aver_ADC_value[MotorCurrL]-2)*9/2;   // here ESCON set 0~4V:-9~9A
-  // Aver_ADC_value[MotorVeloL] = Value_sign(Aver_ADC_value[MotorVeloL]-2)*(Aver_ADC_value[MotorVeloL]-2)*4000/2; // here ESCON set 0~4V:-4000~4000rpm
+  // Aver_ADC_value[MotorVeloL] = (Aver_ADC_value[MotorVeloL]-2)*4000/2; // here ESCON set 0~4V:-4000~4000rpm
   // Aver_ADC_value[LoadCellL] = (Aver_ADC_value[LoadCellL]-1.25)/LoadCellL_Sensitivity; 
   MovingAverFilterIMUC(5,pitchChan);
   TrunkFlexionVel = (angleActualC[pitchChan] - angleActual_p[3][pitchChan])*IMU_UpdateRate;

@@ -63,8 +63,8 @@ extern bool Control_update;  // control update flag
 #define MotorCurrentConstant 0.0437      //motor current constant Nm/A
 #define MotorMaximumCurrent 9            //motor maximum current A configured in EXCON studio
 #define GearRatio 19                     //gear ratio is 19:1
-#define TorsionStiffnessL 0.356          //Left side torsion spring's stiffness
-#define TorsionStiffnessR 0.356          //Left side torsion spring's stiffness
+#define TorsionStiffnessL 0.47           //Left side torsion spring's stiffness
+#define TorsionStiffnessR 0.47           //Right side torsion spring's stiffness
 #define PulleyRadius 0.045               //pulley radius
 #define LoadCellL_Sensitivity 0.00166    //for load cell calibration
 #define PotentioLP1_Sensitivity 0.0083   //0.0083 = 2.5/300 (v/deg); for potentiometer calibration 

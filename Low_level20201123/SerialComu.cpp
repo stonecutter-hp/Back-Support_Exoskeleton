@@ -69,6 +69,12 @@ void receiveDatafromPC(void) {
       }
     }
   }
+  // Clear recieving buffer for next receiving cycle
+  if(!receiveCompleted) {
+    for(unsigned int i=0; i<strlen(USART_RX_BUF); i++) {
+      USART_RX_BUF[i] = '\0';
+    }
+  }
 
 }
 
@@ -115,6 +121,10 @@ void receivedDataPro(void) {
   // Mark unsuccessful command receive from PC
   else if(USART_RX_STA != RevievCharNum) {
     receiveCompleted = false;
+    // Clear recieving buffer for next receiving cycle
+    for(unsigned int i=0; i<strlen(USART_RX_BUF); i++) {
+      USART_RX_BUF[i] = '\0';
+    }    
   }
 
 }

@@ -87,6 +87,7 @@ void getIMUvelL(void) {
 
 /**
  * Yaw angle set to zero for first IMU
+ * Can only be set to zero under 6-axis mode
  */
 void set2zeroL(void) {
   IICwriteBytes(AddrIMUA,0x01,2,&yaw2zero[0]);
@@ -120,6 +121,7 @@ void getIMUvelR(void) {
 
 /**
  * Yaw angle set to zero for second IMU
+ * Can only be set to zero under 6-axis mode
  */
 void set2zeroR(void) {
   IICwriteBytes(AddrIMUB,0x01,2,&yaw2zero[0]);
@@ -153,6 +155,7 @@ void getIMUvelT(void) {
 
 /**
  * Yaw angle set to zero for third IMU
+ * Can only be set to zero under 6-axis mode
  */
 void set2zeroT(void) {
   IICwriteBytes(AddrIMUC,0x01,2,&yaw2zero[0]);

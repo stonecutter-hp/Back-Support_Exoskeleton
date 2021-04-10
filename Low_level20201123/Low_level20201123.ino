@@ -7,7 +7,8 @@
 #include "Timers.h"
 
 /*  Program try 1 for the low-level control of first exoskelton 
-    prototype which is aiming to run at test bench
+    prototype which is aiming to run at test bench with only one side
+    of torque transmission system
 Log
 20201123
   Creating based on the logical of "test_serial_ADC_timer.ino"
