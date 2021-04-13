@@ -11,7 +11,7 @@
 
   To adjust sensor feedback item, both ADC config and sensor feedback info prcessing program should be adjusted simuteneously
 
-  If cettain sensor info is needed for control, make sure it is obtained correctly with correct command
+  If certain sensor info is needed for control, make sure it is obtained correctly with correct command
 
   The motor enable pin is disabled after initialization, and will be enabled when the 'mode' flag recieved from PC indicates normal operation
 

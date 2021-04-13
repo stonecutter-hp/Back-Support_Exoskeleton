@@ -2,13 +2,14 @@ test timer interrupt   √
 test if communication protocol is correct
   MCU sending √
   MCU receiving √
-  PC sending 
-  PC recieving
-  Semi-close loop communication
+  PC sending   √
+  PC recieving  √
+  Semi-close loop communication  √
 test PWM producing  √
 test direct acquire angular velocity from IMU   √
 test communication frequency    √
-test terminator of PC2MCU
+
+test terminator of PC2MCU  √
 test serialport effect
 test MCU recieve while(serial.available()) inchar2 = '\r' for terminor read
 test PC decomposite program is correct or not

@@ -34,8 +34,9 @@ TransState = 'TL0000TR0000M00';
 %% Send data to serial port
 flushoutput(McuSerial);      % flush the output buffer
 fprintf(McuSerial,TransState);    % send the data
+flushinput(McuSerial);       % flush the input buffer for next receiving cycle
 % wait until data are all sent
-while McuSerial.BytesToOutput ~= 0  
-end
+% while McuSerial.BytesToOutput ~= 0  
+% end
 
 end

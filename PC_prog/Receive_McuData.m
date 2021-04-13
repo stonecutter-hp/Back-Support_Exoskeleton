@@ -2,11 +2,11 @@ function [Control_Update,Send_Update] = Receive_McuData()
 global P;
 %% Read data from MCU
 McuSerial = P.config{1,1};
-flushinput(McuSerial);
+% flushinput(McuSerial);
 TransState = fscanf(McuSerial);   % read the input buffer
 % ensure the data completeness
 while numel(TransState) ~= P.ReceiveDataNum
-%    flushinput(McuPort1);
+%    flushinput(McuSerial);
     TransState = fscanf(McuSerial);
 end
 

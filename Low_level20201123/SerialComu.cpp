@@ -150,7 +150,7 @@ void sendDatatoPC(void) {
   unsigned char inter;
   position = 0;
   if(SendPC_update == true) {
-    // Judge if the command is recieved
+    // Check if the command is recieved
     if(receiveCompleted) {
       if(SwitchFlag == '0') {
         SwitchFlag = '1';
