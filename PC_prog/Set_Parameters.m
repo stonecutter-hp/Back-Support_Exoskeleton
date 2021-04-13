@@ -18,7 +18,8 @@ P.TimeAll = [];     % time point of every loop
 P.MotionMode = [];
 P.DesiredTorque = [];
 P.AlphaMean = [];
-P.AlphaDot = [];
+% Store the flexion velocity calculated by Delta_angle/Delta_time
+P.AlphaDot = [];  
 P.BetaMean = [];
 
 %% For high-level referenced information configuration

@@ -88,16 +88,19 @@ void getIMUvel(void);
 
 /**
  * Yaw angle set to zero for first IMU
+ * Can only be set to zero under 6-axis mode
  */
 void set2zeroL(void);
 
 /**
  * Yaw angle set to zero for second IMU
+ * Can only be set to zero under 6-axis mode
  */
 void set2zeroR(void);
 
 /**
  * Yaw angle set to zero for third IMU
+ * Can only be set to zero under 6-axis mode
  */
 void set2zeroT(void);
 

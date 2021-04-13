@@ -102,9 +102,11 @@ void Control(uint8_t mode);
 void MotorPWMoutput(uint16_t PWMcommandL, uint16_t PWMcommandR);
 
 
-
-
-
+/**
+ * Set the yaw angle of human trunk to zero
+ * @param unsigned char - control mode: 1-9 axis IMU 2-6 axis IMU
+ */
+void yawAngleR20(uint8_t aloMode);
 
 
 

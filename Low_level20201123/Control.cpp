@@ -29,6 +29,8 @@ void Control_Init(void) {
   PWM_commandR = 0;
   desiredTorqueL = 0;
   desiredTorqueR = 0;
+  mode = 1;   // Motion detection mode, default is 1 (other motion)
+  side = 0;   // Asymmetric side, default is 0 (no asymmetric)
   Estimated_ImuAssistiveTorqueL = 0;
   Estimated_PoAssistiveTorqueL = 0;
   Estimated_ImuAssistiveTorqueR = 0;
@@ -64,6 +66,23 @@ void Control_Init(void) {
   pidR.Err = 0;
   pidR.Err_p = 0;
   pidR.Err_pp = 0;
+}
+
+/**
+ * Set the yaw angle of human trunk to zero
+ * @param unsigned char - control mode: 1-9 axis IMU 2-6 axis IMU
+ */
+void yawAngleR20(uint8_t aloMode) {
+  if(aloMode == 1) {
+    ;
+  }
+  else if(aloMode == 2) {
+    set2zeroL(void);
+    set2zeroR(void);
+    set2zeroT(void);
+  }
+
+
 }
 
 /**
@@ -238,3 +257,4 @@ void MotorPWMoutput(uint16_t PWMcommandL, uint16_t PWMcommandR) {
   delay(1);
   Timer2.setCompare(TIM2_CH2,PWM_commandR);
 }
+
