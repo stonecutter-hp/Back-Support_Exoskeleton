@@ -33,6 +33,7 @@ extern float desiredTorqueR;    // desired motor torque of right motor
 //              5-Asymmetric Lifting; 6-Symmetric Lowering;
 //              7-Symmetric Lifting;  0-Stop state
 extern uint8_t mode;            // detected motion mode
+extern uint8_t PreMode;         // last time's motion mode
 // 1-left; 2-right; 0-none
 extern uint8_t side;            // Asymmetric side
 extern char inChar1;

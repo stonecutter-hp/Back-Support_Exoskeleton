@@ -42,7 +42,7 @@ extern PID pidR;  // control parameter of right motor
 // the desired torque from PC is defined in communication receiving parameter part
 extern int16_t PWM_commandL;   // range: 0.1*PWMperiod_L~0.9*PWMperiod_L
 extern int16_t PWM_commandR;   // range: 0.1*PWMperiod_R~0.9*PWMperiod_R
-extern bool Control_update;  // control update flag
+extern bool Control_update;    // control update flag
 // Previously workable Kp/Ki/Kd for test bench with large torsion spring:
 // 0.58/0/0.28  0.68/0/0.3
 #define KP_L 0.5              // Kp for PID control of motor L
@@ -72,14 +72,21 @@ extern float Estimated_ImuAssistiveTorqueL;
 extern float Estimated_PoAssistiveTorqueL;
 extern float Estimated_ImuAssistiveTorqueR;
 extern float Estimated_PoAssistiveTorqueR;
-extern double PotentioLP1_InitValue;
+extern float PotentioLP1_InitValue;
 extern float SupportBeamAngleL_InitValue;
+extern float TrunkYaw;
 extern float TrunkFlexionVel;
 /**
  * Control parameter initialization
  * Initial controller including command and controller parameters for PID controller
  */
 void Control_Init(void);
+
+/**
+ * Set the yaw angle of human trunk to zero
+ * @param unsigned char - control mode: 1-9 axis IMU 2-6 axis IMU
+ */
+void yawAngleR20(uint8_t aloMode);
 
 /**
  * Processing sensor feedback for closed-loop control and data sending to PC
@@ -102,11 +109,7 @@ void Control(uint8_t mode);
 void MotorPWMoutput(uint16_t PWMcommandL, uint16_t PWMcommandR);
 
 
-/**
- * Set the yaw angle of human trunk to zero
- * @param unsigned char - control mode: 1-9 axis IMU 2-6 axis IMU
- */
-void yawAngleR20(uint8_t aloMode);
+
 
 
 

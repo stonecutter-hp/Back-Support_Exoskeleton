@@ -62,6 +62,7 @@ void setup() {
   /******************* ADC value and IMU angle feedback initialization *****************/
   getADCaverage(1);
   getIMUangleL();
+  // yawAngleR20(1);     // Forced trunk yaw angle correction,
   PotentioLP1_InitValue = Aver_ADC_value[PotentioLP1];
   SupportBeamAngleL_InitValue = angleActualA[rollChan];
   delay(5); 
@@ -81,6 +82,7 @@ void loop() {
   }
   // getIMUangle();            // get rotation angle of both support beam and human back/link
   getIMUangleL();              // get support beam rotation angle from IMU
+  // yawAngleR20(0);              // trunk yaw angle correction, should before data sensor feedback processing and sending
   sensorFeedbackPro();         // processing sensor feedback for closed-loop control 
   // MovingAverageFilter(2);   // Averaged moving filtered
   if(Control_update) {

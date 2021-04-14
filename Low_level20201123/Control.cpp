@@ -16,8 +16,9 @@ float Estimated_ImuAssistiveTorqueL;
 float Estimated_PoAssistiveTorqueL;
 float Estimated_ImuAssistiveTorqueR;
 float Estimated_PoAssistiveTorqueR;
-double PotentioLP1_InitValue;
+float PotentioLP1_InitValue;
 float SupportBeamAngleL_InitValue;
+float TrunkYaw;
 float TrunkFlexionVel;
 
 /**
@@ -30,6 +31,7 @@ void Control_Init(void) {
   desiredTorqueL = 0;
   desiredTorqueR = 0;
   mode = 1;   // Motion detection mode, default is 1 (other motion)
+  PreMode = mode;
   side = 0;   // Asymmetric side, default is 0 (no asymmetric)
   Estimated_ImuAssistiveTorqueL = 0;
   Estimated_PoAssistiveTorqueL = 0;
@@ -37,6 +39,7 @@ void Control_Init(void) {
   Estimated_PoAssistiveTorqueR = 0;
   PotentioLP1_InitValue = 0;
   SupportBeamAngleL_InitValue = 0;
+  TrunkYaw = 0;
   TrunkFlexionVel = 0;
   // initialize the control parameter of left motor
   pidL.set = desiredTorqueL;
@@ -71,25 +74,51 @@ void Control_Init(void) {
 
 /**
  * Set the yaw angle of human trunk to zero
- * @param unsigned char - control mode: 1-9 axis IMU 2-6 axis IMU
+ * @param unsigned char - IMU operation mode: 1-force to set, other number-logic set
  */
 void yawAngleR20(uint8_t aloMode) {
+  // Roughly yaw angle return to zero logic: 
+  // Detect mode 1 and premode is larger than 3
+  // i.e., From bending back to other motion
   if(aloMode == 1) {
-    ;
+    if(OperaitonAloIMUC == 6) {
+      getIMUangleT();
+      TrunkYaw = angleActualC[yawChan];
+    }
+    else if(OperaitonAloIMUC == 9) {
+      // set2zeroL();
+      // set2zeroR();
+      set2zeroT();
+      getIMUangleT();
+      TrunkYaw = 0;
+    }
   }
-  else if(aloMode == 2) {
-    set2zeroL(void);
-    set2zeroR(void);
-    set2zeroT(void);
+  else {
+    if(mode == 1 && PreMode > 3) {
+      if(OperaitonAloIMUC == 6) {
+        getIMUangleT();
+        TrunkYaw = angleActualC[yawChan];
+      }
+      else if(OperaitonAloIMUC == 9) {
+        // set2zeroL();
+        // set2zeroR();
+        set2zeroT();
+        getIMUangleT();
+        TrunkYaw = 0;        
+      }
+    }
   }
 
 
 }
 
+
+
 /**
  * Processing sensor feedback for closed-loop control and data sending to PC
  */
 void sensorFeedbackPro(void) {
+  // ------------------------ Motor status processing -------------------
   // if high-level command stop state
   if(mode == 0) {
   	// Set zero for reference torque
@@ -101,18 +130,22 @@ void sensorFeedbackPro(void) {
   else {
     digitalWrite(MotorEnableL,HIGH); //Enable motor control	
   }
+
+  // ------- Interation torque feedback info processing for low-level controller ------------------
   // Estimated_ImuAssistiveTorqueL = (angleActualA[0]-SupportBeamAngleL_InitValue)*TorsionStiffnessL;
   Estimated_PoAssistiveTorqueL = (Aver_ADC_value[PotentioLP1]-PotentioLP1_InitValue)/PotentioLP1_Sensitivity*TorsionStiffnessL; 
   if(Estimated_PoAssistiveTorqueL < 0)
   {
   	Estimated_PoAssistiveTorqueL = 0;
   }
+  // --------- Trunk yaw angle feedback info procesisng for high-level controller -----------------
+  angleActualC[yawChan] = angleActualC[yawChan] - TrunkYaw;
+
   // Estimated_PoAssistiveTorqueR = (Aver_ADC_value[PotentioLP2]-PotentioRP1_InitValue)/PotentioRP1_Sensitivity*TorsionStiffnessR; 
   // Aver_ADC_value[MotorCurrL] =  (Aver_ADC_value[MotorCurrL]-2)*9/2;   // here ESCON set 0~4V:-9~9A
   // Aver_ADC_value[MotorVeloL] = (Aver_ADC_value[MotorVeloL]-2)*4000/2; // here ESCON set 0~4V:-4000~4000rpm
   // Aver_ADC_value[LoadCellL] = (Aver_ADC_value[LoadCellL]-1.25)/LoadCellL_Sensitivity; 
-  // MovingAverFilterIMUC(5,pitchChan);
-  // TrunkFlexionVel = (angleActualC[pitchChan] - angleActual_p[3][pitchChan])*IMU_UpdateRate;
+
 }
 
 /**
@@ -121,7 +154,7 @@ void sensorFeedbackPro(void) {
  * @para unsigned char - control mode: 1-PID control, 2-Open loop control
  * Here use increment PID algorithm: Delta.U = Kp*( (ek-ek_1) + (Tcontrol/Ti)*ek + (Td/Tcontrol)*(ek+ek_2-2*ek_1) )
  */
-void Control(uint8_t mode) {
+void Control(uint8_t ContMode) {
   // for PID control
   float dk1L,dk2L;
   float PoutL,IoutL,DoutL;
@@ -132,7 +165,7 @@ void Control(uint8_t mode) {
   float desiredCurrentL;
   float desiredCurrentR;
 
-  if(mode == 1) {
+  if(ContMode == 1) {
     /************************ PID control for left motor *************************/
     pidL.set = desiredTorqueL;
     pidL.currT = Estimated_PoAssistiveTorqueL;    // get current toruqe feedback
@@ -227,7 +260,7 @@ void Control(uint8_t mode) {
   }
 
   // Open-loop control
-  else if(mode == 2) {
+  else if(ContMode == 2) {
     desiredCurrentL = desiredTorqueL/GearRatio/MotorCurrentConstant;
     desiredCurrentR = desiredTorqueR/GearRatio/MotorCurrentConstant;
     PWM_commandL = PWMperiod_L*(desiredCurrentL*0.8/MotorMaximumCurrent+0.1);

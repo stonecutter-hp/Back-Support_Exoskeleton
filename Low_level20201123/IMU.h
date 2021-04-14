@@ -17,6 +17,9 @@
 #define AddrIMUC  0x52
 #define IMU_UpdateRate 200            // Hz
 #define IMUFilterCycles 6
+#define OperaitonAloIMUA 6         // IMUA alogorithm 6-6 axis, 9-9axis 
+#define OperaitonAloIMUB 6         // IMUB alogorithm 6-6 axis, 9-9axis
+#define OperaitonAloIMUC 6         // IMUC alogorithm 6-6 axis, 9-9axis
 
 extern unsigned char yaw2zero[2];  // The command for IMU yaw angle return to zero (only for 6-axis algorithm)
 

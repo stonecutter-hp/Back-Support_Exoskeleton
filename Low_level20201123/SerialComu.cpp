@@ -24,6 +24,7 @@ float desiredTorqueR;    // desired motor torque of right motor
 //              5-Asymmetric Lifting; 6-Symmetric Lowering;
 //              7-Symmetric Lifting;  0-Stop state
 uint8_t mode;            // detected motion mode
+uint8_t PreMode;         // last time's motion mode
 // 1-left; 2-right; 0-none
 uint8_t side;            // Asymmetric side
 char inChar1;
@@ -112,6 +113,7 @@ void receivedDataPro(void) {
       } 
     }
     if(USART_RX_BUF[12] == 'M') {
+      PreMode = mode;
     	mode = USART_RX_BUF[13]-48;
     	side = USART_RX_BUF[14]-48;
     }    
@@ -264,7 +266,7 @@ void sendDatatoPC(void) {
         USART_TX_BUF[position++] = NegSign+48;
       }
       // ±xx.xx
-      dec = SignMark*angleActualC[pitchChan]*Calcu_Pow(10,2);
+      dec = SignMark*angleActualC[yawChan]*Calcu_Pow(10,2);
   	  for(int t=0; t<4; t++) {
   	  	inter = (dec/Calcu_Pow(10,3-t))%10;
   	  	USART_TX_BUF[position++] = inter+48;
