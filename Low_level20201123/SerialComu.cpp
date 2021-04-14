@@ -236,10 +236,10 @@ void sendDatatoPC(void) {
   	  	USART_TX_BUF[position++] = inter+48;
   	  }      
   	}
-  	// Pxxxxx
+  	// Pxxxxx, Notice the X-axis (practical pitch angle) is assigned as roll channel in the program
   	if(SendItemFlag[6] == true) {
       USART_TX_BUF[position++] = 'P';
-      SignMark = Value_sign(angleActualC[pitchChan]);
+      SignMark = Value_sign(angleActualC[rollChan]);
       if(SignMark == PosSign) {
       	USART_TX_BUF[position++] = PosSign+48;
       }
@@ -247,7 +247,7 @@ void sendDatatoPC(void) {
         USART_TX_BUF[position++] = NegSign+48;
       }
       // ±xxx.x
-      dec = SignMark*angleActualC[pitchChan]*Calcu_Pow(10,1);
+      dec = SignMark*angleActualC[rollChan]*Calcu_Pow(10,1);
   	  for(int t=0; t<4; t++) {
   	  	inter = (dec/Calcu_Pow(10,3-t))%10;
   	  	USART_TX_BUF[position++] = inter+48;

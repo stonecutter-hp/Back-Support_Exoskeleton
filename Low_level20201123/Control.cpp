@@ -37,6 +37,7 @@ void Control_Init(void) {
   Estimated_PoAssistiveTorqueR = 0;
   PotentioLP1_InitValue = 0;
   SupportBeamAngleL_InitValue = 0;
+  TrunkFlexionVel = 0;
   // initialize the control parameter of left motor
   pidL.set = desiredTorqueL;
   pidL.currTa = 0;
@@ -110,8 +111,8 @@ void sensorFeedbackPro(void) {
   // Aver_ADC_value[MotorCurrL] =  (Aver_ADC_value[MotorCurrL]-2)*9/2;   // here ESCON set 0~4V:-9~9A
   // Aver_ADC_value[MotorVeloL] = (Aver_ADC_value[MotorVeloL]-2)*4000/2; // here ESCON set 0~4V:-4000~4000rpm
   // Aver_ADC_value[LoadCellL] = (Aver_ADC_value[LoadCellL]-1.25)/LoadCellL_Sensitivity; 
-  MovingAverFilterIMUC(5,pitchChan);
-  TrunkFlexionVel = (angleActualC[pitchChan] - angleActual_p[3][pitchChan])*IMU_UpdateRate;
+  // MovingAverFilterIMUC(5,pitchChan);
+  // TrunkFlexionVel = (angleActualC[pitchChan] - angleActual_p[3][pitchChan])*IMU_UpdateRate;
 }
 
 /**

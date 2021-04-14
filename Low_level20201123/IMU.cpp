@@ -27,7 +27,7 @@ double IMUB_value_filtered[3][IMUFilterCycles];  // store data from IMUB for fil
 double IMUC_value_filtered[3][IMUFilterCycles];  // store data from IMUC for filtering
 double IMU_value_Prev[3][3];                     // store last time filtered angle of 3 IMU * 3 channel
 
-unsigned char yaw2zero[2] = {0x04, 0x10};  // The command for IMU yaw angle return to zero (only for 6-axis algorithm)
+unsigned char yaw2zero[2] = {0x04, 0x00};  // The command for IMU yaw angle return to zero (only for 6-axis algorithm)
 /**
  * IMU angle feedback return to zero
  */
