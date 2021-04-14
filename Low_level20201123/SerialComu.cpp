@@ -289,12 +289,13 @@ void sendDatatoPC(void) {
   	  	USART_TX_BUF[position++] = inter+48;
   	  }         	  
   	}
-    Serial.print(USART_TX_BUF);
-    Serial.flush();
-    Serial.print('\r');
-    Serial.flush();
-    Serial.print('\n');
-    Serial.flush();	
+    // Serial.print(USART_TX_BUF);
+    // Serial.flush();
+    // Serial.print('\r');
+    // Serial.flush();
+    // Serial.print('\n');
+    // Serial.flush();	
+    Serial.println(USART_TX_BUF); // Speed up frequency
   }
 }
 

@@ -81,11 +81,11 @@ void yawAngleR20(uint8_t aloMode) {
   // Detect mode 1 and premode is larger than 3
   // i.e., From bending back to other motion
   if(aloMode == 1) {
-    if(OperaitonAloIMUC == 6) {
+    if(OperaitonAloIMUC == 9) {
       getIMUangleT();
       TrunkYaw = angleActualC[yawChan];
     }
-    else if(OperaitonAloIMUC == 9) {
+    else if(OperaitonAloIMUC == 6) {
       // set2zeroL();
       // set2zeroR();
       set2zeroT();
@@ -95,11 +95,11 @@ void yawAngleR20(uint8_t aloMode) {
   }
   else {
     if(mode == 1 && PreMode > 3) {
-      if(OperaitonAloIMUC == 6) {
+      if(OperaitonAloIMUC == 9) {
         getIMUangleT();
         TrunkYaw = angleActualC[yawChan];
       }
-      else if(OperaitonAloIMUC == 9) {
+      else if(OperaitonAloIMUC == 6) {
         // set2zeroL();
         // set2zeroR();
         set2zeroT();
@@ -140,6 +140,12 @@ void sensorFeedbackPro(void) {
   }
   // --------- Trunk yaw angle feedback info procesisng for high-level controller -----------------
   angleActualC[yawChan] = angleActualC[yawChan] - TrunkYaw;
+  if(angleActualC[yawChan] > 180) {
+    angleActualC[yawChan] = angleActualC[yawChan]-360;
+  }
+  else if(angleActualC[yawChan] < -180) {
+    angleActualC[yawChan] = angleActualC[yawChan]+360;
+  }
 
   // Estimated_PoAssistiveTorqueR = (Aver_ADC_value[PotentioLP2]-PotentioRP1_InitValue)/PotentioRP1_Sensitivity*TorsionStiffnessR; 
   // Aver_ADC_value[MotorCurrL] =  (Aver_ADC_value[MotorCurrL]-2)*9/2;   // here ESCON set 0~4V:-9~9A
