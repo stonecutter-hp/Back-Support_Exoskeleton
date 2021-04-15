@@ -168,6 +168,7 @@ void sendDatatoPC(void) {
   	if(SendItemFlag[0] == true) {
   	  USART_TX_BUF[position++] = 'T';
   	  USART_TX_BUF[position++] = 'L';
+      // xx.xx
   	  dec = Estimated_PoAssistiveTorqueL*Calcu_Pow(10,2);
   	  for(int t=0; t<4; t++) {
   	  	inter = (dec/Calcu_Pow(10,3-t))%10;
@@ -178,7 +179,8 @@ void sendDatatoPC(void) {
   	if(SendItemFlag[1] == true) {
       USART_TX_BUF[position++] = 'L';
       USART_TX_BUF[position++] = 'L';
-      dec = Aver_ADC_value[LoadCellL]*Calcu_Pow(10,2);
+      // xxx.x
+      dec = Aver_ADC_value[LoadCellL]*Calcu_Pow(10,1);
   	  for(int t=0; t<4; t++) {
   	  	inter = (dec/Calcu_Pow(10,3-t))%10;
   	  	USART_TX_BUF[position++] = inter+48;
@@ -195,6 +197,7 @@ void sendDatatoPC(void) {
       else {
         USART_TX_BUF[position++] = NegSign+48;
       }
+      // ±xx.xx
       dec = SignMark*angleActualA[pitchChan]*Calcu_Pow(10,2);
   	  for(int t=0; t<4; t++) {
   	  	inter = (dec/Calcu_Pow(10,3-t))%10;
@@ -205,6 +208,7 @@ void sendDatatoPC(void) {
   	if(SendItemFlag[3] == true) {
   	  USART_TX_BUF[position++] = 'T';
   	  USART_TX_BUF[position++] = 'R';
+      // xx.xx
   	  dec = Estimated_PoAssistiveTorqueR*Calcu_Pow(10,2);
   	  for(int t=0; t<4; t++) {
   	  	inter = (dec/Calcu_Pow(10,3-t))%10;
@@ -215,7 +219,8 @@ void sendDatatoPC(void) {
   	if(SendItemFlag[4] == true) {
       USART_TX_BUF[position++] = 'L';
       USART_TX_BUF[position++] = 'R';
-      dec = Aver_ADC_value[LoadCellR]*Calcu_Pow(10,2);
+      // xxx.x
+      dec = Aver_ADC_value[LoadCellR]*Calcu_Pow(10,1);
   	  for(int t=0; t<4; t++) {
   	  	inter = (dec/Calcu_Pow(10,3-t))%10;
   	  	USART_TX_BUF[position++] = inter+48;
@@ -232,6 +237,7 @@ void sendDatatoPC(void) {
       else {
         USART_TX_BUF[position++] = NegSign+48;
       }
+      // ±xx.xx
       dec = SignMark*angleActualB[pitchChan]*Calcu_Pow(10,2);
   	  for(int t=0; t<4; t++) {
   	  	inter = (dec/Calcu_Pow(10,3-t))%10;

@@ -138,6 +138,13 @@ void sensorFeedbackPro(void) {
   {
   	Estimated_PoAssistiveTorqueL = 0;
   }
+
+  // -------------------------- Cable force feedback info processing -------------------
+  // Aver_ADC_value[LoadCellL] = (Aver_ADC_value[LoadCellL]-1.25)/LoadCellL_Sensitivity; 
+  // if(Aver_ADC_value[LoadCellL] < 0) {
+  //   Aver_ADC_value[LoadCellL] = 0; // only cable tension is detected
+  // }
+  
   // --------- Trunk yaw angle feedback info procesisng for high-level controller -----------------
   angleActualC[yawChan] = angleActualC[yawChan] - TrunkYaw;
   if(angleActualC[yawChan] > 180) {
@@ -150,7 +157,7 @@ void sensorFeedbackPro(void) {
   // Estimated_PoAssistiveTorqueR = (Aver_ADC_value[PotentioLP2]-PotentioRP1_InitValue)/PotentioRP1_Sensitivity*TorsionStiffnessR; 
   // Aver_ADC_value[MotorCurrL] =  (Aver_ADC_value[MotorCurrL]-2)*9/2;   // here ESCON set 0~4V:-9~9A
   // Aver_ADC_value[MotorVeloL] = (Aver_ADC_value[MotorVeloL]-2)*4000/2; // here ESCON set 0~4V:-4000~4000rpm
-  // Aver_ADC_value[LoadCellL] = (Aver_ADC_value[LoadCellL]-1.25)/LoadCellL_Sensitivity; 
+
 
 }
 

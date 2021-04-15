@@ -81,7 +81,7 @@ void loop() {
   	ADC_update = false;
   }
   // getIMUangle();            // get rotation angle of both support beam and human back/link
-  getIMUangleL();              // get support beam rotation angle from IMU
+  getIMUangleT();              // get support beam rotation angle from IMU
   // yawAngleR20(0);              // trunk yaw angle correction, should before data sensor feedback processing and sending
   sensorFeedbackPro();         // processing sensor feedback for closed-loop control 
   // MovingAverageFilter(2);   // Averaged moving filtered

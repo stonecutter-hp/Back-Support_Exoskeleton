@@ -70,8 +70,8 @@ if(Control_Update)
     % LLxxxx
     if(P.RecItem(2) == 1)
         if(TransState(position) == 'L' && TransState(position+1) == 'L')
-            TransForceLL = (TransState(position+2)-48)*10+(TransState(position+3)-48)*1+...
-                           (TransState(position+4)-48)*0.1+(TransState(position+5)-48)*0.01;
+            TransForceLL = (TransState(position+2)-48)*100+(TransState(position+3)-48)*10+...
+                           (TransState(position+4)-48)*1+(TransState(position+5)-48)*0.1;
             P.forceLL = [P.forceLL; TransForceLL];
         end
         position = position+6;
@@ -100,8 +100,8 @@ if(Control_Update)
     % LRxxxx
     if(P.RecItem(5) == 1)
         if(TransState(position) == 'L' && TransState(position+1) == 'R')
-            TransForceLR = (TransState(position+2)-48)*10+(TransState(position+3)-48)*1+...
-                           (TransState(position+4)-48)*0.1+(TransState(position+5)-48)*0.01;
+            TransForceLR = (TransState(position+2)-48)*100+(TransState(position+3)-48)*10+...
+                           (TransState(position+4)-48)*1+(TransState(position+5)-48)*0.1;
             P.forceLR = [P.forceLR; TransForceLR];
         end
         position = position+6;
