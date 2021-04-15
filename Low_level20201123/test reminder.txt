@@ -14,9 +14,9 @@ test serialport effect -- not suitable for our application
 test MCU recieve while(serial.available()) inchar2 = '\r' for terminor read -- do not necessary for semi-closed loop 
 test PC decomposite program is correct or not  √
 
-test velocity quality
-test reference torque generation
-test if the direction and unit of sensor feedback coincides to high-level assumed
+test velocity quality   √
+test reference torque generation      √
+test if the direction and unit of sensor feedback coincides to high-level assumed     Depends on install position (especially for IMU)
 
 
 

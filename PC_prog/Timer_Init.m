@@ -6,6 +6,8 @@ global P;
 % remind the main frequency here
 Timer1 = timer('BusyMode','queue','ExecutionMode','fixedRate',...
                'Period',1/Main_Freq,'TimerFcn',@TimerCallback);  
+% Timer1 = timer('BusyMode','drop','ExecutionMode','fixedRate',...
+%                'Period',1/Main_Freq,'TimerFcn',@TimerCallback);
 % Timer1.TimerFcn = {@TimerCallback,P};  % set the callback of the timer
 Timer1.StartFcn = @ProgStart;
 Timer1.StopFcn = @ProgStop;

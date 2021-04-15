@@ -30,6 +30,14 @@ end
 % % % % % % end
 
 %% If the running time overlarger than preset running time, then stop program
+% % Potential stop condition for practical application: Make sure the main
+% % program only stop when info package feedback turn to resume to a safe
+% % operation point  
+% if (P.TimeAll(end) > P.MaxRunTime && (P.MotionMode(end,1) == 1 || P.MotionMode(end,1) == 0))
+%     stop(Ttimer);
+% end
+
+% Program stop condition for testing
 if (P.TimeAll(end) > P.MaxRunTime)
     stop(Ttimer);
 end

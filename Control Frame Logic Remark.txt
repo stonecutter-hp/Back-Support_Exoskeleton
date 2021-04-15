@@ -11,4 +11,5 @@ For PC High-level controller:
 
 
 For MCU Low-level controller:
+  Initialization --> Get info package from PC (If received, update information, if not received, continue next step) --> Get ADC and IMU feedback --> Sensor feedback processing, including yaw angle set to zero --> Control --> Send info package to PC
   

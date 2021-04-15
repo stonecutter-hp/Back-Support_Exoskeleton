@@ -94,6 +94,7 @@ void Filter_Init() {
     }
     Aver_ADC_value_Prev[i] = 0.0;
     Aver_ADC_value[i] = 0.0;
+    ADC_data[i][3] = 'G';   //Initialize the ADC status flag
   }  
 }
 

@@ -28,7 +28,8 @@ elseif cycles > 1
 end
 % Obtain the alpha dot for this time's detection based on MCU feedback and
 % PC calculation results
-AlphaDot = (P.AlphaDot(end) + P.adotPV(end))/2; 
+% AlphaDot = (P.AlphaDot(end) + P.adotPV(end))/2; 
+AlphaDot = P.AlphaDot(end);
 % yaw angle
 P.BetaMean = movmean(P.angleY,5);     % First moving mean is acquired for raw data
 Beta = P.BetaMean(end);               % Obtain the beta for this time's detection
