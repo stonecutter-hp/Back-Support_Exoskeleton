@@ -6,23 +6,23 @@
 #include "SerialComu.h"
 #include "Timers.h"
 
-/*  Program try 1 for the low-level control of HCHP version exoskelton 
+/*  Program try 1 for the low-level control of ZXHP version exoskelton 
     prototype which is aiming to run at test bench with only one side
     of torque transmission system
 Log
-20201123
-  Creating based on the logical of "test_serial_ADC_timer.ino"
-  Setup feedback item and parameters based on test-bench sensor implementation
+20210416
+  Creating based on "Low-level20201123.ino"
+  For the first version, the high-level control part of torque generation 
+  and user intention detection is embeded in the low-level controller for 
+  simple implementation
 
 ***Program logic***
-1) read desired torque command from PC 
-    (if no command recieved, keep sending sensor feedback with fixed frequncy
-    and use the initial/former command as reference command)--> 
-2) read sensor feedback including: 
-    potentiometer for torque feedback, 
+1) Read sensor feedback including: 
+    potentiometer for hip angle feedback, 
     motor driver for motor current and velocity feedback (for potential cascaded control), 
-    load cell for cable force feedback,
-    and IMU*2 for torque feedback and human back(link) motion -->
+    force sensor for interaction force indication,
+    IMU for human trunk angle feedback -->
+2) Simple user intention detection and reference torque generation calculation -->
 3) calculate the actual control commmand for motor -->
 4) send sensor feedback to PC.
 */
@@ -64,7 +64,6 @@ void setup() {
   getIMUangleL();
   // yawAngleR20(1);     // Forced trunk yaw angle correction,
   PotentioLP1_InitValue = Aver_ADC_value[PotentioLP1];
-  SupportBeamAngleL_InitValue = angleActualA[rollChan];
   delay(5); 
 }
 
