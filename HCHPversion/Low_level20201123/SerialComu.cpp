@@ -39,6 +39,8 @@ char inChar2;
  * Notice: With successful receiving process, USART_RX_STA indicates
  *         total reveived char number exclude '\r\n'; and they are stored
  *         in USART_RX_BUF[0~USART_RX_STA-1], i.e., TLxxxxTRxxxxMxx 
+ *         Here only if terminaor is wrongly detected or data length exceed maximum 
+ *         allowable length will lead to fail data receiving
  */
 void receiveDatafromPC(void) {
   while(Serial.available() && receiveContinuing) {

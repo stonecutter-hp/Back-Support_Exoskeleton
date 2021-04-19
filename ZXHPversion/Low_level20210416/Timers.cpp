@@ -72,4 +72,7 @@ void Timer4_3_int(void) {
   if(SendPC_update == false) {
     SendPC_update = true;
   }
+  if(HLControl_update == false) {
+    HLControl_update = true;
+  }
 }

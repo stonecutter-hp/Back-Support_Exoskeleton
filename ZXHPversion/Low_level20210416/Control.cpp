@@ -5,29 +5,40 @@
 
 #include "Control.h"
 
+/**************************************** Low level PID control parameters definition ********************************/
 PID pidL;  // control parameter of left motor
 PID pidR;  // control parameter of right motor
 // the desired torque from PC is defined in communication receiving parameter part
 int16_t PWM_commandL;   // range: 0.1*PWMperiod_L~0.9*PWMperiod_L
 int16_t PWM_commandR;   // range: 0.1*PWMperiod_R~0.9*PWMperiod_R
-bool Control_update = true;  // control update flag
+bool Control_update = true;    // control update flag
 
-// 
-float Estimated_TdMotorCurrentL;
-float Estimated_TdMotorCurrentR;
-float Estimated_TdForceSensorL;
-float Estimated_TdForceSensorR;
-float Estimated_TdL;
-float Estimated_TdR;
-float HipAngleL;
-float HipAngleR;
-float PotentioLP1_InitValue;
-float PotentioRP2_InitValue;
-float TrunkYaw;
-float TrunkFlexionVel;
+/*************************************** High level controller parameters definition ******************************/
+bool HLControl_update = true;  // high-level control update flag
+HLCont HL_HP;                  // Parameters for specific subjects
+
+/*************************************** Intermediate auxiliary parameters for control ****************************/
+// Parameters for lowe-level control
+float Estimated_TdMotorCurrentL;   // Td feedback from left motor current feedback
+float Estimated_TdMotorCurrentR;   // Td feedback from right motor current feedback
+float Estimated_TdForceSensorL;    // Td feedback from left force sensor
+float Estimated_TdForceSensorR;    // Td feedback from right force sensor
+float Estimated_TdL;               // Estimated compact Td feedback of left side
+float Estimated_TdR;               // Estimated compact Td feedback of right side
+// Parameters for high-level controller
+float HipAngleL;                   // Left hip joint angle
+float HipAngleR;                   // Right hip joint angle
+float PotentioLP1_InitValue;       // Auxiliary parameter for left hip joint angle
+float PotentioRP2_InitValue;       // Auxiliary parameter for right hip joint angle
+float TrunkYaw;                    // Auxiliary parameter for trunk yaw angle
+float TrunkFlexionVel;             // Trunk flexion angular velocity
+extern float ThighAngleL;                 // Left thigh angle
+extern float ThighAngleR;                 // Right thigh angle
+
+
 
 /**
- * Control parameter initialization
+ * Control parameter initialization for low-level controller
  * Here use increment PID algorithm: Delta.U = Kp*( (ek-ek_1) + (Tcontrol/Ti)*ek + (Td/Tcontrol)*(ek+ek_2-2*ek_1) )
  */
 void Control_Init(void) {
@@ -129,19 +140,6 @@ void yawAngleR20(uint8_t aloMode) {
  * Processing sensor feedback for closed-loop control and data sending to PC
  */
 void sensorFeedbackPro(void) {
-  // ------------------------ Motor status processing -------------------
-  // if high-level command stop state
-  if(mode == 0) {
-  	// Set zero for reference torque
-  	desiredTorqueR = 0;
-  	desiredTorqueL = 0;
-  	// disable motor control
-  	digitalWrite(MotorEnableL,LOW);
-  }
-  else {
-    digitalWrite(MotorEnableL,HIGH); //Enable motor control	
-  }
-
   // ------- Interation torque feedback info processing for low-level controller ------------------
 //  Estimated_TdMotorCurrentL = (Aver_ADC_value[MotorCurrL]-2)*9/2;                    // Td feedback from motor driver, here ESCON set 0~4V:-9~9A
 //  Estimated_TdForceSensorL = Aver_ADC_value[ForceSensorL]*ForceSensorL_Sensitivity;  // Td feedback from Force sensor L
@@ -159,10 +157,68 @@ void sensorFeedbackPro(void) {
   // --------- Trunk flexion velocity info processing for high-level controller ------------ 
   TrunkFlexionVel = velActualC[rollChan];
 
-  // --------- Hip joint angle feedback info processing for high-level controller -----------------
+  // --------- Hip joint angle feedback info processing for high-level controller ----------
 //  HipAngleL = (Aver_ADC_value[PotentioLP1]-PotentioLP1_InitValue)/PotentioLP1_Sensitivity;
 
+  // --------- Thigh angle feedback info processing for high-level controller --------------
+//  ThighAngleL = 180-HipAngleL-angleActualC[rollChan];
+}
 
+/**
+ * Conduct simple user intention detection and torque generation calculation as reference torque 
+ * for low-level control based on sensor information feedback from force sensors, IMUs, Potentiometers
+ * and Motor driver
+ * @para unsigned char - control mode 1 for user intenntion detection: 1-xx algorithm, 2-xx algorithm
+ *       unsigned char - control mode 2 for torque generation strategy: 1-xx strategy, 2-xx strategy
+ */
+void HLControl(uint8_t UIDMode, uint8_t RTGMode) {
+  HL_UserIntentDetect(UIDMode);
+  HL_ReferTorqueGenerate(RTGMode);
+  // ------------------------ Motor status updating -------------------
+  // if high-level command stop state
+  if(mode == 0) {
+    // Set zero for reference torque
+    desiredTorqueR = 0;
+    desiredTorqueL = 0;
+    // disable motor control
+    digitalWrite(MotorEnableL,LOW);
+  }
+  else {
+    digitalWrite(MotorEnableL,HIGH); //Enable motor control 
+  }
+}
+
+/**
+ * Conduct simple user intention detection 
+ * @para unsigned char - control mode for user intenntion detection: 1-xx algorithm, 2-xx algorithm
+ */
+void HL_UserIntentDetect(uint8_t UIDMode) {
+  // Here != 100 is a illustration of mode selection
+  if(UIDMode != 100) {
+    if(HipAngleL < HL_HP.ThrHipAngleMean) {
+      // A illustration of motion mode update
+      mode = 1; 
+      side = 1;  
+    }
+    // ----- Here replace for detailed user intention detection alogrithm -------
+  }
+
+  
+}
+
+/**
+ * Reference torque generation 
+ * @para unsigned char - control mode for torque generation strategy: 1-xx strategy, 2-xx strategy
+ */
+void HL_ReferTorqueGenerate(uint8_t RTGMode) {
+  // Here != 100 is a illustration of mode selection
+  if(RTGMode != 100) {
+    if(mode = 1) {
+      desiredTorqueL = 0;
+      desiredTorqueR = 0;
+    }
+  // ----- Here replace for detailed user intention detection alogrithm ------- 
+  }
 }
 
 /**

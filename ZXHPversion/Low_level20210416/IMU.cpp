@@ -16,7 +16,7 @@ unsigned char velTempC[6];     // store the raw data get from IMU C(addr 0x52)
 float angleActualA[3];         // store the angle of IMU A(addr 0x50) for calculation
 float angleActualB[3];         // store the angle of IMU B(addr 0x51) for calculation
 float angleActualC[3];         // store the angle of IMU C(addr 0x52) for calculation
-float angleActual_p[3][3];     // store the last time angle of IMU C(addr 0x52) for calculation of velocity
+float angleActual_p[3][3];     // store the last time angle of IMU feedback for calculation of velocity
 
 float velActualA[3];           // store the velocity of IMU A(addr 0x50)
 float velActualB[3];           // store the velocity of IMU B(addr 0x51)
@@ -104,9 +104,9 @@ void getIMUangleR(void) {
   // angleActual_p[2][pitchChan] = angleActualB[pitchChan];
   // angleActual_p[2][yawChan] = angleActualB[yawChan];
 
-  angleActualB[rollChan] = (float)CharToShort(&angleTempB[0])/32768*180;   // roll A
-  angleActualB[pitchChan] = (float)CharToShort(&angleTempB[2])/32768*180;  // pitch A
-  angleActualB[yawChan] = (float)CharToShort(&angleTempB[4])/32768*180;    // yaw A
+  angleActualB[rollChan] = (float)CharToShort(&angleTempB[0])/32768*180;   // roll B
+  angleActualB[pitchChan] = (float)CharToShort(&angleTempB[2])/32768*180;  // pitch B
+  angleActualB[yawChan] = (float)CharToShort(&angleTempB[4])/32768*180;    // yaw B
 }
 
 /**
@@ -134,13 +134,13 @@ void getIMUangleT(void) {
   IICreadBytes(AddrIMUC,0x3d,6,&angleTempC[0]);  // read angle from IMUA
   // transfer cahr format to float format for the convenience of calculation
   // update last time's angle feedback
-  angleActual_p[3][rollChan] = angleActualC[rollChan];
-  angleActual_p[3][pitchChan] = angleActualC[pitchChan];
-  angleActual_p[3][yawChan] = angleActualC[yawChan];
+  // angleActual_p[3][rollChan] = angleActualC[rollChan];
+  // angleActual_p[3][pitchChan] = angleActualC[pitchChan];
+  // angleActual_p[3][yawChan] = angleActualC[yawChan];
 
-  angleActualC[rollChan] = (float)CharToShort(&angleTempC[0])/32768*180;   // roll A
-  angleActualC[pitchChan] = (float)CharToShort(&angleTempC[2])/32768*180;  // pitch A
-  angleActualC[yawChan] = (float)CharToShort(&angleTempC[4])/32768*180;    // yaw A
+  angleActualC[rollChan] = (float)CharToShort(&angleTempC[0])/32768*180;   // roll C
+  angleActualC[pitchChan] = (float)CharToShort(&angleTempC[2])/32768*180;  // pitch C
+  angleActualC[yawChan] = (float)CharToShort(&angleTempC[4])/32768*180;    // yaw C
 }
 
 /**
@@ -170,6 +170,7 @@ void getIMUangle(void) {
   getIMUangleR();
   delay(1);
   getIMUangleT();
+  delay(1);
 }
 
 /**

@@ -1,3 +1,7 @@
 20210416
-    If the force sensor is connected to ADC channel 10/11/12/13/14/15, it may need extra resistors to make sure the measued voltage from force sensor range from 0 to 2.5v
-    desired torque should be limited at: 0~limited torque 
+    If the force sensor is connected to ADC channel 10/11/12/13/14/15, it may need extra resistance divider to make sure the measued voltage from force sensor range from 0 to 2.5v
+    If extra resistors are connected to divide feedback voltage to 0~2.5v, the attaRatio vector defined in ADC.h should be adjusted accordingly
+    Desired torque should be limited at: 0~limited torque
+
+20210417
+    Check if the communication protocol is coincided to communication program set up like: terminator, SendItemFlag set up.

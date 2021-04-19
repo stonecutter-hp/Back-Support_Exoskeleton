@@ -13,7 +13,7 @@
 /*********************************** Serial communication definition ************************************/
 #define USART_REC_LEN 200                     // define the maximum number of received bytes
 #define USART_TX_LEN 200                      // define the maximum number of sending bytes
-#define RevievCharNum 15                      // correct recieveing char number exclude '\r'
+#define RevievCharNum 15                      // correct recieveing char number exclude terminator
 #define PosSign 1                             // positive sign
 #define NegSign 0                             // negative sign
 extern char USART_RX_BUF[USART_REC_LEN];      // receiving buffer
@@ -49,6 +49,8 @@ extern char inChar2;
  * Notice: With successful receiving process, USART_RX_STA indicates
  *         total reveived char number exclude '\r\n'; and they are stored
  *         in USART_RX_BUF[0~USART_RX_STA-1], i.e., TLxxxxTRxxxxMxx 
+ *         Here only if terminaor is wrongly detected or data length exceed maximum 
+ *         allowable length will lead to fail data receiving
  */
 void receiveDatafromPC(void);
 

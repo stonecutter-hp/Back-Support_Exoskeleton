@@ -31,10 +31,12 @@ const int attRatio[16] = {1,  1,  1,  1,  22.5,   2,  2,  2,  2,  2,   1,   1,  
 
 /* ADC conversion data and STATUS register */
 extern byte ADC_data[ENABLED_CH][4];             // store raw data from ADC
-extern bool ADC_update;                   // ADC_update enable flag 
+extern bool ADC_update;                          // ADC_update enable flag 
 extern unsigned long ADC_value[ENABLED_CH];      // store ADC value in long format  
 extern double Aver_ADC_value[ENABLED_CH];        // store the transferred ADC value for calculation
+// Store inter value for moving average filter
 extern double Aver_ADC_value_filtered[ENABLED_CH][FilterCycles];
+// Store inter value for moving average & exponential filter
 extern double Aver_ADC_value_Prev[ENABLED_CH];
 /* load cell force transfer */
 extern double LoadCell[4];                      // store the transferred force value

@@ -43,6 +43,7 @@ extern PID pidR;  // control parameter of right motor
 extern int16_t PWM_commandL;   // range: 0.1*PWMperiod_L~0.9*PWMperiod_L
 extern int16_t PWM_commandR;   // range: 0.1*PWMperiod_R~0.9*PWMperiod_R
 extern bool Control_update;    // control update flag
+ 
 // Previously workable Kp/Ki/Kd for test bench with large torsion spring:
 // 0.58/0/0.28  0.68/0/0.3
 #define KP_L 0.5              // Kp for PID control of motor L
@@ -57,6 +58,17 @@ extern bool Control_update;    // control update flag
 #define LimitTotal_TaR 7      // Limitation of total control command of motor R
 #define LimitInput 15         // Limitation of input command, here for open-loop is Ta, for closed loop is Td
 
+/****************************************High level controller parameters definition*******************************/
+extern bool HLControl_update;  // high-level control update flag
+// Controller parameter and threshold for high-level control strategy, the content may be adjusted according to future
+// practical applied high-level strategy
+typedef struct {
+  float ThrTrunkFle;       // Threshold for trunk flexion angle
+  float ThrHipAngleMean;   // Threshold for difference between left and right hip angle  
+  float ThrHipAngleDiff;   // Threshold for difference between left and right hip angle  
+}HLCont;  // Controller parameter and threshold for high-level control strategy
+extern HLCont HL_HP;       // Parameters for specified subjects
+
 /**************************************** Transmissio system parameters definition ********************************/
 // The output ability of the actuation unit with 19:1 gear ratio is better restricted to 0~8.9 Nm (0.0525*9*19)
 // The following parameter may be adjusted after calibrateds
@@ -66,18 +78,27 @@ extern bool Control_update;    // control update flag
 #define ForceSensorL_Sensitivity 1       //for force sensor calibration
 #define LoadCellL_Sensitivity 0.00166    //for load cell calibration
 #define PotentioLP1_Sensitivity 0.0083   //0.0083 = 2.5/300 (v/deg); for potentiometer calibration 
-extern float Estimated_TdMotorCurrentL;
-extern float Estimated_TdMotorCurrentR;
-extern float Estimated_TdForceSensorL;
-extern float Estimated_TdForceSensorR;
-extern float Estimated_TdL;
-extern float Estimated_TdR;
-extern float HipAngleL;
-extern float HipAngleR;
-extern float PotentioLP1_InitValue;
-extern float PotentioRP2_InitValue;
-extern float TrunkYaw;
-extern float TrunkFlexionVel;
+
+/*************************************** Intermediate auxiliary parameters for control ****************************/ 
+// Parameters for lowe-level control
+extern float Estimated_TdMotorCurrentL;   // Td feedback from left motor current feedback
+extern float Estimated_TdMotorCurrentR;   // Td feedback from right motor current feedback
+extern float Estimated_TdForceSensorL;    // Td feedback from left force sensor
+extern float Estimated_TdForceSensorR;    // Td feedback from right force sensor
+extern float Estimated_TdL;               // Estimated compact Td feedback of left side
+extern float Estimated_TdR;               // Estimated compact Td feedback of right side
+// Parameters for high-level controller
+extern float HipAngleL;                   // Left hip joint angle
+extern float HipAngleR;                   // Right hip joint angle
+extern float PotentioLP1_InitValue;       // Auxiliary parameter for left hip joint angle
+extern float PotentioRP2_InitValue;       // Auxiliary parameter for right hip joint angle
+extern float TrunkYaw;                    // Auxiliary parameter for trunk yaw angle
+extern float TrunkFlexionVel;             // Trunk flexion angular velocity
+extern float ThighAngleL;                 // Left thigh angle
+extern float ThighAngleR;                 // Right thigh angle
+extern float HipAngleDiff;                // Angle difference between left and right hip angle
+extern float HipAngleMean;                // (Left hip angle + right hip angle)/2
+
 /**
  * Control parameter initialization
  * Initial controller including command and controller parameters for PID controller
@@ -96,12 +117,33 @@ void yawAngleR20(uint8_t aloMode);
 void sensorFeedbackPro(void);
 
 /**
+ * Conduct simple user intention detection and torque generation calculation as reference torque 
+ * for low-level control based on sensor information feedback from force sensors, IMUs, Potentiometers
+ * and Motor driver
+ * @para unsigned char - control mode 1 for user intenntion detection: 1-xx algorithm, 2-xx algorithm
+ *       unsigned char - control mode 2 for torque generation strategy: 1-xx strategy, 2-xx strategy
+ */
+void HLControl(uint8_t UIDMode, uint8_t RTGMode);
+
+/**
+ * Conduct simple user intention detection 
+ * @para unsigned char - control mode for user intenntion detection: 1-xx algorithm, 2-xx algorithm
+ */
+void HL_UserIntentDetect(uint8_t UIDMode);
+
+/**
+ * Reference torque generation 
+ * @para unsigned char - control mode for torque generation strategy: 1-xx strategy, 2-xx strategy
+ */
+void HL_ReferTorqueGenerate(uint8_t RTGMode);
+
+/**
  * Calculate control command (PWM duty cycle) accroding to command received from PC
  * and information received from ADC and IMU
  * @para unsigned char - control mode: 1-PID control, 2-Open loop control
  * Here use increment PID algorithm: Delta.U = Kp*( (ek-ek_1) + (Tcontrol/Ti)*ek + (Td/Tcontrol)*(ek+ek_2-2*ek_1) )
  */
-void Control(uint8_t mode);
+void Control(uint8_t ContMode);
 
 /**
  * Set the pwm duty cycle for both of the motors

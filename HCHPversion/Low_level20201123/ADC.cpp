@@ -9,7 +9,9 @@ byte ADC_data[ENABLED_CH][4];             // store raw data from ADC
 bool ADC_update = true;                   // ADC_update enable flag 
 unsigned long ADC_value[ENABLED_CH];      // store ADC value in long format  
 double Aver_ADC_value[ENABLED_CH];        // store the transferred ADC value for calculation
+// Store inter value for moving average filter
 double Aver_ADC_value_filtered[ENABLED_CH][FilterCycles];
+// Store inter value for moving average & exponential filter
 double Aver_ADC_value_Prev[ENABLED_CH];
 /* load cell force transfer */
 double LoadCell[4];                      // store the transferred force value
@@ -103,6 +105,14 @@ void Filter_Init() {
  * @param double - cycles: 1~FilterCycles
  */
 void MovingAverageFilter(int cycles) {
+  // Notice here i=0~2 and (6-i)*i+i is assigned to process specific ADC feeeback needed
+  // in test bench experiemnts of HCHP version, should be adjusted for other experiments
+  if(cycles > FilterCycles) {
+    cycles = FilterCycles;
+  }
+  else if(cycles < 1) {
+    cycles = 1;
+  } 
   for(int i=0;i<3;i++) {
     for(int j=0; j<cycles-1; j++) {  // update the ADC data
       Aver_ADC_value_filtered[(6-i)*i+i][j] = Aver_ADC_value_filtered[(6-i)*i+i][j+1];
@@ -119,6 +129,14 @@ void MovingAverageFilter(int cycles) {
  * @param double - weighting decreasing coefficient alpha (0~1)
  */
 void ExponentialMovingFilter(double alpha) {
+  // Notice here i=0~2 and (6-i)*i+i is assigned to process specific ADC feeeback needed
+  // in test bench experiemnts of HCHP version, should be adjusted for other experiments
+  if(alpha > 1) {
+    alpha = 1;
+  }
+  else if(alpha < 0) {
+    alpha = 0;
+  } 
   for(int i=0;i<3;i++) {
     Aver_ADC_value[(6-i)*i+i] = alpha*Aver_ADC_value[(6-i)*i+i]+(1-alpha)*Aver_ADC_value_Prev[(6-i)*i+i];
     Aver_ADC_value_Prev[(6-i)*i+i] = Aver_ADC_value[(6-i)*i+i];

@@ -99,7 +99,7 @@ void sensorFeedbackPro(void);
  * @para unsigned char - control mode: 1-PID control, 2-Open loop control
  * Here use increment PID algorithm: Delta.U = Kp*( (ek-ek_1) + (Tcontrol/Ti)*ek + (Td/Tcontrol)*(ek+ek_2-2*ek_1) )
  */
-void Control(uint8_t mode);
+void Control(uint8_t ContMode);
 
 /**
  * Set the pwm duty cycle for both of the motors

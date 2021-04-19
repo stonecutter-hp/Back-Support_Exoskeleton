@@ -44,7 +44,7 @@ void ADC_Init(void) {
   AD7173.set_channel_config(CH9, false, SETUP0, AIN9, REF_NEG);
   AD7173.set_channel_config(CH10, true, SETUP0, AIN10, REF_NEG);  //PotentioLP1
   AD7173.set_channel_config(CH11, false, SETUP0, AIN11, REF_NEG);
-  AD7173.set_channel_config(CH12, false, SETUP0, AIN12, REF_NEG);
+  AD7173.set_channel_config(CH12, false, SETUP0, AIN12, REF_NEG); //ForceSensorL
   AD7173.set_channel_config(CH13, false, SETUP0, AIN13, REF_NEG);
   AD7173.set_channel_config(CH14, false, SETUP0, AIN14, REF_NEG);
   AD7173.set_channel_config(CH15, false, SETUP0, AIN15, REF_NEG);
@@ -103,6 +103,14 @@ void Filter_Init() {
  * @param double - cycles: 1~FilterCycles
  */
 void MovingAverageFilter(int cycles) {
+  // Notice here i=0~2 and (6-i)*i+i is assigned to process specific ADC feeeback needed
+  // in test bench experiemnts of HCHP version, should be adjusted for other experiments
+  if(cycles > FilterCycles) {
+    cycles = FilterCycles;
+  }
+  else if(cycles < 1) {
+    cycles = 1;
+  } 
   for(int i=0;i<3;i++) {
     for(int j=0; j<cycles-1; j++) {  // update the ADC data
       Aver_ADC_value_filtered[(6-i)*i+i][j] = Aver_ADC_value_filtered[(6-i)*i+i][j+1];
@@ -119,6 +127,14 @@ void MovingAverageFilter(int cycles) {
  * @param double - weighting decreasing coefficient alpha (0~1)
  */
 void ExponentialMovingFilter(double alpha) {
+  // Notice here i=0~2 and (6-i)*i+i is assigned to process specific ADC feeeback needed
+  // in test bench experiemnts of HCHP version, should be adjusted for other experiments
+  if(alpha > 1) {
+    alpha = 1;
+  }
+  else if(alpha < 0) {
+    alpha = 0;
+  } 
   for(int i=0;i<3;i++) {
     Aver_ADC_value[(6-i)*i+i] = alpha*Aver_ADC_value[(6-i)*i+i]+(1-alpha)*Aver_ADC_value_Prev[(6-i)*i+i];
     Aver_ADC_value_Prev[(6-i)*i+i] = Aver_ADC_value[(6-i)*i+i];

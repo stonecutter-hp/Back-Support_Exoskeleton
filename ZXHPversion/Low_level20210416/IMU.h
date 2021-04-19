@@ -9,13 +9,13 @@
 #include "IIC.h"
 
 /**************************************** IMU parameters definition ********************************/
-#define rollChan  0
+#define rollChan  0                // Notice that seems the practical pitch angle corresponds to rollChan in this program
 #define pitchChan 1
 #define yawChan   2
 #define AddrIMUA  0x50
 #define AddrIMUB  0x51
 #define AddrIMUC  0x52
-#define IMU_UpdateRate 200            // Hz
+#define IMU_UpdateRate 200         // Hz, Assumed IMU data updated frequency
 #define IMUFilterCycles 6
 #define OperaitonAloIMUA 9         // IMUA alogorithm 6-6 axis, 9-9axis 
 #define OperaitonAloIMUB 9         // IMUB alogorithm 6-6 axis, 9-9axis
