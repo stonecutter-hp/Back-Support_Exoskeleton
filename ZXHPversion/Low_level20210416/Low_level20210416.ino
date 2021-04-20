@@ -16,7 +16,7 @@ Log
   and user intention detection is embeded in the low-level controller for 
   simple implementation
   As a result, only sendDatatoPC is needed and no command receiving from PC
-20210417
+20210420
   The user intention detection strategy refers to the rule-based strategy written
   in the 'Thoughs Keeping notebook'
   
@@ -68,7 +68,7 @@ void setup() {
   getADCaverage(1);
   getIMUangleL();
   yawAngleR20(1);     // Forced trunk yaw angle correction
-  PotentioLP1_InitValue = Aver_ADC_value[PotentioLP1];  // Hip angle initial vallue
+  HipAngL_InitValue = Aver_ADC_value[PotentioLP1];  // Hip angle initial vallue
   delay(5); 
 }
 

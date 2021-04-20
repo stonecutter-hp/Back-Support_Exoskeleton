@@ -17,7 +17,7 @@ bool Control_update = true;    // control update flag
 bool HLControl_update = true;  // high-level control update flag
 HLCont HL_HP;                  // Parameters for specific subjects
 
-/*************************************** Intermediate auxiliary parameters for control ****************************/
+/*************************************** Intermediate auxiliary parameters for control ****************************/ 
 // Parameters for lowe-level control
 float Estimated_TdMotorCurrentL;   // Td feedback from left motor current feedback
 float Estimated_TdMotorCurrentR;   // Td feedback from right motor current feedback
@@ -25,20 +25,32 @@ float Estimated_TdForceSensorL;    // Td feedback from left force sensor
 float Estimated_TdForceSensorR;    // Td feedback from right force sensor
 float Estimated_TdL;               // Estimated compact Td feedback of left side
 float Estimated_TdR;               // Estimated compact Td feedback of right side
-// Parameters for high-level controller
-float HipAngleL;                   // Left hip joint angle
-float HipAngleR;                   // Right hip joint angle
-float PotentioLP1_InitValue;       // Auxiliary parameter for left hip joint angle
-float PotentioRP2_InitValue;       // Auxiliary parameter for right hip joint angle
-float TrunkYaw;                    // Auxiliary parameter for trunk yaw angle
-float TrunkFlexionVel;             // Trunk flexion angular velocity
-extern float ThighAngleL;                 // Left thigh angle
-extern float ThighAngleR;                 // Right thigh angle
+// Parameters for high-level controller (Directly feedback from sensor)
+float HipAngL;                     // Left hip joint angle
+float HipAngL_InitValue;           // Auxiliary parameter for left hip joint angle
+float HipAngR;                     // Right hip joint angle
+float HipAngR_InitValue;           // Auxiliary parameter for right hip joint angle
+float TrunkYawAng;                 // Trunk yaw angle
+float TrunkYaw_InitValue;          // Auxiliary parameter for trunk yaw angle
+float TrunkFleAng;                 // Trunk flexion angle
+float TrunkFleAng_InitValue;       // Auxiliary parameter for trunk pitch angle
+float TrunkFleVel;                 // Trunk flexion angular velocity
+// Parameters for high-level controller (Calculated from sensor feedback)
+float HipAngMean;                  // (Left hip angle + right hip angle)/2
+float HipAngDiff;                  // (Left hip angle - right hip angle)
+float HipAngStd;                   // Std(HipAngMean) within certain time range
+float HipAngVel;                   // Velocity of HipAngMean
+float ThighAngL;                   // Left thigh angle
+float ThighAngR;                   // Right thigh angle
+float ThighAngMean;                // (Left thigh angle + right thigh angle)/2
+float ThighAngStd;                 // Std(ThighAngMean) within certain time range
+float HipAngDiffStd;               // Std(HipAngDiff) within certain time range
 
 
 
 /**
- * Control parameter initialization for low-level controller
+ * Control parameter initialization for Low-level controller
+ * Initial controller including command and controller parameters for Low-level PID controller/ Open-loop controller
  * Here use increment PID algorithm: Delta.U = Kp*( (ek-ek_1) + (Tcontrol/Ti)*ek + (Td/Tcontrol)*(ek+ek_2-2*ek_1) )
  */
 void Control_Init(void) {
@@ -53,16 +65,6 @@ void Control_Init(void) {
   Estimated_TdForceSensorR = 0;
   Estimated_TdL = 0;
   Estimated_TdR = 0;
-  // initialize human body motion status
-  PotentioLP1_InitValue = 0;  // maybe used for hip joint angle feedback
-  PotentioRP2_InitValue = 0;  // maybe used for hip joint angle feedback
-  HipAngleL = 0;              // left hip joint angle feedback
-  HipAngleR= 0;              // left hip joint angle feedback
-  TrunkYaw = 0;
-  TrunkFlexionVel = 0;
-  mode = 1;   // Motion detection mode, default is 1 (other motion)
-  PreMode = mode;
-  side = 0;   // Asymmetric side, default is 0 (no asymmetric)
   // initialize the control parameter of left motor
   pidL.set = desiredTorqueL;
   pidL.currTa = 0;
@@ -95,6 +97,23 @@ void Control_Init(void) {
 }
 
 /**
+ * Control parameter initialization for High-level controller
+ * Initial controller including sensor feedback, auxiliary parameters and thresholds used for high-level controller
+ */
+void HLControl_Init(void) {
+  // initialize human body motion status
+  HipAngL_InitValue = 0;  // maybe used for hip joint angle feedback
+  HipAngR_InitValue = 0;  // maybe used for hip joint angle feedback
+  HipAngL = 0;              // left hip joint angle feedback
+  HipAngR= 0;              // left hip joint angle feedback
+  TrunkYawAng = 0;
+  TrunkFleVel = 0;
+  mode = 1;   // Motion detection mode, default is 1 (other motion)
+  PreMode = mode;
+  side = 0;   // Asymmetric side, default is 0 (no asymmetric)  
+}
+
+/**
  * Set the yaw angle of human trunk to zero
  * @param unsigned char - IMU operation mode: 1-force to set, other number-logic set
  */
@@ -105,28 +124,28 @@ void yawAngleR20(uint8_t aloMode) {
   if(aloMode == 1) {
     if(OperaitonAloIMUC == 9) {
       getIMUangleT();
-      TrunkYaw = angleActualC[yawChan];
+      TrunkYaw_InitValue = angleActualC[yawChan];
     }
     else if(OperaitonAloIMUC == 6) {
       // set2zeroL();
       // set2zeroR();
       set2zeroT();
       getIMUangleT();
-      TrunkYaw = 0;
+      TrunkYaw_InitValue = 0;
     }
   }
   else {
     if(mode == 1 && PreMode > 3) {
       if(OperaitonAloIMUC == 9) {
         getIMUangleT();
-        TrunkYaw = angleActualC[yawChan];
+        TrunkYaw_InitValue = angleActualC[yawChan];
       }
       else if(OperaitonAloIMUC == 6) {
         // set2zeroL();
         // set2zeroR();
         set2zeroT();
         getIMUangleT();
-        TrunkYaw = 0;        
+        TrunkYaw_InitValue = 0;        
       }
     }
   }
@@ -146,22 +165,22 @@ void sensorFeedbackPro(void) {
 //  Estimated_TdL = 0.1*Estimated_TdForceSensorL+0.9*Estimated_TdMotorCurrentL;        // Td feedback used for low-level closed-loop control
   
   // --------- Trunk yaw angle feedback info procesisng for high-level controller -----------------
-  angleActualC[yawChan] = angleActualC[yawChan] - TrunkYaw;
-  if(angleActualC[yawChan] > 180) {
-    angleActualC[yawChan] = angleActualC[yawChan]-360;
+  TrunkYawAng = angleActualC[yawChan] - TrunkYaw_InitValue;
+  if(TrunkYawAng > 180) {
+    TrunkYawAng = TrunkYawAng-360;
   }
-  else if(angleActualC[yawChan] < -180) {
-    angleActualC[yawChan] = angleActualC[yawChan]+360;
+  else if(TrunkYawAng < -180) {
+    TrunkYawAng = TrunkYawAng+360;
   }
 
   // --------- Trunk flexion velocity info processing for high-level controller ------------ 
-  TrunkFlexionVel = velActualC[rollChan];
+  TrunkFleVel = velActualC[rollChan];
 
   // --------- Hip joint angle feedback info processing for high-level controller ----------
-//  HipAngleL = (Aver_ADC_value[PotentioLP1]-PotentioLP1_InitValue)/PotentioLP1_Sensitivity;
+//  HipAngleL = (Aver_ADC_value[PotentioLP1]-HipAngleL_InitValue)/PotentioLP1_Sensitivity;
 
   // --------- Thigh angle feedback info processing for high-level controller --------------
-//  ThighAngleL = 180-HipAngleL-angleActualC[rollChan];
+//  ThighAngL = 180-HipAngL-angleActualC[rollChan];  //(TrunkFleAng = angleActualC[rollChan])
 }
 
 /**
@@ -195,7 +214,7 @@ void HLControl(uint8_t UIDMode, uint8_t RTGMode) {
 void HL_UserIntentDetect(uint8_t UIDMode) {
   // Here != 100 is a illustration of mode selection
   if(UIDMode != 100) {
-    if(HipAngleL < HL_HP.ThrHipAngleMean) {
+    if(HipAngL < HL_HP.ThrHipAngMean) {
       // A illustration of motion mode update
       mode = 1; 
       side = 1;  

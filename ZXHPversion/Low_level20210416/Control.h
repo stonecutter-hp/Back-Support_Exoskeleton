@@ -63,9 +63,17 @@ extern bool HLControl_update;  // high-level control update flag
 // Controller parameter and threshold for high-level control strategy, the content may be adjusted according to future
 // practical applied high-level strategy
 typedef struct {
-  float ThrTrunkFle;       // Threshold for trunk flexion angle
-  float ThrHipAngleMean;   // Threshold for difference between left and right hip angle  
-  float ThrHipAngleDiff;   // Threshold for difference between left and right hip angle  
+  float ThrTrunkFleAng;    // Threshold for trunk flexion angle
+  float ThrTrunkFleVel;    // Threshold for trunk flexion velocity
+  float ThrHipAngMean;     // Threshold for mean value of summation of left and right hip angle  
+  float ThrHipAngDiff;     // Threshold for difference between left and right hip angle
+  float ThrHipAngStd;      // Threshold for standard deviation of mean hip angle
+  float ThrHipVel;         // Threshold for mean hip angle velocity
+  float ThrThighAngMean;   // Threshold for mean value of summation of left and right thigh angle
+  float ThrThighAngStd;    // Threshold for standard deviation of mean thigh angle
+  float ThrThighAngVel;    // Threshold for mean thigh angle velocity
+  float ThrHipAngDiffStd;  // Threshold for standard deviation of difference between left and right hip angle
+    
 }HLCont;  // Controller parameter and threshold for high-level control strategy
 extern HLCont HL_HP;       // Parameters for specified subjects
 
@@ -87,23 +95,40 @@ extern float Estimated_TdForceSensorL;    // Td feedback from left force sensor
 extern float Estimated_TdForceSensorR;    // Td feedback from right force sensor
 extern float Estimated_TdL;               // Estimated compact Td feedback of left side
 extern float Estimated_TdR;               // Estimated compact Td feedback of right side
-// Parameters for high-level controller
-extern float HipAngleL;                   // Left hip joint angle
-extern float HipAngleR;                   // Right hip joint angle
-extern float PotentioLP1_InitValue;       // Auxiliary parameter for left hip joint angle
-extern float PotentioRP2_InitValue;       // Auxiliary parameter for right hip joint angle
-extern float TrunkYaw;                    // Auxiliary parameter for trunk yaw angle
-extern float TrunkFlexionVel;             // Trunk flexion angular velocity
-extern float ThighAngleL;                 // Left thigh angle
-extern float ThighAngleR;                 // Right thigh angle
-extern float HipAngleDiff;                // Angle difference between left and right hip angle
-extern float HipAngleMean;                // (Left hip angle + right hip angle)/2
+// Parameters for high-level controller (Directly feedback from sensor)
+extern float HipAngL;                     // Left hip joint angle
+extern float HipAngL_InitValue;           // Auxiliary parameter for left hip joint angle
+extern float HipAngR;                     // Right hip joint angle
+extern float HipAngR_InitValue;           // Auxiliary parameter for right hip joint angle
+extern float TrunkYawAng;                 // Trunk yaw angle
+extern float TrunkYaw_InitValue;          // Auxiliary parameter for trunk yaw angle
+extern float TrunkFleAng;                 // Trunk flexion angle
+extern float TrunkFleAng_InitValue;       // Auxiliary parameter for trunk pitch angle
+extern float TrunkFleVel;                 // Trunk flexion angular velocity
+// Parameters for high-level controller (Calculated from sensor feedback)
+extern float HipAngMean;                  // (Left hip angle + right hip angle)/2
+extern float HipAngDiff;                  // (Left hip angle - right hip angle)
+extern float HipAngStd;                   // Std(HipAngMean) within certain time range
+extern float HipAngVel;                   // Velocity of HipAngMean
+extern float ThighAngL;                   // Left thigh angle
+extern float ThighAngR;                   // Right thigh angle
+extern float ThighAngMean;                // (Left thigh angle + right thigh angle)/2
+extern float ThighAngStd;                 // Std(ThighAngMean) within certain time range
+extern float HipAngDiffStd;               // Std(HipAngDiff) within certain time range
+
 
 /**
- * Control parameter initialization
- * Initial controller including command and controller parameters for PID controller
+ * Control parameter initialization for Low-level controller
+ * Initial controller including command and controller parameters for Low-level PID controller/ Open-loop controller
+ * Here use increment PID algorithm: Delta.U = Kp*( (ek-ek_1) + (Tcontrol/Ti)*ek + (Td/Tcontrol)*(ek+ek_2-2*ek_1) )
  */
 void Control_Init(void);
+
+/**
+ * Control parameter initialization for High-level controller
+ * Initial controller including sensor feedback, auxiliary parameters and thresholds used for high-level controller
+ */
+void HLControl_Init(void);
 
 /**
  * Set the yaw angle of human trunk to zero
