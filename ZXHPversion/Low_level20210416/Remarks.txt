@@ -5,3 +5,9 @@
 
 20210417
     Check if the communication protocol is coincided to communication program set up like: terminator, SendItemFlag set up.
+
+20210421
+    For low-level controller parameter adjustment, find it in Control.h #define part as the actuation unit parameter is the same for different subjects.
+    For high-level controller parameter adjustment, find it in Control.ccpp HLControl_Init() as the parameter is different for different subjects.
+    Notice to check the Initial value like ForceSensorL_InitValue, HipAngR_InitValue is ADC raw data or Processed data
+    Remember to record expected initial value of every sensor before practical application of the control program

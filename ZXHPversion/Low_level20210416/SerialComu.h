@@ -26,16 +26,6 @@ extern char USART_TX_BUF[USART_TX_LEN];       // sending buffer
 extern int USART_TX_STA;                      // sending number flag
 extern bool SendItemFlag[9];                  // for convinient of adjust feedback item 
 /*********************************** Communication receiving data definition ************************************/
-extern float desiredTorqueL;    // desired motor torque of left motor
-extern float desiredTorqueR;    // desired motor torque of right motor
-// motion type: 1-other motion;       2-Symmetric Holding; 
-//              3-Asymmetric Holding; 4-Asymmetric Lowering;
-//              5-Asymmetric Lifting; 6-Symmetric Lowering;
-//              7-Symmetric Lifting;  0-Stop state
-extern uint8_t mode;            // detected motion mode
-extern uint8_t PreMode;         // last time's motion mode
-// 1-left; 2-right; 0-none
-extern uint8_t side;            // Asymmetric side
 extern char inChar1;
 extern char inChar2;
 

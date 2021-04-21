@@ -17,16 +17,6 @@ int USART_TX_STA = 0;                 // sending number flag
 bool SendItemFlag[9] = {true, true, true, true, true, true, true, true, true};
 
 /*********************************** Communication receiving data definition ************************************/
-float desiredTorqueL;    // desired motor torque of left motor
-float desiredTorqueR;    // desired motor torque of right motor
-// motion type: 1-other motion;       2-Symmetric Holding; 
-//              3-Asymmetric Holding; 4-Asymmetric Lowering;
-//              5-Asymmetric Lifting; 6-Symmetric Lowering;
-//              7-Symmetric Lifting;  0-Stop state
-uint8_t mode;            // detected motion mode
-uint8_t PreMode;         // last time's motion mode
-// 1-left; 2-right; 0-none
-uint8_t side;            // Asymmetric side
 char inChar1;
 char inChar2;
 

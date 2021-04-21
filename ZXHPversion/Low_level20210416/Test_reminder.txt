@@ -1,4 +1,7 @@
 20210420
-abs(),sin() function testing
-velocity from MCU calculation testing
-Check every information from sensor and corresponding calculation before implement controller
+  Abs(),sin() function testing
+  Velocity from MCU calculation testing
+  Check every information from sensor and corresponding calculation before implement controller
+
+20210421
+  Record expected initial value of every sensor

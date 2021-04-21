@@ -60,39 +60,67 @@ extern bool Control_update;    // control update flag
 
 /****************************************High level controller parameters definition*******************************/
 extern bool HLControl_update;  // high-level control update flag
+extern float desiredTorqueL;    // desired motor torque of left motor
+extern float desiredTorqueR;    // desired motor torque of right motor
+// motion type: 1-other motion;       2-Symmetric Holding; 
+//              3-Asymmetric Holding; 4-Asymmetric Lowering;
+//              5-Asymmetric Lifting; 6-Symmetric Lowering;
+//              7-Symmetric Lifting;  0-Stop state
+extern uint8_t mode;            // detected motion mode
+extern uint8_t PreMode;         // last time's motion mode
+// 1-left; 2-right; 0-none
+extern uint8_t side;            // Asymmetric side
 // Controller parameter and threshold for high-level control strategy, the content may be adjusted according to future
 // practical applied high-level strategy
 typedef struct {
+  // Parameters for UID strategy
   float ThrTrunkFleAng;    // Threshold for trunk flexion angle
   float ThrTrunkFleVel;    // Threshold for trunk flexion velocity
   float ThrHipAngMean;     // Threshold for mean value of summation of left and right hip angle  
   float ThrHipAngDiff;     // Threshold for difference between left and right hip angle
   float ThrHipAngStd;      // Threshold for standard deviation of mean hip angle
   float ThrHipVel;         // Threshold for mean hip angle velocity
+  // Notice that ThrThighAngMean should not be larger than ThrHipAngMean - ThrTrunkFleAng if ThighAng comes from
+  // calculation of (HipAng - TrunkFleAng) instead of measurement
   float ThrThighAngMean;   // Threshold for mean value of summation of left and right thigh angle
   float ThrThighAngStd;    // Threshold for standard deviation of mean thigh angle
   float ThrThighAngVel;    // Threshold for mean thigh angle velocity
   float ThrHipAngDiffStd;  // Threshold for standard deviation of difference between left and right hip angle
-    
+  // Parameters for RTG strategy
+  float TrunkMass;         // kg, Subject's trunk mass
+  float ImpeKp;            // Nm/deg, Rendered stiffness of Impedance strategy
+  float ImpeKv;            // Nm*s/deg, Rendered damping of Impedance strategy
 }HLCont;  // Controller parameter and threshold for high-level control strategy
-extern HLCont HL_HP;       // Parameters for specified subjects
+extern HLCont Subject1;    // Parameters for specified subjects
+// Expected initial value range (CaliValue +- Tol) of sensor feedback for initial calibration
+// the initial values should be adjusted along with prototype design
+#define ForceSensorL_CaliValue 0
+#define ForceSensorL_Tol 0
+#define ForceSensorR_CaliValue 0
+#define ForceSensorR_Tol 0
+#define HipAngL_CaliValue 0
+#define HipAngL_Tol 0
+#define HipAngR_CaliValue 0
+#define HipAngR_Tol 0
+#define TrunkFleAng_CaliValue 0
+#define TrunkFleAng_Tol 0
 
-/**************************************** Transmissio system parameters definition ********************************/
+/**************************************** Transmission system parameters definition ********************************/
 // The output ability of the actuation unit with 19:1 gear ratio is better restricted to 0~8.9 Nm (0.0525*9*19)
 // The following parameter may be adjusted after calibrateds
 #define MotorCurrentConstant 0.0437      //motor current constant Nm/A
 #define MotorMaximumCurrent 9            //motor maximum current A configured in EXCON studio
 #define GearRatio 19                     //gear ratio is 19:1
-#define ForceSensorL_Sensitivity 1       //for force sensor calibration
-#define LoadCellL_Sensitivity 0.00166    //for load cell calibration
-#define PotentioLP1_Sensitivity 0.0083   //0.0083 = 2.5/300 (v/deg); for potentiometer calibration 
+
 
 /*************************************** Intermediate auxiliary parameters for control ****************************/ 
 // Parameters for lowe-level control
 extern float Estimated_TdMotorCurrentL;   // Td feedback from left motor current feedback
 extern float Estimated_TdMotorCurrentR;   // Td feedback from right motor current feedback
 extern float Estimated_TdForceSensorL;    // Td feedback from left force sensor
+extern float ForceSensorL_InitValue;      // Auxiliary parameter for left force sensor
 extern float Estimated_TdForceSensorR;    // Td feedback from right force sensor
+extern float ForceSensorR_InitValue;      // Auxiliary parameter for right force sensor
 extern float Estimated_TdL;               // Estimated compact Td feedback of left side
 extern float Estimated_TdR;               // Estimated compact Td feedback of right side
 // Parameters for high-level controller (Directly feedback from sensor)
@@ -116,19 +144,25 @@ extern float ThighAngMean;                // (Left thigh angle + right thigh ang
 extern float ThighAngStd;                 // Std(ThighAngMean) within certain time range
 extern float HipAngDiffStd;               // Std(HipAngDiff) within certain time range
 
+/**
+ * Control parameter initialization for High-level controller
+ * Initial controller including: 
+ * Sensor feedbacks, auxiliary parameters and thresholds used for high-level controller
+ */
+void HLControl_Init(void);
 
 /**
  * Control parameter initialization for Low-level controller
- * Initial controller including command and controller parameters for Low-level PID controller/ Open-loop controller
+ * Initial parameters including: 
+ * PID struct parameters (PID controller parameters); Iterative force feedback; Intermediate quantities related to PWM command.
  * Here use increment PID algorithm: Delta.U = Kp*( (ek-ek_1) + (Tcontrol/Ti)*ek + (Td/Tcontrol)*(ek+ek_2-2*ek_1) )
  */
 void Control_Init(void);
 
 /**
- * Control parameter initialization for High-level controller
- * Initial controller including sensor feedback, auxiliary parameters and thresholds used for high-level controller
+ * Pre-processing for sensor feedback to make sure the initial status of sensor is good for calibration
  */
-void HLControl_Init(void);
+void PreproSensorInit(void);
 
 /**
  * Set the yaw angle of human trunk to zero
@@ -137,7 +171,12 @@ void HLControl_Init(void);
 void yawAngleR20(uint8_t aloMode);
 
 /**
- * Processing sensor feedback for closed-loop control and data sending to PC
+ * Processing sensor feedback for High-level closed-loop control and data sending
+ */
+void HLsensorFeedbackPro(void);
+
+/**
+ * Processing sensor feedback for Low-level closed-loop control
  */
 void sensorFeedbackPro(void);
 

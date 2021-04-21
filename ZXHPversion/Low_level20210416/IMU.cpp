@@ -28,6 +28,7 @@ double IMUC_value_filtered[3][IMUFilterCycles];  // store data from IMUC for fil
 double IMU_value_Prev[3][3];                     // store last time filtered angle of 3 IMU * 3 channel
 
 unsigned char yaw2zero[2] = {0x04, 0x00};  // The command for IMU yaw angle return to zero (only for 6-axis algorithm)
+
 /**
  * IMU angle feedback return to zero
  */
@@ -39,8 +40,6 @@ void IMU_Init(void)  {
     velActualA[i] = 0;
     velActualB[i] = 0;
     velActualC[i] = 0;
-
-
     for(int t=0; t<IMUFilterCycles; t++) {
       IMUA_value_filtered[i][t] = 0;
       IMUB_value_filtered[i][t] = 0;
@@ -66,7 +65,7 @@ void IMU_Init(void)  {
  */
 void getIMUangleL(void) {
   IICreadBytes(AddrIMUA,0x3d,6,&angleTempA[0]);  // read angle from IMUA
-  // transfer cahr format to float format for the convenience of calculation
+  // transfer char format to float format for the convenience of calculation
   // angleActual_p[1][rollChan] = angleActualA[rollChan];
   // angleActual_p[1][pitchChan] = angleActualA[pitchChan];
   // angleActual_p[1][yawChan] = angleActualA[yawChan];
@@ -98,7 +97,7 @@ void set2zeroL(void) {
  */
 void getIMUangleR(void) {
   IICreadBytes(AddrIMUB,0x3d,6,&angleTempB[0]);  // read angle from IMUA
-  // transfer cahr format to float format for the convenience of calculation
+  // transfer char format to float format for the convenience of calculation
   // update last time's angle feedback
   // angleActual_p[2][rollChan] = angleActualB[rollChan];
   // angleActual_p[2][pitchChan] = angleActualB[pitchChan];
@@ -132,7 +131,7 @@ void set2zeroR(void) {
  */
 void getIMUangleT(void) {
   IICreadBytes(AddrIMUC,0x3d,6,&angleTempC[0]);  // read angle from IMUA
-  // transfer cahr format to float format for the convenience of calculation
+  // transfer char format to float format for the convenience of calculation
   // update last time's angle feedback
   // angleActual_p[3][rollChan] = angleActualC[rollChan];
   // angleActual_p[3][pitchChan] = angleActualC[pitchChan];

@@ -37,7 +37,9 @@ void setup() {
   Serial.begin(460800);   // initialize serial set baurd rate
 
   /*************************** Control parameter Initialization ************************/
-  Control_Init();  // initialize the control parameters
+  // Attention initialize high-level controller first
+  HLControl_Init(); // initialize the high-level control parameters
+  Control_Init();   // initialize the control parameters
   
   /*********** Assign general IO for motor control and LED state indication ************/
   GeneralIO_Init();
@@ -58,17 +60,30 @@ void setup() {
   /***************************** PWM Generation Initialization *************************/
   PWMmode_Init();
 
+  /***************************** Sensor initial value calibration **********************/
+  PreproSensorInit();
+  delay(5);
+  
+  /****************************** Initial status checking ******************************/
+  // Make sure the initial status is standing mode (mode = 1)
+  while(mode != 1) {
+    // Collect info from ADC including: Potentiometets(HipAng), ForceSensors(Interaction force)
+    // and Motor status 
+    getADCaverage(1);
+    // Collect info from IMUC including: TrunkAng, TrunkVel
+    getIMUangleT();   
+    HLsensorFeedbackPro();
+  }
+
+//  yawAngleR20(1);     // Forced trunk yaw angle correction
+//  HipAngL_InitValue = Aver_ADC_value[PotentioLP1];  // Hip angle initial vallue
+//  delay(5);
+  
   // resume all the timers
   Timer1.resume();     // Motor L PWM
   Timer2.resume();     // Motor R PWM
   Timer3.resume();     // ADC and control update
   Timer4.resume();     // Sending PC update
-
-  /******************* ADC value and IMU angle feedback initialization *****************/
-  getADCaverage(1);
-  getIMUangleL();
-  yawAngleR20(1);     // Forced trunk yaw angle correction
-  HipAngL_InitValue = Aver_ADC_value[PotentioLP1];  // Hip angle initial vallue
   delay(5); 
 }
 

@@ -10,8 +10,8 @@
 #include "Control.h"
 
 /*********************************** Timer configuration parameter definition ************************************/
-// Timer3(CH4) is assigned for ADC and Control(PWM) command frequency arrangement
-// Timer4(CH3)(PB8) is assigned for frequency of data sending to PC
+// Timer3(CH4) is assigned for ADC and Low-level control frequency
+// Timer4(CH3)(PB8) is assigned for data sending and High-level control frequency
 // Notice the Overflow value should range in 0~65535
 #define TIM3_CH4 4               // timer3 channel4
 #define TIM3preScale 72          // 72MHz/72 = 1Mhz
@@ -44,13 +44,13 @@ void Timers_Init(void);
 void PWMmode_Init(void);
 
 /**
- * Interruption of timer3 is for ADC update and Control update
+ * Interruption of timer3 is for ADC update and Low-level control update
  * Frequency = 72/TIM3preScale/TIM3_OverflowValue = 72MHz/72/1000 = 1kHz
  */
 void Timer3_4_int(void);
 
 /**
- * Interruption timer4 is for data sending to PC
+ * Interruption timer4 is for data sending and High-level control
  * Frequency = 72/TIM4preScale/TIM4_OverflowValue = 72MHz/72/2500 = 400Hz
  */
 void Timer4_3_int(void);
