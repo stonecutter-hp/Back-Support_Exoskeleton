@@ -109,24 +109,24 @@ void set2zeroT(void);
 
 /**
  * Mean Moving filter for the IMUA feedback
- * @param int - cycles: 1~IMUFilterCycles
  * @param int - channel: rollChan/pitchChan/yawChan
+ * @param int - cycles: 1~IMUFilterCycles
  */
-void MovingAverFilterIMUA(int cycles, int channel);
+void MovingAverFilterIMUA(int channel, int cycles)
 
 /**
  * Mean Moving filter for the IMUB feedback
- * @param int - cycles: 1~IMUFilterCycles
  * @param int - channel: rollChan/pitchChan/yawChan
+ * @param int - cycles: 1~IMUFilterCycles
  */
-void MovingAverFilterIMUB(int cycles, int channel);
+void MovingAverFilterIMUB(int channel, int cycles)
 
 /**
  * Mean Moving filter for the IMUC feedback
- * @param int - cycles: 1~IMUFilterCycles
  * @param int - channel: rollChan/pitchChan/yawChan
+ * @param int - cycles: 1~IMUFilterCycles
  */
-void MovingAverFilterIMUC(int cycles, int channel);
+void MovingAverFilterIMUC(int channel, int cycles)
 
 
 #endif

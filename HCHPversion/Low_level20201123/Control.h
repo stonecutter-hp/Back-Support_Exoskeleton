@@ -66,19 +66,21 @@ extern bool Control_update;    // control update flag
 #define TorsionStiffnessL 0.47           //Left side torsion spring's stiffness
 #define TorsionStiffnessR 0.47           //Right side torsion spring's stiffness
 #define PulleyRadius 0.045               //pulley radius
-#define LoadCellL_Sensitivity 0.00166    //for load cell calibration
-#define PotentioLP1_Sensitivity 0.0083   //0.0083 = 2.5/300 (v/deg); for potentiometer calibration 
 extern float Estimated_ImuAssistiveTorqueL;
 extern float Estimated_PoAssistiveTorqueL;
 extern float Estimated_ImuAssistiveTorqueR;
 extern float Estimated_PoAssistiveTorqueR;
 extern float PotentioLP1_InitValue;
 extern float SupportBeamAngleL_InitValue;
-extern float TrunkYaw;
+extern float TrunkYaw_InitValue;
 extern float TrunkFlexionVel;
+
 /**
- * Control parameter initialization
- * Initial controller including command and controller parameters for PID controller
+ * Control parameter initialization for Low-level controller
+ * Initial parameters including: 
+ * PID struct parameters (PID controller parameters); Iterative force feedback; 
+ * Reference torque command and Intermediate quantities related to PWM command.
+ * Here use increment PID algorithm: Delta.U = Kp*( (ek-ek_1) + (Tcontrol/Ti)*ek + (Td/Tcontrol)*(ek+ek_2-2*ek_1) )
  */
 void Control_Init(void);
 

@@ -29,6 +29,10 @@ const int attRatio[16] = {1,  1,  1,  1,  22.5,   2,  2,  2,  2,  2,   1,   1,  
 #define LoadCellR 1          //ADC channel assigned for right load cell
 #define FilterCycles 10      //FilterCycles for moving/exponetial average filter
 
+// Parameters for ADC raw data processing for sensors
+#define LoadCellL_Sensitivity 0.00166    //for load cell calibration
+#define PotentioLP1_Sensitivity 0.0083   //0.0083 = 2.5/300 (v/deg); for potentiometer calibration 
+
 /* ADC conversion data and STATUS register */
 extern byte ADC_data[ENABLED_CH][4];             // store raw data from ADC
 extern bool ADC_update;                   // ADC_update enable flag 
@@ -52,15 +56,17 @@ void Filter_Init(void);
 
 /**
  * Mean Moving filter for the ADC value
- * @param double - cycles: 1~FilterCycles
+ * @param int - channel: 0~ENABLED_CH-1
+ * @param int - cycles: 1~FilterCycles
  */
-void MovingAverageFilter(int cycles);
+void MovingAverageFilter(int channel, int cycles);
 
 /**
  * Exponential moving average filter for the ADC value
- * @param double - weighting decreasing coefficient alpha (0~1)
+ * @param int - channel: 0~ENABLED_CH-1
+ * @param float - alpha: weighting decreasing coefficient (0~1)
  */
-void ExponentialMovingFilter(double alpha);
+void ExponentialMovingFilter(int channel, float alpha);
 
 /**
  * Get the ADC value of all channels once

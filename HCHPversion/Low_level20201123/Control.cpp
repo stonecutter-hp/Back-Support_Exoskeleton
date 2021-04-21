@@ -18,11 +18,14 @@ float Estimated_ImuAssistiveTorqueR;
 float Estimated_PoAssistiveTorqueR;
 float PotentioLP1_InitValue;
 float SupportBeamAngleL_InitValue;
-float TrunkYaw;
+float TrunkYaw_InitValue;
 float TrunkFlexionVel;
 
 /**
- * Control parameter initialization
+ * Control parameter initialization for Low-level controller
+ * Initial parameters including: 
+ * PID struct parameters (PID controller parameters); Iterative force feedback; 
+ * Reference torque command and Intermediate quantities related to PWM command.
  * Here use increment PID algorithm: Delta.U = Kp*( (ek-ek_1) + (Tcontrol/Ti)*ek + (Td/Tcontrol)*(ek+ek_2-2*ek_1) )
  */
 void Control_Init(void) {
@@ -39,7 +42,7 @@ void Control_Init(void) {
   Estimated_PoAssistiveTorqueR = 0;
   PotentioLP1_InitValue = 0;
   SupportBeamAngleL_InitValue = 0;
-  TrunkYaw = 0;
+  TrunkYaw_InitValue = 0;
   TrunkFlexionVel = 0;
   // initialize the control parameter of left motor
   pidL.set = desiredTorqueL;
@@ -83,36 +86,34 @@ void yawAngleR20(uint8_t aloMode) {
   if(aloMode == 1) {
     if(OperaitonAloIMUC == 9) {
       getIMUangleT();
-      TrunkYaw = angleActualC[yawChan];
+      TrunkYaw_InitValue = angleActualC[yawChan];
     }
     else if(OperaitonAloIMUC == 6) {
       // set2zeroL();
       // set2zeroR();
       set2zeroT();
       getIMUangleT();
-      TrunkYaw = 0;
+      TrunkYaw_InitValue = 0;
     }
   }
   else {
     if(mode == 1 && PreMode > 3) {
       if(OperaitonAloIMUC == 9) {
         getIMUangleT();
-        TrunkYaw = angleActualC[yawChan];
+        TrunkYaw_InitValue = angleActualC[yawChan];
       }
       else if(OperaitonAloIMUC == 6) {
         // set2zeroL();
         // set2zeroR();
         set2zeroT();
         getIMUangleT();
-        TrunkYaw = 0;        
+        TrunkYaw_InitValue = 0;        
       }
     }
   }
 
 
 }
-
-
 
 /**
  * Processing sensor feedback for closed-loop control and data sending to PC
@@ -146,7 +147,7 @@ void sensorFeedbackPro(void) {
   // }
   
   // --------- Trunk yaw angle feedback info procesisng for high-level controller -----------------
-  angleActualC[yawChan] = angleActualC[yawChan] - TrunkYaw;
+  angleActualC[yawChan] = angleActualC[yawChan] - TrunkYaw_InitValue;
   if(angleActualC[yawChan] > 180) {
     angleActualC[yawChan] = angleActualC[yawChan]-360;
   }

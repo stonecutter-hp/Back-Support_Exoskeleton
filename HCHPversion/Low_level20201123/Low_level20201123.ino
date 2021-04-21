@@ -84,7 +84,7 @@ void loop() {
   getIMUangleT();              // get support beam rotation angle from IMU
   // yawAngleR20(0);              // trunk yaw angle correction, should before data sensor feedback processing and sending
   sensorFeedbackPro();         // processing sensor feedback for closed-loop control 
-  // MovingAverFilterIMUC(3,rollChan);   // Averaged moving filtered
+  // MovingAverFilterIMUC(rollChan,3);   // Averaged moving filtered
   if(Control_update) {
   	Control(1);                // calculate controlled command: PWM duty cycles
   	Control_update = false;
