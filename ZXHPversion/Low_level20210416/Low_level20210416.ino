@@ -1,6 +1,7 @@
 #include <AD7173.h>  // the library for ADC
 #include "ADC.h"
 #include "Control.h"
+#include "FSM.h"
 #include "IIC.h"
 #include "IMU.h"
 #include "SerialComu.h"
@@ -56,7 +57,7 @@ void setup() {
 
   /******************************** Timer Initialization *******************************/
   Timers_Init();
-
+  
   /***************************** PWM Generation Initialization *************************/
   PWMmode_Init();
 
@@ -65,14 +66,16 @@ void setup() {
   delay(5);
   
   /****************************** Initial status checking ******************************/
-  // Make sure the initial status is standing mode (mode = 1)
-  while(mode != 1) {
+  // Make sure the initial status is standing mode
+  while(mode != Standing) {
     // Collect info from ADC including: Potentiometets(HipAng), ForceSensors(Interaction force)
     // and Motor status 
     getADCaverage(1);
     // Collect info from IMUC including: TrunkAng, TrunkVel
-    getIMUangleT();   
+    getIMUangleT();
+    getIMUvelT();   
     HLsensorFeedbackPro();
+//    if(abs(HipAngMean)<)
   }
 
 //  yawAngleR20(1);     // Forced trunk yaw angle correction
@@ -101,7 +104,7 @@ void loop() {
   getIMUvelT();                    // get human trunk flexion velocity
   // yawAngleR20(0);               // trunk yaw angle correction, should before data sensor feedback processing and sending
   sensorFeedbackPro();             // processing sensor feedback for high-level control and low-level closed-loop control 
-  // MovingAverFilterIMUC(3,rollChan);   // Averaged moving filtered
+  // MovingAverFilterIMUC(rollChan,3);   // Averaged moving filtered
   if(HLControl_update) {
     HLControl(1,1);                // At present the frequency of high-level control is the same as data sending frequency 
     HLControl_update = false;

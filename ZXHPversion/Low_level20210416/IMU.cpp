@@ -187,57 +187,75 @@ void getIMUvel(void) {
 
 /**
  * Mean Moving filter for the IMUA feedback
- * @param int - cycles: 1~IMUFilterCycles
  * @param int - channel: rollChan/pitchChan/yawChan
+ * @param int - cycles: 1~IMUFilterCycles
  */
-void MovingAverFilterIMUA(int cycles, int channel) {
+void MovingAverFilterIMUA(int channel, int cycles) {
   float interValue;
+  if(cycles > IMUFilterCycles) {
+    cycles = IMUFilterCycles;
+  }
+  else if(cycles < 1) {
+    cycles = 1;
+  }
   interValue = angleActualA[channel];
   // get this times filtered results
-  angleActualA[channel] = IMU_value_Prev[1][channel] + (angleActualA[channel]-IMUA_value_filtered[channel][0])/cycles;
+  angleActualA[channel] = IMU_value_Prev[1][channel] + (angleActualA[channel]-IMUA_value_filtered[channel][IMUFilterCycles-cycles])/cycles;
   // update the data in the moving window
-  for(int j=0; j<cycles-1; j++) {
+  for(int j=0; j<IMUFilterCycles-1; j++) {
     IMUA_value_filtered[channel][j] = IMUA_value_filtered[channel][j+1];
   }
-  IMUA_value_filtered[channel][cycles-1] = interValue;
+  IMUA_value_filtered[channel][IMUFilterCycles-1] = interValue;
   // store this time's results for next calculation
   IMU_value_Prev[1][channel] = angleActualA[channel];
 }
 
 /**
  * Mean Moving filter for the IMUB feedback
- * @param int - cycles: 1~IMUFilterCycles
  * @param int - channel: rollChan/pitchChan/yawChan
+ * @param int - cycles: 1~IMUFilterCycles
  */
-void MovingAverFilterIMUB(int cycles, int channel) {
+void MovingAverFilterIMUB(int channel, int cycles) {
   float interValue;
+  if(cycles > IMUFilterCycles) {
+    cycles = IMUFilterCycles;
+  }
+  else if(cycles < 1) {
+    cycles = 1;
+  }
   interValue = angleActualB[channel];
   // get this times filtered results
-  angleActualB[channel] = IMU_value_Prev[2][channel] + (angleActualB[channel]-IMUB_value_filtered[channel][0])/cycles;
+  angleActualB[channel] = IMU_value_Prev[2][channel] + (angleActualB[channel]-IMUB_value_filtered[channel][IMUFilterCycles-cycles])/cycles;
   // update the data in the moving window
-  for(int j=0; j<cycles-1; j++) {
+  for(int j=0; j<IMUFilterCycles-1; j++) {
     IMUB_value_filtered[channel][j] = IMUB_value_filtered[channel][j+1];
   }
-  IMUB_value_filtered[channel][cycles-1] = interValue;
+  IMUB_value_filtered[channel][IMUFilterCycles-1] = interValue;
   // store this time's results for next calculation
   IMU_value_Prev[2][channel] = angleActualB[channel];
 }
 
 /**
  * Mean Moving filter for the IMUC feedback
- * @param int - cycles: 1~IMUFilterCycles
  * @param int - channel: rollChan/pitchChan/yawChan
+ * @param int - cycles: 1~IMUFilterCycles
  */
-void MovingAverFilterIMUC(int cycles, int channel) {
+void MovingAverFilterIMUC(int channel, int cycles) {
   float interValue;
+  if(cycles > IMUFilterCycles) {
+    cycles = IMUFilterCycles;
+  }
+  else if(cycles < 1) {
+    cycles = 1;
+  }
   interValue = angleActualC[channel];
   // get this times filtered results
-  angleActualC[channel] = IMU_value_Prev[3][channel] + (angleActualC[channel]-IMUC_value_filtered[channel][0])/cycles;
+  angleActualC[channel] = IMU_value_Prev[3][channel] + (angleActualC[channel]-IMUC_value_filtered[channel][IMUFilterCycles-cycles])/cycles;
   // update the data in the moving window
-  for(int j=0; j<cycles-1; j++) {
+  for(int j=0; j<IMUFilterCycles-1; j++) {
     IMUC_value_filtered[channel][j] = IMUC_value_filtered[channel][j+1];
   }
-  IMUC_value_filtered[channel][cycles-1] = interValue;
+  IMUC_value_filtered[channel][IMUFilterCycles-1] = interValue;
   // store this time's results for next calculation
   IMU_value_Prev[3][channel] = angleActualC[channel];
 }

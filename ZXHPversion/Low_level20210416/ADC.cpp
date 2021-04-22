@@ -9,8 +9,16 @@ byte ADC_data[ENABLED_CH][4];             // store raw data from ADC
 bool ADC_update = true;                   // ADC_update enable flag 
 unsigned long ADC_value[ENABLED_CH];      // store ADC value in long format  
 double Aver_ADC_value[ENABLED_CH];        // store the transferred ADC value for calculation
+double Aver_ADC_value_Prev[ENABLED_CH];   // Store last time processed(filtered) ADC feedaback
+double Aver_ADC_mean_Prev[ENABLED_CH];    // Store last time mean of ADC feedback
+// A window store the historical unfiltered ADC value of certain cycle
+// for ADC feedback moving average and standard deviation calculation
+// Notice in ZXHP version EXO:
+// some ADC channels are for High-level control with high-level controlfrequency time interval
+// some ADC channels are for Low-level control with low-level control frequency time interval
+double Aver_ADC_value_unfiltered[ENABLED_CH][FilterCycles];
+// A window store the historical (maybe)filtered ADC value of certain cycle
 double Aver_ADC_value_filtered[ENABLED_CH][FilterCycles];
-double Aver_ADC_value_Prev[ENABLED_CH];
 /* load cell force transfer */
 double LoadCell[4];                      // store the transferred force value
 
@@ -82,62 +90,6 @@ void ADC_Init(void) {
   delay(10);
 
   digitalWrite(LED0,HIGH);  // finish setup and light the green light
-}
-
-/**
- * Initial the matrix for average filter Aver_ADC_value_filtered[ENABLED_CH][FilterCycles]
- */
-void Filter_Init() {
-  for(int i=0; i<ENABLED_CH; i++) {
-    for(int j=0; j<FilterCycles; j++) {
-      Aver_ADC_value_filtered[i][j] = 0.0;
-    }
-    ADC_value[i] = 0;
-    Aver_ADC_value_Prev[i] = 0.0;
-    Aver_ADC_value[i] = 0.0;
-    ADC_data[i][3] = 'G';   //Initialize the ADC status flag
-  }  
-}
-
-/**
- * Mean Moving filter for the ADC value
- * @param int - channel: 0~ENABLED_CH-1
- * @param int - cycles: 1~FilterCycles
- */
-void MovingAverageFilter(int channel, int cycles) {
-  double interValue;
-  if(cycles > FilterCycles) {
-    cycles = FilterCycles;
-  }
-  else if(cycles < 1) {
-    cycles = 1;
-  }
-  interValue = Aver_ADC_value[channel];
-  // get this times filtered results
-  Aver_ADC_value[channel] = Aver_ADC_value_Prev[channel] + (Aver_ADC_value[channel] - Aver_ADC_value_filtered[channel][0])/cycles;
-  // update the data in the moving window
-  for(int j=0; j<cycles-1; j++) {
-    Aver_ADC_value_filtered[channel][j] = Aver_ADC_value_filtered[channel][j+1];
-  }
-  Aver_ADC_value_filtered[channel][cycles-1] = interValue;
-  // store this time's results for next calculation
-  Aver_ADC_value_Prev[channel] = Aver_ADC_value[channel];
-}
-
-/**
- * Exponential moving average filter for the ADC value
- * @param int - channel: 0~ENABLED_CH-1
- * @param float - alpha: weighting decreasing coefficient (0~1)
- */
-void ExponentialMovingFilter(int channel, float alpha) {
-  if(alpha > 1) {
-    alpha = 1;
-  }
-  else if(alpha < 0) {
-    alpha = 0;
-  } 
-  Aver_ADC_value[channel] = alpha*Aver_ADC_value[channel]+(1-alpha)*Aver_ADC_value_Prev[channel];
-  Aver_ADC_value_Prev[channel] = Aver_ADC_value[channel];
 }
 
 /**
@@ -228,4 +180,94 @@ void getADCaverage(int times) {
     tempADCvalue[t] = tempADCvalue[t]/times;
     Aver_ADC_value[t] = (double)(tempADCvalue[t]*attRatio[t]*2.5)/16777251;  //24 bits
   }
+}
+
+/**
+ * Initial the matrix for average filter Aver_ADC_value_unfiltered[ENABLED_CH][FilterCycles]
+ */
+void Filter_Init() {
+  for(int i=0; i<ENABLED_CH; i++) {
+    for(int j=0; j<FilterCycles; j++) {
+      Aver_ADC_value_unfiltered[i][j] = 0.0;
+      Aver_ADC_value_filtered[i][j] = 0.0;
+    }
+    ADC_value[i] = 0;
+    Aver_ADC_value_Prev[i] = 0.0;
+    Aver_ADC_mean_Prev[i] = 0.0;
+    Aver_ADC_value[i] = 0.0;
+    ADC_data[i][3] = 'G';   //Initialize the ADC status flag
+  }  
+}
+
+/**
+ * Mean Moving filter for the ADC value within certain cycles
+ * @param int - channel: 0~ENABLED_CH-1
+ * @param int - cycles: 1~FilterCycles
+ */
+void MovingAverageFilter(int channel, int cycles) {
+  double interValue;
+  if(cycles > FilterCycles) {
+    cycles = FilterCycles;
+  }
+  else if(cycles < 1) {
+    cycles = 1;
+  }
+  interValue = Aver_ADC_value[channel];
+  // get this times filtered results
+  Aver_ADC_value[channel] = Aver_ADC_value_Prev[channel] + (Aver_ADC_value[channel] - Aver_ADC_value_unfiltered[channel][FilterCycles-cycles])/cycles;
+  // update the data in the moving window
+  for(int j=0; j<FilterCycles-1; j++) {
+    Aver_ADC_value_unfiltered[channel][j] = Aver_ADC_value_unfiltered[channel][j+1];
+  }
+  Aver_ADC_value_unfiltered[channel][FilterCycles-1] = interValue;
+  // store this time's results for next calculation
+  Aver_ADC_value_Prev[channel] = Aver_ADC_value[channel];
+}
+
+/**
+ * Exponential moving average filter for the ADC value within certain cycles
+ * @param int - channel: 0~ENABLED_CH-1
+ * @param float - alpha: weighting decreasing coefficient (0~1)
+ */
+void ExponentialMovingFilter(int channel, float alpha) {
+  if(alpha > 1) {
+    alpha = 1;
+  }
+  else if(alpha < 0) {
+    alpha = 0;
+  } 
+  Aver_ADC_value[channel] = alpha*Aver_ADC_value[channel]+(1-alpha)*Aver_ADC_value_Prev[channel];
+  Aver_ADC_value_Prev[channel] = Aver_ADC_value[channel];
+}
+
+/**
+ * Calculate standard deviation for the ADC value within certain cycles
+ * @param int - channel: 0~ENABLED_CH-1
+ * @param int - cycles: 1~FilterCycles
+ */
+double ADCStdCal(int channel, int cycles) {
+  double interMean;
+  double interValue;
+  interValue = 0.0;
+  if(cycles > FilterCycles) {
+    cycles = FilterCycles;
+  }
+  else if(cycles < 1) {
+    cycles = 1;
+  }
+  // get this times' mean value
+  interMean = Aver_ADC_mean_Prev[channel] + (Aver_ADC_value[channel] - Aver_ADC_value_filtered[channel][FilterCycles-cycles])/cycles;
+  // update the data in the moving window
+  for(int j=0; j<FilterCycles-1; j++) {
+    Aver_ADC_value_filtered[channel][j] = Aver_ADC_value_filtered[channel][j+1];
+  }
+  Aver_ADC_value_filtered[channel][FilterCycles-1] = Aver_ADC_value[channel];
+  // store the last time mean value
+  Aver_ADC_mean_Prev[channel] = interMean;
+  // calculate standard deviation
+  for(int j=FilterCycles-cycles; j<FilterCycles; j++) {
+    interValue = interValue + pow(Aver_ADC_value_filtered[channel][j]-interMean,2);
+  }
+  interValue = sqrt(interValue/cycles);
+  return interValue;
 }

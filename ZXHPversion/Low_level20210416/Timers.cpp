@@ -16,6 +16,8 @@ extern uint16 PWMperiod_R = 500;    // period of right PWM
 void Timers_Init(void) {
   Timer3.init();   // stop the timers before configuring them
   Timer4.init();   // stop the timers before configuring them
+  // high-level control frequency
+  HLUpdateFre = 72000/TIM4preScale/TIM4_OverflowValue*1000;
   // Configurate timer 3    1khz
   Timer3.setPrescaleFactor(TIM3preScale);          // set pre scale factor 72 -->  72MHz/72=1MHz
   Timer3.setOverflow(TIM3_OverflowValue);          // set overflow value to determine timer 3 frequency: 1(MHz)/overflow

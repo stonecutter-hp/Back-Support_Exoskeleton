@@ -27,7 +27,7 @@ const int attRatio[16] = {1,  1,  1,  1,  22.5,   2,  2,  2,  2,  2,   1,   1,  
 #define ForceSensorR 13      //ADC channel assigned for right force sensor
 #define LoadCellL 0          //ADC channel assigned for left load cell
 #define LoadCellR 1          //ADC channel assigned for right load cell
-#define FilterCycles 10      //FilterCycles for moving/exponetial average filter
+#define FilterCycles 20      //FilterCycles for moving/exponetial average filter
 
 // Parameters for ADC raw data processing for sensors
 #define ForceSensorL_Sensitivity 1       // v/N, for left force sensor calibration
@@ -41,10 +41,16 @@ extern byte ADC_data[ENABLED_CH][4];             // store raw data from ADC
 extern bool ADC_update;                          // ADC_update enable flag 
 extern unsigned long ADC_value[ENABLED_CH];      // store ADC value in long format  
 extern double Aver_ADC_value[ENABLED_CH];        // store the transferred ADC value for calculation
-// Store inter value for moving average filter
+extern double Aver_ADC_value_Prev[ENABLED_CH];   // Store last time processed ADC feedaback
+extern double Aver_ADC_mean_Prev[ENABLED_CH];    // Store last time mean of ADC feedback
+// A window store the historical unfiltered ADC value of certain cycle
+// for ADC feedback moving average and standard deviation calculation
+// Notice in ZXHP version EXO:
+// some ADC channels are for High-level control with high-level controlfrequency time interval
+// some ADC channels are for Low-level control with low-level control frequency time interval
+extern double Aver_ADC_value_unfiltered[ENABLED_CH][FilterCycles];
+// A window store the historical (maybe)filtered ADC value of certain cycle
 extern double Aver_ADC_value_filtered[ENABLED_CH][FilterCycles];
-// Store inter value for moving average & exponential filter
-extern double Aver_ADC_value_Prev[ENABLED_CH];
 /* load cell force transfer */
 extern double LoadCell[4];                      // store the transferred force value
 
@@ -53,25 +59,6 @@ extern double LoadCell[4];                      // store the transferred force v
  * ADC initialization for channel mode configuration
  */
 void ADC_Init(void); 
-
-/**
- * Initial the matrix for average filter Aver_ADC_value_filtered[ENABLED_CH][FilterCycles]
- */
-void Filter_Init(void);
-
-/**
- * Mean Moving filter for the ADC value
- * @param int - channel: 0~ENABLED_CH-1
- * @param int - cycles: 1~FilterCycles
- */
-void MovingAverageFilter(int channel, int cycles);
-
-/**
- * Exponential moving average filter for the ADC value
- * @param int - channel: 0~ENABLED_CH-1
- * @param float - alpha: weighting decreasing coefficient (0~1)
- */
-void ExponentialMovingFilter(int channel, float alpha);
 
 /**
  * Get the ADC value of all channels once
@@ -84,6 +71,30 @@ void getADC(void);
  */
 void getADCaverage(int times);
 
+/**
+ * Initial the matrix for average filter Aver_ADC_value_unfiltered[ENABLED_CH][FilterCycles]
+ */
+void Filter_Init(void);
 
+/**
+ * Mean Moving filter for the ADC value within certain cycles
+ * @param int - channel: 0~ENABLED_CH-1
+ * @param int - cycles: 1~FilterCycles
+ */
+void MovingAverageFilter(int channel, int cycles);
+
+/**
+ * Exponential moving average filter for the ADC value within certain cycles
+ * @param int - channel: 0~ENABLED_CH-1
+ * @param float - alpha: weighting decreasing coefficient (0~1)
+ */
+void ExponentialMovingFilter(int channel, float alpha);
+
+/**
+ * Calculate standard deviation for the ADC value within certain cycles
+ * @param int - channel: 0~ENABLED_CH-1
+ * @param int - cycles: 1~FilterCycles
+ */
+double ADCStdCal(int channel, int cycles);
 
 #endif

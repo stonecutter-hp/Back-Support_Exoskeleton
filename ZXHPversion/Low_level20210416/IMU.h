@@ -15,7 +15,7 @@
 #define AddrIMUA  0x50
 #define AddrIMUB  0x51
 #define AddrIMUC  0x52
-#define IMU_UpdateRate 200         // Hz, Assumed IMU data updated frequency
+#define IMU_UpdateFre 200          // Hz, Assumed IMU data updated frequency
 #define IMUFilterCycles 6
 #define OperaitonAloIMUA 9         // IMUA alogorithm 6-6 axis, 9-9axis 
 #define OperaitonAloIMUB 9         // IMUB alogorithm 6-6 axis, 9-9axis
@@ -109,24 +109,24 @@ void set2zeroT(void);
 
 /**
  * Mean Moving filter for the IMUA feedback
- * @param int - cycles: 1~IMUFilterCycles
  * @param int - channel: rollChan/pitchChan/yawChan
+ * @param int - cycles: 1~IMUFilterCycles
  */
-void MovingAverFilterIMUA(int cycles, int channel);
+void MovingAverFilterIMUA(int channel, int cycles);
 
 /**
  * Mean Moving filter for the IMUB feedback
- * @param int - cycles: 1~IMUFilterCycles
  * @param int - channel: rollChan/pitchChan/yawChan
+ * @param int - cycles: 1~IMUFilterCycles
  */
-void MovingAverFilterIMUB(int cycles, int channel);
+void MovingAverFilterIMUB(int channel, int cycles);
 
 /**
  * Mean Moving filter for the IMUC feedback
- * @param int - cycles: 1~IMUFilterCycles
  * @param int - channel: rollChan/pitchChan/yawChan
+ * @param int - cycles: 1~IMUFilterCycles
  */
-void MovingAverFilterIMUC(int cycles, int channel);
+void MovingAverFilterIMUC(int channel, int cycles);
 
 
 #endif

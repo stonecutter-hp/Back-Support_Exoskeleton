@@ -11,3 +11,8 @@
     For high-level controller parameter adjustment, find it in Control.ccpp HLControl_Init() as the parameter is different for different subjects.
     Notice to check the Initial value like ForceSensorL_InitValue, HipAngR_InitValue is ADC raw data or Processed data
     Remember to record expected initial value of every sensor before practical application of the control program
+
+20210422
+    Make sure the relationship ThighAngle + TrunkAngle = Hip Joint is satisfied from both software and hardware aspect
+
+

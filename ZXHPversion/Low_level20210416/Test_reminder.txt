@@ -1,7 +1,11 @@
 20210420
-  Abs(),sin() function testing
+  Abs(),sin() function testing   √
   Velocity from MCU calculation testing
   Check every information from sensor and corresponding calculation before implement controller
 
 20210421
   Record expected initial value of every sensor
+
+20210422
+  Check pitch angle's variation range
+  How can a class call function from other class

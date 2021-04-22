@@ -1,5 +1,6 @@
 /***********************************************************************
  * The PID control configuration and processing function 
+ * High-level control configuration and procession function
  * System model parameters
  **********************************************************************/
 
@@ -11,6 +12,9 @@
 #include "Timers.h"
 #include "ADC.h"
 #include "IMU.h"
+#include "FSM.h"
+
+#define d2r M_PI/180
 
 /**************************************** Low level PID control parameters definition ********************************/
 // Here use increment PID algorithm: Delta.U = Kp*( (ek-ek_1) + (Tcontrol/Ti)*ek + (Td/Tcontrol)*(ek+ek_2-2*ek_1) )
@@ -59,39 +63,10 @@ extern bool Control_update;    // control update flag
 #define LimitInput 15         // Limitation of input command, here for open-loop is Ta, for closed loop is Td
 
 /****************************************High level controller parameters definition*******************************/
-extern bool HLControl_update;  // high-level control update flag
+extern bool HLControl_update;   // high-level control update flag
+extern float HLUpdateFre;       // hihg-level control frequency
 extern float desiredTorqueL;    // desired motor torque of left motor
 extern float desiredTorqueR;    // desired motor torque of right motor
-// motion type: 1-other motion;       2-Symmetric Holding; 
-//              3-Asymmetric Holding; 4-Asymmetric Lowering;
-//              5-Asymmetric Lifting; 6-Symmetric Lowering;
-//              7-Symmetric Lifting;  0-Stop state
-extern uint8_t mode;            // detected motion mode
-extern uint8_t PreMode;         // last time's motion mode
-// 1-left; 2-right; 0-none
-extern uint8_t side;            // Asymmetric side
-// Controller parameter and threshold for high-level control strategy, the content may be adjusted according to future
-// practical applied high-level strategy
-typedef struct {
-  // Parameters for UID strategy
-  float ThrTrunkFleAng;    // Threshold for trunk flexion angle
-  float ThrTrunkFleVel;    // Threshold for trunk flexion velocity
-  float ThrHipAngMean;     // Threshold for mean value of summation of left and right hip angle  
-  float ThrHipAngDiff;     // Threshold for difference between left and right hip angle
-  float ThrHipAngStd;      // Threshold for standard deviation of mean hip angle
-  float ThrHipVel;         // Threshold for mean hip angle velocity
-  // Notice that ThrThighAngMean should not be larger than ThrHipAngMean - ThrTrunkFleAng if ThighAng comes from
-  // calculation of (HipAng - TrunkFleAng) instead of measurement
-  float ThrThighAngMean;   // Threshold for mean value of summation of left and right thigh angle
-  float ThrThighAngStd;    // Threshold for standard deviation of mean thigh angle
-  float ThrThighAngVel;    // Threshold for mean thigh angle velocity
-  float ThrHipAngDiffStd;  // Threshold for standard deviation of difference between left and right hip angle
-  // Parameters for RTG strategy
-  float TrunkMass;         // kg, Subject's trunk mass
-  float ImpeKp;            // Nm/deg, Rendered stiffness of Impedance strategy
-  float ImpeKv;            // Nm*s/deg, Rendered damping of Impedance strategy
-}HLCont;  // Controller parameter and threshold for high-level control strategy
-extern HLCont Subject1;    // Parameters for specified subjects
 // Expected initial value range (CaliValue +- Tol) of sensor feedback for initial calibration
 // the initial values should be adjusted along with prototype design
 #define ForceSensorL_CaliValue 0
@@ -141,8 +116,15 @@ extern float HipAngVel;                   // Velocity of HipAngMean
 extern float ThighAngL;                   // Left thigh angle
 extern float ThighAngR;                   // Right thigh angle
 extern float ThighAngMean;                // (Left thigh angle + right thigh angle)/2
+extern float ThighAng_InitValue;          // Auxiliary parameter for thigh angle
 extern float ThighAngStd;                 // Std(ThighAngMean) within certain time range
 extern float HipAngDiffStd;               // Std(HipAngDiff) within certain time range
+// A window store the historical HipAngMean value of certain cycle for standard deviation calculation
+extern float HipAngMeanPre[FilterCycles];
+extern float HipAngMeanBar;               // Auxiliary parameter X_bar for standard deviation calculation
+// A window store the historical HipAngDiff value of certain cycle for standard deviation calculation
+extern float HipAngDiffPre[FilterCycles];
+extern float HipAngDiffBar;               // Auxiliary parameter X_bar for standard deviation calculation
 
 /**
  * Control parameter initialization for High-level controller
@@ -176,6 +158,25 @@ void yawAngleR20(uint8_t aloMode);
 void HLsensorFeedbackPro(void);
 
 /**
+ * Yaw angle processing for practical control
+ */
+void TrunkYawAngPro(void);
+
+/**
+ * Calculate standard deviation for HipAngMean within certain cycles
+ * @param int - cycles: 1~FilterCycles
+ * @param return - calculated standard deviation
+ */
+double HipAngStdCal(int cycles);
+
+/**
+ * Calculate standard deviation for HipAngDiff within certain cycles
+ * @param int - cycles: 1~FilterCycles
+ * @param return - calculated standard deviation
+ */
+double HipAngDiffStdCal(int cycles);
+
+/**
  * Processing sensor feedback for Low-level closed-loop control
  */
 void sensorFeedbackPro(void);
@@ -191,7 +192,7 @@ void HLControl(uint8_t UIDMode, uint8_t RTGMode);
 
 /**
  * Conduct simple user intention detection 
- * @para unsigned char - control mode for user intenntion detection: 1-xx algorithm, 2-xx algorithm
+ * @para unsigned char - control version for user intenntion detection: 1-v1 algorithm, 2-v2 algorithm
  */
 void HL_UserIntentDetect(uint8_t UIDMode);
 
