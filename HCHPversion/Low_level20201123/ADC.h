@@ -38,7 +38,7 @@ extern byte ADC_data[ENABLED_CH][4];             // store raw data from ADC
 extern bool ADC_update;                   // ADC_update enable flag 
 extern unsigned long ADC_value[ENABLED_CH];      // store ADC value in long format  
 extern double Aver_ADC_value[ENABLED_CH];        // store the transferred ADC value for calculation
-extern double Aver_ADC_value_filtered[ENABLED_CH][FilterCycles];
+extern double Aver_ADC_value_unfiltered[ENABLED_CH][FilterCycles];
 extern double Aver_ADC_value_Prev[ENABLED_CH];
 /* load cell force transfer */
 extern double LoadCell[4];                      // store the transferred force value
@@ -50,7 +50,7 @@ extern double LoadCell[4];                      // store the transferred force v
 void ADC_Init(void); 
 
 /**
- * Initial the matrix for average filter Aver_ADC_value_filtered[ENABLED_CH][FilterCycles]
+ * Initial the matrix for average filter Aver_ADC_value_unfiltered[ENABLED_CH][FilterCycles]
  */
 void Filter_Init(void);
 
