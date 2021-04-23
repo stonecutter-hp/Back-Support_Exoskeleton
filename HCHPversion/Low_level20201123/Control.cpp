@@ -77,18 +77,19 @@ void Control_Init(void) {
 
 /**
  * Set the yaw angle of human trunk to zero
- * @param unsigned char - IMU operation mode: 1-force to set, other number-logic set
+ * @param unsigned char - Yaw init mode: 1-force to set, other number-logic set
+ * @param IMUAlo - IMU operation algorithm
  */
-void yawAngleR20(uint8_t aloMode) {
+void yawAngleR20(uint8_t yawInitmode, IMUAlo aloMode){
   // Roughly yaw angle return to zero logic: 
   // Detect mode 1 and premode is larger than 3
   // i.e., From bending back to other motion
-  if(aloMode == 1) {
-    if(OperaitonAloIMUC == 9) {
+  if(yawInitmode == ForcedInit) {
+    if(aloMode == IMU9Axis) {
       getIMUangleT();
       TrunkYaw_InitValue = angleActualC[yawChan];
     }
-    else if(OperaitonAloIMUC == 6) {
+    else if(aloMode == IMU6Axis) {
       // set2zeroL();
       // set2zeroR();
       set2zeroT();
@@ -97,12 +98,12 @@ void yawAngleR20(uint8_t aloMode) {
     }
   }
   else {
-    if(mode == 1 && PreMode > 3) {
-      if(OperaitonAloIMUC == 9) {
+    if(mode == 0 && PreMode > 3) {
+      if(aloMode == IMU9Axis) {
         getIMUangleT();
         TrunkYaw_InitValue = angleActualC[yawChan];
       }
-      else if(OperaitonAloIMUC == 6) {
+      else if(aloMode == IMU6Axis) {
         // set2zeroL();
         // set2zeroR();
         set2zeroT();
@@ -111,8 +112,6 @@ void yawAngleR20(uint8_t aloMode) {
       }
     }
   }
-
-
 }
 
 /**
@@ -309,4 +308,3 @@ void MotorPWMoutput(uint16_t PWMcommandL, uint16_t PWMcommandR) {
   delay(1);
   Timer2.setCompare(TIM2_CH2,PWM_commandR);
 }
-

@@ -17,9 +17,16 @@
 #define AddrIMUC  0x52
 #define IMU_UpdateRate 200            // Hz
 #define IMUFilterCycles 6
-#define OperaitonAloIMUA 9         // IMUA alogorithm 6-6 axis, 9-9axis 
-#define OperaitonAloIMUB 9         // IMUB alogorithm 6-6 axis, 9-9axis
-#define OperaitonAloIMUC 9         // IMUC alogorithm 6-6 axis, 9-9axis
+#define ForcedInit 1
+#define LogicInit  0
+/* IMU alogorithm 6 axis or 9 axis */
+typedef enum {
+  IMU9Axis = 0,
+  IMU6Axis = 1
+} IMUAlo;
+extern IMUAlo OperaitonAloIMUA;     
+extern IMUAlo OperaitonAloIMUB; 
+extern IMUAlo OperaitonAloIMUC; 
 
 extern unsigned char yaw2zero[2];  // The command for IMU yaw angle return to zero (only for 6-axis algorithm)
 

@@ -5,6 +5,11 @@
 
 #include "IMU.h"
 
+/* IMU alogorithm 6 axis or 9 axis */
+IMUAlo OperaitonAloIMUA;     
+IMUAlo OperaitonAloIMUB; 
+IMUAlo OperaitonAloIMUC;
+
 /**************************************** IMU parameters definition ********************************/
 unsigned char angleTempA[6];   // store the raw data get from IMU A(addr 0x50)
 unsigned char angleTempB[6];   // store the raw data get from IMU B(addr 0x51)
@@ -58,6 +63,9 @@ void IMU_Init(void)  {
     velTempB[i] = 0;
     velTempC[i] = 0;
   }
+  OperaitonAloIMUA = IMU9Axis;
+  OperaitonAloIMUB = IMU9Axis;
+  OperaitonAloIMUC = IMU9Axis;
 }
 
 /**

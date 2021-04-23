@@ -82,7 +82,7 @@ void loop() {
   }
   // getIMUangle();            // get rotation angle of both support beam and human back/link
   getIMUangleT();              // get support beam rotation angle from IMU
-  // yawAngleR20(0);              // trunk yaw angle correction, should before data sensor feedback processing and sending
+  // yawAngleR20(LogicInit,OperaitonAloIMUC);              // trunk yaw angle correction, should before data sensor feedback processing and sending
   sensorFeedbackPro();         // processing sensor feedback for closed-loop control 
   // MovingAverFilterIMUC(rollChan,3);   // Averaged moving filtered
   if(Control_update) {
