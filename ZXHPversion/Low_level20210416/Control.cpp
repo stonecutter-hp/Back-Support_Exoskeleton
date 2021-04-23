@@ -1,6 +1,5 @@
 /***********************************************************************
- * The PID control configuration and processing function 
- * High-level control configuration and procession function
+ * The PID control configuration and processing function &
  * System model parameters
  **********************************************************************/
 
@@ -14,11 +13,7 @@ int16_t PWM_commandL;   // range: 0.1*PWMperiod_L~0.9*PWMperiod_L
 int16_t PWM_commandR;   // range: 0.1*PWMperiod_R~0.9*PWMperiod_R
 bool Control_update = true;    // control update flag
 
-/*************************************** High level controller parameters definition ******************************/
-bool HLControl_update = true;  // high-level control update flag
-float HLUpdateFre;             // hihg-level control frequency
-float desiredTorqueL;    // desired motor torque of left motor
-float desiredTorqueR;    // desired motor torque of right motor
+
 
 /*************************************** Intermediate auxiliary parameters for control ****************************/ 
 // Parameters for lowe-level control
@@ -30,111 +25,19 @@ float Estimated_TdForceSensorR;    // Td feedback from right force sensor
 float ForceSensorR_InitValue;      // Auxiliary parameter for right force sensor
 float Estimated_TdL;               // Estimated compact Td feedback of left side
 float Estimated_TdR;               // Estimated compact Td feedback of right side
-// Parameters for high-level controller (Directly feedback from sensor)
-float HipAngL;                     // Left hip joint angle
-float HipAngL_InitValue;           // Auxiliary parameter for left hip joint angle
-float HipAngR;                     // Right hip joint angle
-float HipAngR_InitValue;           // Auxiliary parameter for right hip joint angle
-float TrunkYawAng;                 // Trunk yaw angle
-float TrunkYaw_InitValue;          // Auxiliary parameter for trunk yaw angle
-float TrunkFleAng;                 // Trunk flexion angle
-float TrunkFleAng_InitValue;       // Auxiliary parameter for trunk pitch angle
-float TrunkFleVel;                 // Trunk flexion angular velocity
-// Parameters for high-level controller (Calculated from sensor feedback)
-float HipAngMean;                  // (Left hip angle + right hip angle)/2
-float HipAngDiff;                  // (Left hip angle - right hip angle)
-float HipAngStd;                   // Std(HipAngMean) within certain time range
-float HipAngVel;                   // Velocity of HipAngMean
-float ThighAngL;                   // Left thigh angle
-float ThighAngR;                   // Right thigh angle
-float ThighAngMean;                // (Left thigh angle + right thigh angle)/2
-float ThighAng_InitValue;          // Auxiliary parameter for thigh angle
-float ThighAngStd;                 // Std(ThighAngMean) within certain time range
-float HipAngDiffStd;               // Std(HipAngDiff) within certain time range
-// A window store the historical HipAngMean value of certain cycle for standard deviation calculation
-float HipAngMeanPre[FilterCycles];
-float HipAngMeanBar;               // Auxiliary parameter X_bar for standard deviation calculation
-// A window store the historical HipAngDiff value of certain cycle for standard deviation calculation
-float HipAngDiffPre[FilterCycles];
-float HipAngDiffBar;               // Auxiliary parameter X_bar for standard deviation calculation
-
-/**
- * Control parameter initialization for High-level controller
- * Initial controller including: 
- * Sensor feedbacks, auxiliary parameters and thresholds used for high-level controller
- */
-void HLControl_Init(void) {
-  //----------------- Initialize parameters for UID strategy -------------------------
-  // Parameters for high-level controller (Directly feedback from sensor)
-  HipAngL = 0;                     // Left hip joint angle
-  HipAngL_InitValue = 0;           // Auxiliary parameter for left hip joint angle
-  HipAngR = 0;                     // Right hip joint angle
-  HipAngR_InitValue = 0;           // Auxiliary parameter for right hip joint angle
-  TrunkYawAng = 0;                 // Trunk yaw angle
-  TrunkYaw_InitValue = 0;          // Auxiliary parameter for trunk yaw angle
-  TrunkFleAng = 0;                 // Trunk flexion angle
-  TrunkFleAng_InitValue = 0;       // Auxiliary parameter for trunk pitch angle
-  TrunkFleVel = 0;                 // Trunk flexion angular velocity
-  // Parameters for high-level controller (Calculated from sensor feedback)
-  HipAngMean = 0;                  // (Left hip angle + right hip angle)/2
-  HipAngDiff = 0;                  // (Left hip angle - right hip angle)
-  HipAngStd = 0;                   // Std(HipAngMean) within certain time range
-  HipAngVel = 0;                   // Velocity of HipAngMean
-  ThighAngL = 0;                   // Left thigh angle
-  ThighAngR = 0;                   // Right thigh angle
-  ThighAngMean = 0;                // (Left thigh angle + right thigh angle)/2
-  ThighAng_InitValue = 0;          // Auxiliary parameter for thigh angle
-  ThighAngStd = 0;                 // Std(ThighAngMean) within certain time range
-  HipAngDiffStd = 0;               // Std(HipAngDiff) within certain time range
-  // UID status indicators  
-  mode = StopState;   // Motion detection mode, default is 0 (Stop state)
-  PreMode = mode;
-  side = 0;   // Asymmetric side, default is 0 (no asymmetric)
-  //----------------- Initialize parameters for RTG strategy -------------------------
-  desiredTorqueL = 0;
-  desiredTorqueR = 0;
-  //---------------- Subject parameter initialization --------------------------
-  // Parameters for UID strategy
-  Subject1.ThrTrunkFleAng = 15;    // deg, Threshold for trunk flexion angle
-  Subject1.ThrTrunkFleVel = 50;    // deg/s, Threshold for trunk flexion velocity
-  Subject1.ThrHipAngMean = 30;     // deg, Threshold for mean value of summation of left and right hip angle  
-  Subject1.ThrHipAngDiff = 10;     // deg, Threshold for difference between left and right hip angle
-  Subject1.ThrHipAngStd = 10;      // deg, Threshold for standard deviation of mean hip angle
-  Subject1.ThrHipVel = 10;         // deg/s, Threshold for mean hip angle velocity
-  Subject1.ThrThighAngMean = 10;   // deg, Threshold for mean value of summation of left and right thigh angle
-  // Notice that ThrThighAngMean should not be larger than ThrHipAngMean - ThrTrunkFleAng if ThighAng comes from
-  // calculation of (HipAng - TrunkFleAng) instead of measurement
-  if(Subject1.ThrThighAngMean > Subject1.ThrHipAngMean - Subject1.ThrTrunkFleAng) {
-    Subject1.ThrThighAngMean = Subject1.ThrHipAngMean - Subject1.ThrTrunkFleAng;
-  }
-  Subject1.ThrThighAngStd = 10;    // deg, Threshold for standard deviation of mean thigh angle
-  Subject1.ThrThighAngVel = 30;    // deg/s, Threshold for mean thigh angle velocity
-  Subject1.ThrHipAngDiffStd = 10;  // deg, Threshold for standard deviation of difference between left and right hip angle
-  Subject1.StdRange = 10;          // Standard deviation calculation range
-  // Parameters for RTG strategy
-  Subject1.TrunkMass = 40;         // kg, Subject's trunk mass
-  Subject1.ImpeKp = 0.2;           // Nm/deg, Rendered stiffness of Impedance strategy
-  Subject1.ImpeKv = 0;             // Nm*s/deg, Rendered damping of Impedance strategy  
-
-  // Std calculation parameter initialization
-  for(int i=0; i<FilterCycles; i++) {
-    HipAngMeanPre[i] = 0;
-    HipAngDiffPre[i] = 0;
-  }
-  HipAngMeanBar = 0;
-  HipAngDiffBar = 0;
-}
 
 /**
  * Control parameter initialization for Low-level controller
  * Initial parameters including: 
- * PID struct parameters (PID controller parameters); Iterative force feedback; Intermediate quantities related to PWM command.
+ * PWM commands; Iterative force feedback; PID struct parameters (PID controller parameters) related to PWM command.
  * Here use increment PID algorithm: Delta.U = Kp*( (ek-ek_1) + (Tcontrol/Ti)*ek + (Td/Tcontrol)*(ek+ek_2-2*ek_1) )
  */
 void Control_Init(void) {
+  /* Initialize PWM command */
   PWM_commandL = 0;
   PWM_commandR = 0;
-  // initialize interation torque feedback
+  
+  /* Initialize interation torque feedback */
   Estimated_TdMotorCurrentL = 0;
   Estimated_TdMotorCurrentR = 0;
   Estimated_TdForceSensorL = 0;
@@ -143,6 +46,8 @@ void Control_Init(void) {
   ForceSensorR_InitValue = 0;
   Estimated_TdL = 0;
   Estimated_TdR = 0;
+
+  /* Initialize PID struct parameters*/
   // initialize the control parameter of left motor
   pidL.set = desiredTorqueL;
   pidL.currTa = 0;
@@ -175,32 +80,22 @@ void Control_Init(void) {
 }
 
 /**
- * Pre-processing for sensor feedback to make sure the initial status of sensor is good for calibration
+ * Pre-processing for sensor feedback related to low-level controller 
+ * to make sure the initial status of sensor is good for calibration
  */
-void PreproSensorInit() {
+void LLPreproSensorInit() {
   int8_t SensorReady;
   int8_t SensorReady_1;
   int8_t SensorReady_2;
-  int8_t SensorReady_3;
-  int8_t SensorReady_4;
-  int8_t SensorReady_5;
   SensorReady = 0;
   while(SensorReady == 0){
-    // Initialize present yaw angle as 0 reference. Notice inside the function info will be collected
-    // from IMUC simultaneously including: TrunkAng, TrunkVel
-    yawAngleR20(1);
-    delay(1);
-    // Collect info from ADC including: Potentiometets(HipAng), ForceSensors(Interaction force)
-    // and Motor status 
+    // Collect info from ADC including: ForceSensors(Interaction force) and Motor status 
     getADCaverage(1);
     delay(1);
     // Initialize the inital value for each sensor feedback
     // Notice to check the Initial value is ADC raw data or Processed data
     ForceSensorL_InitValue = Aver_ADC_value[ForceSensorL]/ForceSensorL_Sensitivity;
     ForceSensorR_InitValue = Aver_ADC_value[ForceSensorR]/ForceSensorR_Sensitivity;
-    HipAngL_InitValue = Aver_ADC_value[PotentioLP1]/PotentioLP1_Sensitivity;
-    HipAngR_InitValue = Aver_ADC_value[PotentioRP2]/PotentioRP2_Sensitivity;
-    TrunkFleAng_InitValue = angleActualC[rollChan];
     // Here place program to check if these initial value of each sensor is near the expected position. 
     // If not, recalibration the initial value of the sensor feedback 
     if(ForceSensorL_InitValue > ForceSensorL_CaliValue + ForceSensorL_Tol || ForceSensorL_InitValue < ForceSensorL_CaliValue - ForceSensorL_Tol)
@@ -209,158 +104,9 @@ void PreproSensorInit() {
     if(ForceSensorR_InitValue > ForceSensorR_CaliValue + ForceSensorR_Tol || ForceSensorR_InitValue < ForceSensorR_CaliValue - ForceSensorR_Tol)
       SensorReady_2 = 0;
     else SensorReady_2 = 1;
-    if(HipAngL_InitValue > HipAngL_CaliValue + HipAngL_Tol || HipAngL_InitValue < HipAngL_CaliValue - HipAngL_Tol)
-      SensorReady_3 = 0;
-    else SensorReady_3 = 1;
-    if(HipAngR_InitValue > HipAngR_CaliValue + HipAngR_Tol || HipAngR_InitValue < HipAngR_CaliValue - HipAngR_Tol)
-      SensorReady_4 = 0;
-    else SensorReady_4 = 1;
-    if(TrunkFleAng_InitValue > TrunkFleAng_CaliValue + TrunkFleAng_Tol || TrunkFleAng_InitValue < TrunkFleAng_CaliValue - TrunkFleAng_Tol)
-      SensorReady_5 = 0;
-    else SensorReady_5 = 1;
-    SensorReady = SensorReady_1*SensorReady_2*SensorReady_3*SensorReady_4*SensorReady_5;
+    SensorReady = SensorReady_1*SensorReady_2;
   }
-  Serial.println("Sensor Ready.");
-}
-
-/**
- * Set the yaw angle of human trunk to zero
- * @param unsigned char - IMU operation mode: 1-force to set, other number-logic set
- */
-void yawAngleR20(uint8_t aloMode) {
-  // Roughly yaw angle return to zero logic: 
-  // Detect mode 1 and premode is larger than 3
-  // i.e., From bending back to other motion
-  if(aloMode == 1) {
-    if(OperaitonAloIMUC == 9) {
-      getIMUangleT();
-      TrunkYaw_InitValue = angleActualC[yawChan];
-    }
-    else if(OperaitonAloIMUC == 6) {
-      // set2zeroL();
-      // set2zeroR();
-      set2zeroT();
-      getIMUangleT();
-      TrunkYaw_InitValue = 0;
-    }
-  }
-  else {
-    if(mode == Standing && PreMode > Lowering) {
-      if(OperaitonAloIMUC == 9) {
-        getIMUangleT();
-        TrunkYaw_InitValue = angleActualC[yawChan];
-      }
-      else if(OperaitonAloIMUC == 6) {
-        // set2zeroL();
-        // set2zeroR();
-        set2zeroT();
-        getIMUangleT();
-        TrunkYaw_InitValue = 0;        
-      }
-    }
-  }
-}
-
-/**
- * Processing sensor feedback for High-level closed-loop control and data sending
- */
-void HLsensorFeedbackPro() {
-//  // Smooth the hip angle feedback
-//  MovingAverageFilter(PotentioLP1,5);
-//  MovingAverageFilter(PotentioRP2,5);
-  // Directly feedback from sensor
-  HipAngL = Aver_ADC_value[PotentioLP1]/PotentioLP1_Sensitivity - HipAngL_InitValue;
-  HipAngR = Aver_ADC_value[PotentioRP2]/PotentioRP2_Sensitivity - HipAngR_InitValue;
-  TrunkFleAng = TrunkFleAng_InitValue - angleActualC[rollChan];
-  TrunkYawAngPro();
-  TrunkFleVel = velActualC[rollChan];
-  // Calculated from sensor feedback
-  HipAngMean = (HipAngL+HipAngR)/2;
-  HipAngDiff = HipAngL-HipAngR;
-  HipAngStd = HipAngStdCal(Subject1.StdRange);
-  ThighAngL = HipAngL - TrunkFleAng;
-  ThighAngR = HipAngR - TrunkFleAng;
-  ThighAngMean = (ThighAngL+ThighAngR)/2-ThighAng_InitValue;
-//  ThighAngStd = ThighAngStdCal(Subject1.StdRange);
-  HipAngDiffStd = HipAngDiffStdCal(Subject1.StdRange);
-}
-
-/**
- * Yaw angle processing for practical control
- */
-void TrunkYawAngPro() {
-  // Trunk yaw angle feedback info procesisng for high-level controller
-  TrunkYawAng = angleActualC[yawChan] - TrunkYaw_InitValue;
-  if(TrunkYawAng > 180) {
-    TrunkYawAng = TrunkYawAng-360;
-  }
-  else if(TrunkYawAng < -180) {
-    TrunkYawAng = TrunkYawAng+360;
-  }
-}
-
-/**
- * Calculate standard deviation for HipAngMean within certain cycles
- * @param int - cycles: 1~FilterCycles
- * @param return - calculated standard deviation
- */
-double HipAngStdCal(int cycles) {
-  double interMean;
-  double interValue;
-  interValue = 0.0;
-  if(cycles > FilterCycles) {
-    cycles = FilterCycles;
-  }
-  else if(cycles < 1) {
-    cycles = 1;
-  }
-  // get this times' mean value
-  interMean = HipAngMeanBar + (HipAngMean - HipAngMeanPre[FilterCycles-cycles])/cycles;
-  // update the data in the moving window
-  for(int j=0; j<FilterCycles-1; j++) {
-    HipAngMeanPre[j] = HipAngMeanPre[j+1];
-  }
-  HipAngMeanPre[FilterCycles-1] = HipAngMean;
-  // store the last time mean value
-  HipAngMeanBar = interMean;
-  // calculate standard deviation
-  for(int j=FilterCycles-cycles; j<FilterCycles; j++) {
-    interValue = interValue + pow(HipAngMeanPre[j]-interMean,2);
-  }
-  interValue = sqrt(interValue/cycles);
-  return interValue;  
-}
-
-/**
- * Calculate standard deviation for HipAngDiff within certain cycles
- * @param int - cycles: 1~FilterCycles
- * @param return - calculated standard deviation
- */
-double HipAngDiffStdCal(int cycles) {
-  double interMean;
-  double interValue;
-  interValue = 0.0;
-  if(cycles > FilterCycles) {
-    cycles = FilterCycles;
-  }
-  else if(cycles < 1) {
-    cycles = 1;
-  }
-  // get this times' mean value
-  interMean = HipAngDiffBar + (HipAngDiff - HipAngDiffPre[FilterCycles-cycles])/cycles;
-  // update the data in the moving window
-  for(int j=0; j<FilterCycles-1; j++) {
-    HipAngDiffPre[j] = HipAngDiffPre[j+1];
-  }
-  HipAngDiffPre[FilterCycles-1] = HipAngDiff;
-  // store the last time mean value
-  HipAngDiffBar = interMean;
-  // calculate standard deviation
-  for(int j=FilterCycles-cycles; j<FilterCycles; j++) {
-    interValue = interValue + pow(HipAngDiffPre[j]-interMean,2);
-  }
-  interValue = sqrt(interValue/cycles);
-  return interValue;    
+  Serial.println("Sensor Ready for Low-level Controller.");  
 }
 
 /**
@@ -380,62 +126,6 @@ void sensorFeedbackPro(void) {
 
   // --------- Thigh angle feedback info processing for high-level controller --------------
 //  ThighAngL = 180-HipAngL-angleActualC[rollChan];  //(TrunkFleAng = angleActualC[rollChan])
-}
-
-/**
- * Conduct simple user intention detection and torque generation calculation as reference torque 
- * for low-level control based on sensor information feedback from force sensors, IMUs, Potentiometers
- * and Motor driver
- * @para unsigned char - control mode 1 for user intenntion detection: 1-xx algorithm, 2-xx algorithm
- *       unsigned char - control mode 2 for torque generation strategy: 1-xx strategy, 2-xx strategy
- */
-void HLControl(uint8_t UIDMode, uint8_t RTGMode) {
-  HL_UserIntentDetect(UIDMode);
-  HL_ReferTorqueGenerate(RTGMode);
-  // ------------------------ Motor status updating -------------------
-  // if high-level command stop state
-  if(mode == StopState) {
-    // Set zero for reference torque
-    desiredTorqueR = 0;
-    desiredTorqueL = 0;
-    // disable motor control
-    digitalWrite(MotorEnableL,LOW);
-  }
-  else {
-    digitalWrite(MotorEnableL,HIGH); //Enable motor control 
-  }
-}
-
-/**
- * Conduct simple user intention detection 
- * @para unsigned char - control mode for user intenntion detection: 1-xx algorithm, 2-xx algorithm
- */
-void HL_UserIntentDetect(uint8_t UIDMode) {
-  // User intent detection strategy v1 (Referring to the 'Thoughts Keeping notbook')
-  if(UIDMode == 1) {
-    if(HipAngL < Subject1.ThrHipAngMean) {
-      // A illustration of motion mode update
-      mode = Standing; 
-      side = 1;  
-    }
-    // ----- Here replace for detailed user intention detection alogrithm -------
-  }
-   
-}
-
-/**
- * Reference torque generation 
- * @para unsigned char - control mode for torque generation strategy: 1-xx strategy, 2-xx strategy
- */
-void HL_ReferTorqueGenerate(uint8_t RTGMode) {
-  // Here != 100 is a illustration of mode selection
-  if(RTGMode != 100) {
-    if(mode = Standing) {
-      desiredTorqueL = 0;
-      desiredTorqueR = 0;
-    }
-  // ----- Here replace for detailed user intention detection alogrithm ------- 
-  }
 }
 
 /**

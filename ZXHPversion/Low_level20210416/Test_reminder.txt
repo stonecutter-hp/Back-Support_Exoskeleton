@@ -9,3 +9,7 @@
 20210422
   Check pitch angle's variation range
   How can a class call function from other class
+
+20210423
+  IMU yaw angle set to zero retest
+  Check if enum type can be used for if/else command from PC command recieving, i.e. (uint8_t)mode = 1 from recieving can lead to such a command (uint8_t)mode = (enum) status.

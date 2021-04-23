@@ -5,6 +5,11 @@
 
 #include "IMU.h"
 
+/* IMU alogorithm 6 axis or 9 axis */
+IMUAlo OperaitonAloIMUA;     
+IMUAlo OperaitonAloIMUB; 
+IMUAlo OperaitonAloIMUC;
+
 /**************************************** IMU parameters definition ********************************/
 unsigned char angleTempA[6];   // store the raw data get from IMU A(addr 0x50)
 unsigned char angleTempB[6];   // store the raw data get from IMU B(addr 0x51)
@@ -30,7 +35,7 @@ double IMU_value_Prev[3][3];                     // store last time filtered ang
 unsigned char yaw2zero[2] = {0x04, 0x00};  // The command for IMU yaw angle return to zero (only for 6-axis algorithm)
 
 /**
- * IMU angle feedback return to zero
+ * IMU angle feedback return to zero and set IMU operation algorithm
  */
 void IMU_Init(void)  {
   for(int i=0;i<3;i++) {
@@ -58,6 +63,9 @@ void IMU_Init(void)  {
     velTempB[i] = 0;
     velTempC[i] = 0;
   }
+  OperaitonAloIMUA = IMU9Axis;
+  OperaitonAloIMUB = IMU9Axis;
+  OperaitonAloIMUC = IMU9Axis;
 }
 
 /**

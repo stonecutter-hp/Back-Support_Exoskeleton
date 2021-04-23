@@ -15,4 +15,8 @@
 20210422
     Make sure the relationship ThighAngle + TrunkAngle = Hip Joint is satisfied from both software and hardware aspect
 
+20210423
+    Next time before programming, plan the code configuration first !
+
+
 

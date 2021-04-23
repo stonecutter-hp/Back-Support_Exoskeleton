@@ -38,8 +38,10 @@ void setup() {
   Serial.begin(460800);   // initialize serial set baurd rate
 
   /*************************** Control parameter Initialization ************************/
-  // Attention initialize high-level controller first
-  HLControl_Init(); // initialize the high-level control parameters
+  // Attention initialize high-level controller first since reference torque should be 
+  // initialized for low-level control
+  UID_Init();       // initialize the UID strategy parameters
+  RTG_Init();       // initialize the RTG strategy parameters
   Control_Init();   // initialize the control parameters
   
   /*********** Assign general IO for motor control and LED state indication ************/
@@ -62,7 +64,8 @@ void setup() {
   PWMmode_Init();
 
   /***************************** Sensor initial value calibration **********************/
-  PreproSensorInit();
+  LLPreproSensorInit();
+  HLPreproSensorInit();
   delay(5);
   
   /****************************** Initial status checking ******************************/

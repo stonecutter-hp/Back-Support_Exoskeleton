@@ -1,6 +1,5 @@
 /***********************************************************************
- * The PID control configuration and processing function 
- * High-level control configuration and procession function
+ * The PID control configuration and processing function &
  * System model parameters
  **********************************************************************/
 
@@ -13,6 +12,7 @@
 #include "ADC.h"
 #include "IMU.h"
 #include "FSM.h"
+#include "RefTG.h"
 
 #define d2r M_PI/180
 
@@ -62,24 +62,6 @@ extern bool Control_update;    // control update flag
 #define LimitTotal_TaR 7      // Limitation of total control command of motor R
 #define LimitInput 15         // Limitation of input command, here for open-loop is Ta, for closed loop is Td
 
-/****************************************High level controller parameters definition*******************************/
-extern bool HLControl_update;   // high-level control update flag
-extern float HLUpdateFre;       // hihg-level control frequency
-extern float desiredTorqueL;    // desired motor torque of left motor
-extern float desiredTorqueR;    // desired motor torque of right motor
-// Expected initial value range (CaliValue +- Tol) of sensor feedback for initial calibration
-// the initial values should be adjusted along with prototype design
-#define ForceSensorL_CaliValue 0
-#define ForceSensorL_Tol 0
-#define ForceSensorR_CaliValue 0
-#define ForceSensorR_Tol 0
-#define HipAngL_CaliValue 0
-#define HipAngL_Tol 0
-#define HipAngR_CaliValue 0
-#define HipAngR_Tol 0
-#define TrunkFleAng_CaliValue 0
-#define TrunkFleAng_Tol 0
-
 /**************************************** Transmission system parameters definition ********************************/
 // The output ability of the actuation unit with 19:1 gear ratio is better restricted to 0~8.9 Nm (0.0525*9*19)
 // The following parameter may be adjusted after calibrateds
@@ -87,9 +69,16 @@ extern float desiredTorqueR;    // desired motor torque of right motor
 #define MotorMaximumCurrent 9            //motor maximum current A configured in EXCON studio
 #define GearRatio 19                     //gear ratio is 19:1
 
+/******************** Low-level controller related sensor feedback calibration value definition ********************/
+// Expected initial value range (CaliValue +- Tol) of sensor feedback for initial calibration
+// the initial values should be adjusted along with prototype design
+#define ForceSensorL_CaliValue 0
+#define ForceSensorL_Tol 0
+#define ForceSensorR_CaliValue 0
+#define ForceSensorR_Tol 0
 
 /*************************************** Intermediate auxiliary parameters for control ****************************/ 
-// Parameters for lowe-level control
+// Parameters for low-level control
 extern float Estimated_TdMotorCurrentL;   // Td feedback from left motor current feedback
 extern float Estimated_TdMotorCurrentR;   // Td feedback from right motor current feedback
 extern float Estimated_TdForceSensorL;    // Td feedback from left force sensor
@@ -98,109 +87,25 @@ extern float Estimated_TdForceSensorR;    // Td feedback from right force sensor
 extern float ForceSensorR_InitValue;      // Auxiliary parameter for right force sensor
 extern float Estimated_TdL;               // Estimated compact Td feedback of left side
 extern float Estimated_TdR;               // Estimated compact Td feedback of right side
-// Parameters for high-level controller (Directly feedback from sensor)
-extern float HipAngL;                     // Left hip joint angle
-extern float HipAngL_InitValue;           // Auxiliary parameter for left hip joint angle
-extern float HipAngR;                     // Right hip joint angle
-extern float HipAngR_InitValue;           // Auxiliary parameter for right hip joint angle
-extern float TrunkYawAng;                 // Trunk yaw angle
-extern float TrunkYaw_InitValue;          // Auxiliary parameter for trunk yaw angle
-extern float TrunkFleAng;                 // Trunk flexion angle
-extern float TrunkFleAng_InitValue;       // Auxiliary parameter for trunk pitch angle
-extern float TrunkFleVel;                 // Trunk flexion angular velocity
-// Parameters for high-level controller (Calculated from sensor feedback)
-extern float HipAngMean;                  // (Left hip angle + right hip angle)/2
-extern float HipAngDiff;                  // (Left hip angle - right hip angle)
-extern float HipAngStd;                   // Std(HipAngMean) within certain time range
-extern float HipAngVel;                   // Velocity of HipAngMean
-extern float ThighAngL;                   // Left thigh angle
-extern float ThighAngR;                   // Right thigh angle
-extern float ThighAngMean;                // (Left thigh angle + right thigh angle)/2
-extern float ThighAng_InitValue;          // Auxiliary parameter for thigh angle
-extern float ThighAngStd;                 // Std(ThighAngMean) within certain time range
-extern float HipAngDiffStd;               // Std(HipAngDiff) within certain time range
-// A window store the historical HipAngMean value of certain cycle for standard deviation calculation
-extern float HipAngMeanPre[FilterCycles];
-extern float HipAngMeanBar;               // Auxiliary parameter X_bar for standard deviation calculation
-// A window store the historical HipAngDiff value of certain cycle for standard deviation calculation
-extern float HipAngDiffPre[FilterCycles];
-extern float HipAngDiffBar;               // Auxiliary parameter X_bar for standard deviation calculation
-
-/**
- * Control parameter initialization for High-level controller
- * Initial controller including: 
- * Sensor feedbacks, auxiliary parameters and thresholds used for high-level controller
- */
-void HLControl_Init(void);
 
 /**
  * Control parameter initialization for Low-level controller
  * Initial parameters including: 
- * PID struct parameters (PID controller parameters); Iterative force feedback; Intermediate quantities related to PWM command.
+ * PWM commands; Iterative force feedback; PID struct parameters (PID controller parameters) related to PWM command.
  * Here use increment PID algorithm: Delta.U = Kp*( (ek-ek_1) + (Tcontrol/Ti)*ek + (Td/Tcontrol)*(ek+ek_2-2*ek_1) )
  */
 void Control_Init(void);
 
 /**
- * Pre-processing for sensor feedback to make sure the initial status of sensor is good for calibration
+ * Pre-processing for sensor feedback related to low-level controller 
+ * to make sure the initial status of sensor is good for calibration
  */
-void PreproSensorInit(void);
-
-/**
- * Set the yaw angle of human trunk to zero
- * @param unsigned char - control mode: 1-9 axis IMU 2-6 axis IMU
- */
-void yawAngleR20(uint8_t aloMode);
-
-/**
- * Processing sensor feedback for High-level closed-loop control and data sending
- */
-void HLsensorFeedbackPro(void);
-
-/**
- * Yaw angle processing for practical control
- */
-void TrunkYawAngPro(void);
-
-/**
- * Calculate standard deviation for HipAngMean within certain cycles
- * @param int - cycles: 1~FilterCycles
- * @param return - calculated standard deviation
- */
-double HipAngStdCal(int cycles);
-
-/**
- * Calculate standard deviation for HipAngDiff within certain cycles
- * @param int - cycles: 1~FilterCycles
- * @param return - calculated standard deviation
- */
-double HipAngDiffStdCal(int cycles);
+void LLPreproSensorInit(void);
 
 /**
  * Processing sensor feedback for Low-level closed-loop control
  */
 void sensorFeedbackPro(void);
-
-/**
- * Conduct simple user intention detection and torque generation calculation as reference torque 
- * for low-level control based on sensor information feedback from force sensors, IMUs, Potentiometers
- * and Motor driver
- * @para unsigned char - control mode 1 for user intenntion detection: 1-xx algorithm, 2-xx algorithm
- *       unsigned char - control mode 2 for torque generation strategy: 1-xx strategy, 2-xx strategy
- */
-void HLControl(uint8_t UIDMode, uint8_t RTGMode);
-
-/**
- * Conduct simple user intention detection 
- * @para unsigned char - control version for user intenntion detection: 1-v1 algorithm, 2-v2 algorithm
- */
-void HL_UserIntentDetect(uint8_t UIDMode);
-
-/**
- * Reference torque generation 
- * @para unsigned char - control mode for torque generation strategy: 1-xx strategy, 2-xx strategy
- */
-void HL_ReferTorqueGenerate(uint8_t RTGMode);
 
 /**
  * Calculate control command (PWM duty cycle) accroding to command received from PC
