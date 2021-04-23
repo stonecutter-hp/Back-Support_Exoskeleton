@@ -13,6 +13,8 @@ Log
 20201123
   Creating based on the logical of "test_serial_ADC_timer.ino"
   Setup feedback item and parameters based on test-bench sensor implementation
+20210423
+  Keep updated with the programming of ZXHP version control program
 
 ***Program logic***
 1) read desired torque command from PC 
