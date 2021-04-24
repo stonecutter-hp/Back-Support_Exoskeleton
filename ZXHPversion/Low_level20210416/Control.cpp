@@ -99,11 +99,11 @@ void LLPreproSensorInit() {
     // Here place program to check if these initial value of each sensor is near the expected position. 
     // If not, recalibration the initial value of the sensor feedback 
     if(ForceSensorL_InitValue > ForceSensorL_CaliValue + ForceSensorL_Tol || ForceSensorL_InitValue < ForceSensorL_CaliValue - ForceSensorL_Tol)
-      SensorReady_1 = 0;  
-    else SensorReady_1 = 1;
+    {SensorReady_1 = 0;}  
+    else {SensorReady_1 = 1;}
     if(ForceSensorR_InitValue > ForceSensorR_CaliValue + ForceSensorR_Tol || ForceSensorR_InitValue < ForceSensorR_CaliValue - ForceSensorR_Tol)
-      SensorReady_2 = 0;
-    else SensorReady_2 = 1;
+    {SensorReady_2 = 0;}
+    else {SensorReady_2 = 1;}
     SensorReady = SensorReady_1*SensorReady_2;
   }
   Serial.println("Sensor Ready for Low-level Controller.");  

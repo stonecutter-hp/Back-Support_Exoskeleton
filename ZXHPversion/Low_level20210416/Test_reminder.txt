@@ -13,3 +13,8 @@
 20210423
   IMU yaw angle set to zero retest
   Check if enum type can be used for if/else command from PC command recieving, i.e. (uint8_t)mode = 1 from recieving can lead to such a command (uint8_t)mode = (enum) status.
+  test if std calclulation is good  √ --> inidicating the moving average function and pow() function and sqrt() function is working
+
+20210424
+  Test if simplified if else is working 
+  Test if functional function ConThresReqCheck() is work or not

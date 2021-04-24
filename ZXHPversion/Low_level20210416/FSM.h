@@ -52,20 +52,28 @@ extern BendTech tech;           // bending tech flag
 */
 typedef struct {
   // Parameters for UID strategy
-  float ThrTrunkFleAng;    // Threshold for trunk flexion angle
-  float ThrTrunkFleVel;    // Threshold for trunk flexion velocity
-  float ThrHipAngMean;     // Threshold for mean value of summation of left and right hip angle  
-  float ThrHipAngDiff;     // Threshold for difference between left and right hip angle
-  float ThrHipAngStd;      // Threshold for standard deviation of mean hip angle
-  float ThrHipVel;         // Threshold for mean hip angle velocity
+  float ThrTrunkFleAng_1;    // Threshold 1 for trunk flexion angle
+  float ThrTrunkFleAng_2;    // Threshold 2 for trunk flexion angle
+  float ThrTrunkFleVel;      // Threshold for trunk flexion velocity
+  float ThrHipAngMean_1;     // Threshold 1 for mean value of summation of left and right hip angle
+  float ThrHipAngMean_2;     // Threshold 2 for mean value of summation of left and right hip angle   
+  float ThrHipAngDiff_1;     // Threshold 1 for difference between left and right hip angle
+  float ThrHipAngStd_1;      // Threshold 1 for standard deviation of mean hip angle
+  float ThrHipAngStd_2;      // Threshold 2 for standard deviation of mean hip angle
+  float ThrHipAngStd_3;      // Threshold 3 for standard deviation of mean hip angle
+  float ThrHipAngStd_4;      // Threshold 4 for standard deviation of mean hip angle
+  float ThrHipVel;           // Threshold for mean hip angle velocity
   // Notice that ThrThighAngMean should not be larger than ThrHipAngMean - ThrTrunkFleAng if ThighAng comes from
   // calculation of (HipAng - TrunkFleAng) instead of measurement
-  float ThrThighAngMean;   // Threshold for mean value of summation of left and right thigh angle
-  float ThrThighAngStd;    // Threshold for standard deviation of mean thigh angle
-  float ThrThighAngVel;    // Threshold for mean thigh angle velocity
-  float ThrHipAngDiffStd;  // Threshold for standard deviation of difference between left and right hip angle
+  float ThrThighAngMean_1;   // Threshold 1 for mean thigh angle
+  float ThrThighAngMean_2;   // Threshold 2 for mean thigh angle
+  float ThrThighAngStd;      // Threshold for standard deviation of mean thigh angle
+  float ThrThighAngVel;      // Threshold for mean thigh angle velocity
+  float ThrHipAngDiffStd;    // Threshold for standard deviation of difference between left and right hip angle
   // Standard deviation calculation range
   int StdRange;
+  // Ratio tolerance related to hip angle for transition between standing and lowering&lifting 
+  float RatioTol;
 }UIDCont;                  // Controller parameter and threshold for high-level control strategy
 extern UIDCont UID_Subject1;    // UID strategy parameters for specific subjects
 
@@ -87,12 +95,18 @@ extern UIDCont UID_Subject1;    // UID strategy parameters for specific subjects
 // Parameters Directly feedback from sensor
 extern float HipAngL;                     // Left hip joint angle
 extern float HipAngL_InitValue;           // Auxiliary parameter for left hip joint angle
+extern float HipAngL_T0InitValue;         // Auxiliary parameter of T0 left hip joint angle
+extern float HipAngL_MaxValue;            // Auxiliary parameter of Max left hip joint bending angle
 extern float HipAngR;                     // Right hip joint angle
 extern float HipAngR_InitValue;           // Auxiliary parameter for right hip joint angle
+extern float HipAngR_T0InitValue;         // Auxiliary parameter of T0 right hip joint angle
+extern float HipAngR_MaxValue;            // Auxiliary parameter of Max right hip joint bending angle
 extern float TrunkYawAng;                 // Trunk yaw angle
 extern float TrunkYaw_InitValue;          // Auxiliary parameter for trunk yaw angle
+extern float TrunkYaw_T0InitValue;        // Auxiliary parameter for T0 trunk yaw angle
 extern float TrunkFleAng;                 // Trunk flexion angle
 extern float TrunkFleAng_InitValue;       // Auxiliary parameter for trunk pitch angle
+extern float TrunkFleAng_T0InitValue;     // Auxiliary parameter for T0 trunk pitch angle
 extern float TrunkFleVel;                 // Trunk flexion angular velocity
 // Parameters calculated from sensor feedback
 extern float HipAngMean;                  // (Left hip angle + right hip angle)/2
@@ -100,9 +114,10 @@ extern float HipAngDiff;                  // (Left hip angle - right hip angle)
 extern float HipAngStd;                   // Std(HipAngMean) within certain time range
 extern float HipAngVel;                   // Velocity of HipAngMean
 extern float ThighAngL;                   // Left thigh angle
+extern float ThighAngL_T0InitValue;       // Auxiliary parameter of T0 left thigh angle for RTG
 extern float ThighAngR;                   // Right thigh angle
+extern float ThighAngR_T0InitValue;       // Auxiliary parameter of T0 right thigh angle for RTG
 extern float ThighAngMean;                // (Left thigh angle + right thigh angle)/2
-extern float ThighAng_InitValue;          // Auxiliary parameter for thigh angle
 extern float ThighAngStd;                 // Std(ThighAngMean) within certain time range
 extern float HipAngDiffStd;               // Std(HipAngDiff) within certain time range
 // A window store the historical HipAngMean value of certain cycle for standard deviation calculation
@@ -111,6 +126,10 @@ extern float HipAngMeanBar;               // Auxiliary parameter X_bar for stand
 // A window store the historical HipAngDiff value of certain cycle for standard deviation calculation
 extern float HipAngDiffPre[FilterCycles];
 extern float HipAngDiffBar;               // Auxiliary parameter X_bar for standard deviation calculation
+// A window store the historical HipAngStd value of certain cycle for Finite state machine
+extern float HipAngStdPre[FilterCycles];
+// A window store the historical HipAngDiffStd value of certain cycle for Finite state machine
+extern float HipAngDiffStdPre[FilterCycles];
 
 /**
  * Control parameter initialization for UID strategy
@@ -145,14 +164,14 @@ void TrunkYawAngPro(void);
 /**
  * Calculate standard deviation for HipAngMean within certain cycles
  * @param int - cycles: 1~FilterCycles
- * @param return - calculated standard deviation
+ * @return double - calculated standard deviation
  */
 double HipAngStdCal(int cycles);
 
 /**
  * Calculate standard deviation for HipAngDiff within certain cycles
  * @param int - cycles: 1~FilterCycles
- * @param return - calculated standard deviation
+ * @return double - calculated standard deviation
  */
 double HipAngDiffStdCal(int cycles);
 
@@ -171,5 +190,58 @@ void HLControl(uint8_t UIDMode, uint8_t RTGMode);
  */
 void HL_UserIntentDetect(uint8_t UIDMode);
 
+/**************** Functional function of each phase for the Finite-state machine ******************/
+/**
+ * System operation during standing phase: 
+ *   Transmission condition detection 
+ *   Reference torque generation strategy adjustment indication
+ */
+void StandingPhase(void);
+
+/**
+ * System operation during Walking phase: 
+ *   Transmission condition detection 
+ *   Reference torque generation strategy adjustment indication
+ */
+void WalkingPhase(void);
+
+/**
+ * System operation during Lowering phase: 
+ *   Transmission condition detection 
+ *   Reference torque generation strategy adjustment indication
+ */
+void LoweringPhase(void);
+
+/**
+ * System operation during Grasping phase: 
+ *   Transmission condition detection 
+ *   Reference torque generation strategy adjustment indication
+ */
+void GraspingPhase(void);
+
+/**
+ * System operation during Lifting phase: 
+ *   Transmission condition detection 
+ *   Reference torque generation strategy adjustment indication
+ */
+void LiftingPhase(void);
+
+/**
+ * Functional funciton to check continuously threshold requirement is meeted
+ * @param float - threshold
+ * @param float[] - The array to be checked
+ * @param int - number of continous requirment satisfied items at once: 1~FilterCycles  
+ * @param unsigned char - threshold requirements: 0- <Threshold, 1- >Threshold
+ * @return bool - true: satisfied; false: not satisfied
+ */
+bool ConThresReqCheck(float threshold, float *value, int cycles, uint8_t ThreRequire);
+
+/**
+ * Functional funciton to detect peak angle
+ * @param float[] - The array to be detected  
+ * @param unsigned char - peak value mode: 0-detect minimum value, 1-detect maximum value
+ * @return float - detected peakvalue
+ */
+float PeakvalueDetect(float *Pevalue, uint8_t Peakmode);
 
 #endif

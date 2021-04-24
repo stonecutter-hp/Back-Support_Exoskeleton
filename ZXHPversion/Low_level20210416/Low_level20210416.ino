@@ -78,12 +78,7 @@ void setup() {
     getIMUangleT();
     getIMUvelT();   
     HLsensorFeedbackPro();
-//    if(abs(HipAngMean)<)
   }
-
-//  yawAngleR20(1);     // Forced trunk yaw angle correction
-//  HipAngL_InitValue = Aver_ADC_value[PotentioLP1];  // Hip angle initial vallue
-//  delay(5);
   
   // resume all the timers
   Timer1.resume();     // Motor L PWM
