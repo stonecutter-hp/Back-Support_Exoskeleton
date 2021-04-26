@@ -14,6 +14,7 @@ MotionType mode;               // this time's motion mode flag
 MotionType PreMode;            // last time's motion mode flag
 AsymSide side;                 // Asymmetric side flag
 BendTech tech;                 // bending tech flag  
+bool YawAngleUpdate = true;   // Yaw angle reset complete flag
 
 /* Controller parameters and thresholds for UID strategy */
 UIDCont UID_Subject1;          // UID strategy parameters for specific subjects
@@ -209,20 +210,25 @@ void yawAngleR20(uint8_t yawInitmode, IMUAlo aloMode){
     }
   }
   else {
-    if(mode == Standing && PreMode > Lowering) {
-      if(aloMode == IMU9Axis) {
-        getIMUangleT();
-        TrunkYaw_InitValue = angleActualC[yawChan];
-      }
-      else if(aloMode == IMU6Axis) {
-        // set2zeroL();
-        // set2zeroR();
-        set2zeroT();
-        getIMUangleT();
-        TrunkYaw_InitValue = 0;        
+    if(mode == Standing && (PreMode == ExitState || PreMode == Lifting || PreMode == Walking)) {
+      if(YawAngleUpdate) {
+        if(aloMode == IMU9Axis) {
+          getIMUangleT();
+          TrunkYaw_InitValue = angleActualC[yawChan];
+        }
+        else if(aloMode == IMU6Axis) {
+          // set2zeroL();
+          // set2zeroR();
+          set2zeroT();
+          getIMUangleT();
+          TrunkYaw_InitValue = 0;        
+        }
+        YawAngleUpdate = false;
       }
     }
+    YawAngleUpdate = true;
   }
+  
 }
 
 /**
@@ -381,10 +387,14 @@ void HL_UserIntentDetect(uint8_t UIDMode) {
  */
 void StandingPhase() {
   if(abs(HipAngMean) < UID_Subject1.ThrHipAngMean_1 && HipAngStd > UID_Subject1.ThrHipAngStd_1) {
-    if(ConThresReqCheck(UID_Subject1.ThrHipAngDiff_1,HipAngDiffPre,UID_Subject1.StdRange,1)) {mode = Walking;}
+    if(ConThresReqCheck(UID_Subject1.ThrHipAngDiff_1,HipAngDiffPre,UID_Subject1.StdRange,1)) {
+      mode = Walking;
+      PreMode = Standing;
+    }
   }
   else if(abs(HipAngMean) > UID_Subject1.ThrHipAngMean_1 && HipAngStd > UID_Subject1.ThrHipAngStd_3) {
     mode = Lowering;
+    PreMode = Standing;
     // Record each angle when starting to lowering
     HipAngL_T0InitValue = HipAngL;
     HipAngR_T0InitValue = HipAngR;
@@ -397,6 +407,7 @@ void StandingPhase() {
   }
   else if (abs(HipAngMean) > UID_Subject1.ThrHipAngMean_1*(1+UID_Subject1.RatioTol)) {
     mode = Lowering;
+    PreMode = Standing;
     // Record each angle when starting to lowering
     HipAngL_T0InitValue = HipAngL;
     HipAngR_T0InitValue = HipAngR;
@@ -417,7 +428,10 @@ void StandingPhase() {
  */
 void WalkingPhase() {
   if(abs(HipAngMean) < UID_Subject1.ThrHipAngMean_2 && HipAngStd < UID_Subject1.ThrHipAngStd_2) {
-    if(ConThresReqCheck(UID_Subject1.ThrHipAngDiff_1,HipAngDiffPre,UID_Subject1.StdRange,0)) {mode = Standing;}
+    if(ConThresReqCheck(UID_Subject1.ThrHipAngDiff_1,HipAngDiffPre,UID_Subject1.StdRange,0)) {
+      mode = Standing;
+      PreMode = Walking;
+    }
   }
   else {mode = Walking;}
 }
@@ -432,6 +446,7 @@ void LoweringPhase() {
   Auxpara = PeakvalueDetect(HipAngMeanPre,1);
   if(Auxpara != 0 && HipAngStd < UID_Subject1.ThrHipAngStd_4) {
     mode = Grasping;
+    PreMode = Lowering;
     //Record max hip joint bending angle
     HipAngL_MaxValue = HipAngL;
     HipAngR_MaxValue = HipAngR;
@@ -445,8 +460,10 @@ void LoweringPhase() {
  *   Reference torque generation strategy adjustment indication
  */
 void GraspingPhase() {
-  if(abs(HipAngMean) > UID_Subject1.ThrHipAngMean_1 && HipAngStd > UID_Subject1.ThrHipAngStd_4)
-  {mode = Lifting;}
+  if(abs(HipAngMean) > UID_Subject1.ThrHipAngMean_1 && HipAngStd > UID_Subject1.ThrHipAngStd_4) {
+    mode = Lifting;
+    PreMode = Grasping;
+  }
   else {mode = Grasping;}
 }
 
@@ -456,10 +473,14 @@ void GraspingPhase() {
  *   Reference torque generation strategy adjustment indication
  */
 void LiftingPhase() {
-  if(abs(HipAngMean) < UID_Subject1.ThrHipAngMean_1 && HipAngStd < UID_Subject1.ThrHipAngStd_2) 
-  {mode = Standing;}
-  else if (abs(HipAngMean) < UID_Subject1.ThrHipAngMean_1*(1-UID_Subject1.RatioTol)) 
-  {mode = Standing;}  
+  if(abs(HipAngMean) < UID_Subject1.ThrHipAngMean_1 && HipAngStd < UID_Subject1.ThrHipAngStd_2) {
+    mode = Standing;
+    PreMode = Lifting;
+  }
+  else if (abs(HipAngMean) < UID_Subject1.ThrHipAngMean_1*(1-UID_Subject1.RatioTol)) {
+    mode = Standing;
+    PreMode = Lifting;
+  }  
   else {mode = Lifting;}
 }
 
@@ -476,7 +497,10 @@ void ExitPhase() {
   }
   if(mode == ExitState) {
     if(abs(HipAngMean) < UID_Subject1.ThrHipAngMean_2 && HipAngStd < UID_Subject1.ThrHipAngStd_2) {
-      if(ConThresReqCheck(UID_Subject1.ThrHipAngDiff_1,HipAngDiffPre,UID_Subject1.StdRange,0)) {mode = Standing;}
+      if(ConThresReqCheck(UID_Subject1.ThrHipAngDiff_1,HipAngDiffPre,UID_Subject1.StdRange,0)) {
+        mode = Standing;
+        PreMode = ExitState;
+      }
     }
   }
 }

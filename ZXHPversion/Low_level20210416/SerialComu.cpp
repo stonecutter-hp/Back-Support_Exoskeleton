@@ -97,38 +97,7 @@ void receivedDataPro(void) {
  * Notice: The last two is end character for PC receiveing '\r\n'
  */
 void sendDatatoPC(void) {
-  int dec;
-  int position;
-  int8_t SignMark;
-  unsigned char inter;
-  position = 0;
-  if(SendPC_update == true) {
-// ---------- Following just for example and need to be adjusted specifically for ZXHP version -------------
-//    // Check if the command is recieved
-//    if(receiveCompleted) {
-//      if(SwitchFlag == '0') {
-//        SwitchFlag = '1';
-//      }
-//      else {
-//        SwitchFlag = '0';
-//      }
-//    }
-//    // Mx
-//    USART_TX_BUF[position++] = 'M';
-//    USART_TX_BUF[position++] = SwitchFlag;
-//  	// TLxxxx
-//  	if(SendItemFlag[0] == true) {
-//  	  USART_TX_BUF[position++] = 'T';
-//  	  USART_TX_BUF[position++] = 'L';
-//      // xx.xx
-//  	  dec = Estimated_PoAssistiveTorqueL*Calcu_Pow(10,2);
-//  	  for(int t=0; t<4; t++) {
-//  	  	inter = (dec/Calcu_Pow(10,3-t))%10;
-//  	  	USART_TX_BUF[position++] = inter+48;
-//  	  }
-//  	}
-    Serial.println(USART_TX_BUF); // Speed up frequency
-  }
+  Serial.println(mode);
 }
 
 /**

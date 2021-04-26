@@ -43,6 +43,7 @@ extern MotionType mode;         // this time's motion mode flag
 extern MotionType PreMode;      // last time's motion mode flag
 extern AsymSide side;           // Asymmetric side flag
 extern BendTech tech;           // bending tech flag    
+extern bool YawAngleUpdate;     // Yaw angle reset flag
       
 /* 
  * Controller parameter and threshold for User Intention Detection strategy, 

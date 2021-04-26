@@ -18,13 +18,13 @@ void Timers_Init(void) {
   Timer4.init();   // stop the timers before configuring them
   // high-level control frequency
   HLUpdateFre = 72000/TIM4preScale/TIM4_OverflowValue*1000;
-  // Configurate timer 3    1khz
+  // Configurate timer 3    
   Timer3.setPrescaleFactor(TIM3preScale);          // set pre scale factor 72 -->  72MHz/72=1MHz
   Timer3.setOverflow(TIM3_OverflowValue);          // set overflow value to determine timer 3 frequency: 1(MHz)/overflow
   Timer3.setCompare(TIM3_CH4,TIM3_OverflowValue);  // set compare value within overflow for frequency of timers interrupt
   Timer3.attachInterrupt(TIM3_CH4,Timer3_4_int);   // attach interrupt to timer3 channel4
   Timer3.refresh();                                // refresh the timer 3 configuration
-  // Configurate timer 4    400hz
+  // Configurate timer 4    
   Timer4.setPrescaleFactor(TIM4preScale);          // set pre scale factor 72 -->  72MHz/72=1MHz
   Timer4.setOverflow(TIM4_OverflowValue);          // set overflow value to determine timer 4 frequency: 1(MHz)/overflow
   Timer4.setCompare(TIM4_CH3,TIM4_OverflowValue);  // set compare value within overflow for frequency of timers interrupt

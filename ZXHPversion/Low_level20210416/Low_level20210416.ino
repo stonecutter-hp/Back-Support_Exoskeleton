@@ -83,7 +83,7 @@ void setup() {
     HLsensorFeedbackPro();
     HL_UserIntentDetect(1);
   }
-  
+  Serial.println("Initial position is Standing now.");
   // resume all the timers
   Timer1.resume();     // Motor L PWM
   Timer2.resume();     // Motor R PWM
@@ -105,6 +105,11 @@ void loop() {
   	ADC_update = false;
   }
   if(HLControl_update) {
+    // Notice Yaw angle will be reset to zero if last time trigger event others --> Standing is detected 
+    // if yawAngleR20() is place before HLControl() to leave one cycle time for subject to full standing
+    // Therefore, Yaw angle will be reset to zero immediately if this time trigger event others --> Standing is detected 
+    // if yawAngleR20() is place after HLControl()
+    yawAngleR20(LogicInit, OperaitonAloIMUC);  // Here inside operation is for IMUC address
     HLsensorFeedbackPro();         // processing sensor feedback for high-level control
     HLControl(1,1);                // At present the frequency of high-level control is the same as data sending frequency  
     HLControl_update = false;
