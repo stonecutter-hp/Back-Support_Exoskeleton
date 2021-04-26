@@ -3,6 +3,7 @@
 #include "Control.h"
 #include "FSM.h"
 #include "IIC.h"
+#include "RefTG.h"
 #include "IMU.h"
 #include "SerialComu.h"
 #include "Timers.h"
@@ -20,6 +21,8 @@ Log
 20210420
   The user intention detection strategy refers to the rule-based strategy written
   in the 'Thoughs Keeping notebook'
+20210424
+  Finish intial FSM frame programing: Based on global coordinate of joint angle
   
 
 ***Program logic***
@@ -78,6 +81,7 @@ void setup() {
     getIMUangleT();
     getIMUvelT();   
     HLsensorFeedbackPro();
+    HL_UserIntentDetect(1);
   }
   
   // resume all the timers
@@ -96,18 +100,17 @@ void loop() {
 //  starttime = millis();
   if(ADC_update) {
   	getADCaverage(1);              // get ADC value
+    getIMUangleT();                // get human trunk flexion angle
+    getIMUvelT();                  // get human trunk flexion velocity
   	ADC_update = false;
   }
-  getIMUangleT();                  // get human trunk flexion angle
-  getIMUvelT();                    // get human trunk flexion velocity
-  // yawAngleR20(0);               // trunk yaw angle correction, should before data sensor feedback processing and sending
-  sensorFeedbackPro();             // processing sensor feedback for high-level control and low-level closed-loop control 
-  // MovingAverFilterIMUC(rollChan,3);   // Averaged moving filtered
   if(HLControl_update) {
-    HLControl(1,1);                // At present the frequency of high-level control is the same as data sending frequency 
+    HLsensorFeedbackPro();         // processing sensor feedback for high-level control
+    HLControl(1,1);                // At present the frequency of high-level control is the same as data sending frequency  
     HLControl_update = false;
   }
   if(Control_update) {
+    sensorFeedbackPro();           // processing sensor feedback for low-level closed-loop control
   	Control(1);                    // calculate controlled command: PWM duty cycles
   	Control_update = false;        // At present the frequency of low-level control is the same as ADC sensor feedback update frequency
   }

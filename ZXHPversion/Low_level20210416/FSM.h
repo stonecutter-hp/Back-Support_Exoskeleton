@@ -16,7 +16,6 @@ extern float HLUpdateFre;       // hihg-level control frequency
 
 /* Motion type define */
 typedef enum {
-  StopState = 0,
   Standing = 1,
   Walking = 2,
   Lowering = 3,
@@ -51,7 +50,7 @@ extern BendTech tech;           // bending tech flag
  * high-level strategy.
 */
 typedef struct {
-  // Parameters for UID strategy
+  /*Parameters for UID strategy */
   float ThrTrunkFleAng_1;    // Threshold 1 for trunk flexion angle
   float ThrTrunkFleAng_2;    // Threshold 2 for trunk flexion angle
   float ThrTrunkFleVel;      // Threshold for trunk flexion velocity
@@ -63,18 +62,22 @@ typedef struct {
   float ThrHipAngStd_3;      // Threshold 3 for standard deviation of mean hip angle
   float ThrHipAngStd_4;      // Threshold 4 for standard deviation of mean hip angle
   float ThrHipVel;           // Threshold for mean hip angle velocity
-  // Notice that ThrThighAngMean should not be larger than ThrHipAngMean - ThrTrunkFleAng if ThighAng comes from
-  // calculation of (HipAng - TrunkFleAng) instead of measurement
   float ThrThighAngMean_1;   // Threshold 1 for mean thigh angle
   float ThrThighAngMean_2;   // Threshold 2 for mean thigh angle
   float ThrThighAngStd;      // Threshold for standard deviation of mean thigh angle
   float ThrThighAngVel;      // Threshold for mean thigh angle velocity
-  float ThrHipAngDiffStd;    // Threshold for standard deviation of difference between left and right hip angle
+
   // Standard deviation calculation range
   int StdRange;
   // Ratio tolerance related to hip angle for transition between standing and lowering&lifting 
   float RatioTol;
-}UIDCont;                  // Controller parameter and threshold for high-level control strategy
+  /* Thresholds for Exit Phase */ 
+  float ThrHipAngDiffStd;    // Threshold for standard deviation of difference between left and right hip angle
+  float ThrTrunkFleAngEMin;  // Threshold for allowable minimum trunk flexion angle
+  float ThrTrunkFleAngEMax;  // Threshold for allowable maximum trunk flexion angle
+  float ThrThighAngMeanEMin; // Threshold for allowable minimum thigh flexion angle
+  float ThrThighAngMeanEMax; // Threshold for allowable maximum thigh flexion angle
+}UIDCont;                    // Controller parameter and threshold for high-level control strategy
 extern UIDCont UID_Subject1;    // UID strategy parameters for specific subjects
 
 /* High-level controller related sensor feedback calibration value definition */
@@ -225,6 +228,18 @@ void GraspingPhase(void);
  *   Reference torque generation strategy adjustment indication
  */
 void LiftingPhase(void);
+
+/**
+ * System operation during Exit phase: 
+ *   Transmission condition detection 
+ *   Reference torque generation strategy adjustment indication
+ */
+void ExitPhase(void);
+
+/**
+ * Bending technique classification
+ */
+void BendTechClassify(void);
 
 /**
  * Functional funciton to check continuously threshold requirement is meeted

@@ -95,8 +95,9 @@ void UID_Init(void) {
   HipAngDiffStd = 0;               // Std(HipAngDiff) within certain time range
   
   /* Initialize UID status flags */  
-  mode = StopState;   // Motion detection mode, default is Stop state
+  mode = ExitState;   // Motion detection mode, default is Stop state
   PreMode = mode;
+  tech = Stoop;       // BendingTech mode, default is stoop bending
   side = none;        // Asymmetric side, default is no asymmetric
   
   /* Initialize thresholds for specific subject */
@@ -127,11 +128,16 @@ void UID_Init(void) {
     // Threshold 2 for trunk flexion angle
     UID_Subject1.ThrTrunkFleAng_2 = UID_Subject1.ThrHipAngMean_1 - UID_Subject1.ThrThighAngMean_2;
   }
-  UID_Subject1.ThrThighAngStd = 10;    // deg, Threshold for standard deviation of mean thigh angle
-  UID_Subject1.ThrThighAngVel = 30;    // deg/s, Threshold for mean thigh angle velocity
-  UID_Subject1.ThrHipAngDiffStd = 10;  // deg, Threshold for standard deviation of difference between left and right hip angle
-  UID_Subject1.StdRange = 10;          // Standard deviation calculation range
-  UID_Subject1.RatioTol = 0.2;         // Ratio tolerance related to hip angle for transition between standing and lowering&lifting
+  UID_Subject1.ThrThighAngStd = 10;       // deg, Threshold for standard deviation of mean thigh angle
+  UID_Subject1.ThrThighAngVel = 30;       // deg/s, Threshold for mean thigh angle velocity
+  UID_Subject1.StdRange = 10;             // Standard deviation calculation range
+  UID_Subject1.RatioTol = 0.2;            // Ratio tolerance related to hip angle for transition between standing and lowering&lifting
+  UID_Subject1.ThrHipAngDiffStd = 20;     // deg, Threshold for standard deviation of difference between left and right hip angle
+  UID_Subject1.ThrTrunkFleAngEMin = -15;  // deg, Threshold for allowable minimum trunk flexion angle
+  UID_Subject1.ThrTrunkFleAngEMax = 140;  // deg, Threshold for allowable maximum trunk flexion angle
+  UID_Subject1.ThrThighAngMeanEMin = -15; // deg, Threshold for allowable minimum thigh flexion angle 
+  UID_Subject1.ThrThighAngMeanEMax = 140; // deg, Threshold for allowable maximum thigh flexion angle
+  
   // Initialize auxiliary parameters for Std calculation and Finite state machine
   for(int i=0; i<FilterCycles; i++) {
     HipAngMeanPre[i] = 0;
@@ -231,7 +237,7 @@ void HLsensorFeedbackPro() {
   // Directly feedback from sensor
   HipAngL = Aver_ADC_value[PotentioLP1]/PotentioLP1_Sensitivity - HipAngL_InitValue;
   HipAngR = Aver_ADC_value[PotentioRP2]/PotentioRP2_Sensitivity - HipAngR_InitValue;
-  TrunkFleAng = TrunkFleAng_InitValue - angleActualC[rollChan];
+  TrunkFleAng = angleActualC[rollChan] - TrunkFleAng_InitValue;
   TrunkYawAngPro();
   TrunkFleVel = velActualC[rollChan];
   // Calculated from sensor feedback
@@ -336,19 +342,8 @@ double HipAngDiffStdCal(int cycles) {
  */
 void HLControl(uint8_t UIDMode, uint8_t RTGMode) {
   HL_UserIntentDetect(UIDMode);
+  // Notice the enable/disable operation of Motor is within reference torque generation function
   HL_ReferTorqueGenerate(RTGMode);
-  // ------------------------ Motor status updating -------------------
-  // if high-level command stop state
-  if(mode == StopState) {
-    // Set zero for reference torque
-    desiredTorqueR = 0;
-    desiredTorqueL = 0;
-    // disable motor control
-    digitalWrite(MotorEnableL,LOW);
-  }
-  else {
-    digitalWrite(MotorEnableL,HIGH); //Enable motor control 
-  }
 }
 
 /**
@@ -374,6 +369,7 @@ void HL_UserIntentDetect(uint8_t UIDMode) {
       LiftingPhase();
     }
   }
+  ExitPhase();
   
 }
 
@@ -396,6 +392,8 @@ void StandingPhase() {
     TrunkYaw_T0InitValue = TrunkYawAng;
     ThighAngL_T0InitValue = ThighAngL;
     ThighAngR_T0InitValue = ThighAngR;
+    // When lowering motion is detected, bending tech is classified in the meantime
+    BendTechClassify();
   }
   else if (abs(HipAngMean) > UID_Subject1.ThrHipAngMean_1*(1+UID_Subject1.RatioTol)) {
     mode = Lowering;
@@ -406,6 +404,8 @@ void StandingPhase() {
     TrunkYaw_T0InitValue = TrunkYawAng;
     ThighAngL_T0InitValue = ThighAngL;
     ThighAngR_T0InitValue = ThighAngR;
+    // When lowering motion is detected, bending tech is classified in the meantime
+    BendTechClassify();
   }
   else {mode = Standing;}
 }
@@ -416,7 +416,7 @@ void StandingPhase() {
  *   Reference torque generation strategy adjustment indication
  */
 void WalkingPhase() {
-  if(abs(HipAngMean) < UID_Subject1.ThrHipAngMean_2 && HipAngStd > UID_Subject1.ThrHipAngStd_2) {
+  if(abs(HipAngMean) < UID_Subject1.ThrHipAngMean_2 && HipAngStd < UID_Subject1.ThrHipAngStd_2) {
     if(ConThresReqCheck(UID_Subject1.ThrHipAngDiff_1,HipAngDiffPre,UID_Subject1.StdRange,0)) {mode = Standing;}
   }
   else {mode = Walking;}
@@ -461,6 +461,39 @@ void LiftingPhase() {
   else if (abs(HipAngMean) < UID_Subject1.ThrHipAngMean_1*(1-UID_Subject1.RatioTol)) 
   {mode = Standing;}  
   else {mode = Lifting;}
+}
+
+/**
+ * System operation during Exit phase: 
+ *   Transmission condition detection 
+ *   Reference torque generation strategy adjustment indication
+ */
+void ExitPhase() {
+  if(TrunkFleAng < UID_Subject1.ThrTrunkFleAngEMin || TrunkFleAng > UID_Subject1.ThrTrunkFleAngEMax
+  || ThighAngMean < UID_Subject1.ThrThighAngMeanEMin || ThighAngMean > UID_Subject1.ThrThighAngMeanEMax
+  || HipAngDiffStd > UID_Subject1.ThrHipAngDiffStd) {
+    mode = ExitState;
+  }
+  if(mode == ExitState) {
+    if(abs(HipAngMean) < UID_Subject1.ThrHipAngMean_2 && HipAngStd < UID_Subject1.ThrHipAngStd_2) {
+      if(ConThresReqCheck(UID_Subject1.ThrHipAngDiff_1,HipAngDiffPre,UID_Subject1.StdRange,0)) {mode = Standing;}
+    }
+  }
+}
+
+/**
+ * Bending technique classification
+ */
+void BendTechClassify() {
+  if(TrunkFleAng > UID_Subject1.ThrTrunkFleAng_1 && TrunkFleVel > UID_Subject1.ThrThighAngVel
+  && ThighAngMean < UID_Subject1.ThrThighAngMean_1) {
+    tech = Stoop;
+  }
+  else if(TrunkFleAng < UID_Subject1.ThrTrunkFleAng_2 && TrunkFleVel < UID_Subject1.ThrThighAngVel
+  && ThighAngMean > UID_Subject1.ThrThighAngMean_2) {
+    tech = Squat;
+  }
+  else tech = SemiSquat;
 }
 
 /**
