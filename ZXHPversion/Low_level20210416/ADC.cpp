@@ -7,17 +7,17 @@
 /* ADC conversion data and STATUS register */
 byte ADC_data[ENABLED_CH][4];             // store raw data from ADC
 bool ADC_update = true;                   // ADC_update enable flag 
+float ADC_updateFre;                      // ADC feedback update frequency
 unsigned long ADC_value[ENABLED_CH];      // store ADC value in long format  
 double Aver_ADC_value[ENABLED_CH];        // store the transferred ADC value for calculation
 double Aver_ADC_value_Prev[ENABLED_CH];   // Store last time processed(filtered) ADC feedaback
 double Aver_ADC_mean_Prev[ENABLED_CH];    // Store last time mean of ADC feedback
-// A window store the historical unfiltered ADC value of certain cycle
-// for ADC feedback moving average and standard deviation calculation
 // Notice in ZXHP version EXO:
 // some ADC channels are for High-level control with high-level controlfrequency time interval
 // some ADC channels are for Low-level control with low-level control frequency time interval
+// A window store the historical unfiltered ADC value of certain cycle for ADC feedback moving average  
 double Aver_ADC_value_unfiltered[ENABLED_CH][FilterCycles];
-// A window store the historical (maybe)filtered ADC value of certain cycle
+// A window store the historical (maybe)filtered ADC value of certain cycle for standard deviation calculation
 double Aver_ADC_value_filtered[ENABLED_CH][FilterCycles];
 /* load cell force transfer */
 double LoadCell[4];                      // store the transferred force value

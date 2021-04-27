@@ -1,23 +1,30 @@
 20210420
   Abs(),sin() function testing   √
-  Velocity from MCU calculation testing
-  Check every information from sensor and corresponding calculation before implement controller
+  Velocity from MCU calculation testing  √ for Program prepared
+  
+  Check every information from sensor and corresponding calculation before implement controller  -- Wait until logic test
 
 20210421
   Record expected initial value of every sensor
 
 20210422
-  Check pitch angle's variation range
-  How can a class call function from other class
+  Check pitch angle's variation range   √
 
 20210423
-  IMU yaw angle set to zero retest
-  Check if enum type can be used for if/else command from PC command recieving, i.e. (uint8_t)mode = 1 from recieving can lead to such a command (uint8_t)mode = (enum) status.
-  test if std calclulation is good  √ --> inidicating the moving average function and pow() function and sqrt() function is working
+  IMU yaw angle set to zero retest   √
+
+  Check if enum type can be used for if/else command from PC command recieving, i.e. (uint8_t)mode = 1 from recieving can lead to such a command (uint8_t)mode = (enum) status. 
+  -- √ with a solution: Define another variable for PC command recieiving and then change the enum status accordingly to avoid format mixing
+
+  Test if std calclulation is good  √ --> inidicating the
+  moving average function and pow() function and sqrt() function is working
 
 20210424
-  Test if simplified if else is working 
-  Test if functional function ConThresReqCheck() is work or not
+  Test if simplified if else is working   √
+  Test if functional function ConThresReqCheck() is work or not  √
 
 20210426
-  Test if the linefeeds of if command works
+  Test if the linefeeds of if command works  √
+
+20210427
+  Test move mean average functional function √

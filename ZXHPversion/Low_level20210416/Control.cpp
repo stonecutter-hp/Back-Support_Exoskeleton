@@ -119,7 +119,6 @@ void sensorFeedbackPro(void) {
 //  Estimated_TdL = 0.1*Estimated_TdForceSensorL+0.9*Estimated_TdMotorCurrentL;        // Td feedback used for low-level closed-loop control
   
   // --------- Trunk flexion velocity info processing for high-level controller ------------ 
-  TrunkFleVel = velActualC[rollChan];
 
   // --------- Hip joint angle feedback info processing for high-level controller ----------
 //  HipAngleL = (Aver_ADC_value[PotentioLP1]-HipAngleL_InitValue)/PotentioLP1_Sensitivity;

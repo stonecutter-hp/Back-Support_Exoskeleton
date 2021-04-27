@@ -39,17 +39,17 @@ const int attRatio[16] = {1,  1,  1,  1,  22.5,   2,  2,  2,  2,  2,   1,   1,  
 /* ADC conversion data and STATUS register */
 extern byte ADC_data[ENABLED_CH][4];             // store raw data from ADC
 extern bool ADC_update;                          // ADC_update enable flag 
+extern float ADC_updateFre;                      // ADC feedback update frequency
 extern unsigned long ADC_value[ENABLED_CH];      // store ADC value in long format  
 extern double Aver_ADC_value[ENABLED_CH];        // store the transferred ADC value for calculation
 extern double Aver_ADC_value_Prev[ENABLED_CH];   // Store last time processed ADC feedaback
 extern double Aver_ADC_mean_Prev[ENABLED_CH];    // Store last time mean of ADC feedback
-// A window store the historical unfiltered ADC value of certain cycle
-// for ADC feedback moving average and standard deviation calculation
 // Notice in ZXHP version EXO:
 // some ADC channels are for High-level control with high-level controlfrequency time interval
 // some ADC channels are for Low-level control with low-level control frequency time interval
+// A window store the historical unfiltered ADC value of certain cycle for ADC feedback moving average  
 extern double Aver_ADC_value_unfiltered[ENABLED_CH][FilterCycles];
-// A window store the historical (maybe)filtered ADC value of certain cycle
+// A window store the historical (maybe)filtered ADC value of certain cycle for standard deviation calculation
 extern double Aver_ADC_value_filtered[ENABLED_CH][FilterCycles];
 /* load cell force transfer */
 extern double LoadCell[4];                      // store the transferred force value

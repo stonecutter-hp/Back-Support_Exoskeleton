@@ -23,3 +23,7 @@
     Therefore, Yaw angle will be reset to zero immediately if this time trigger event others --> Standing is detected if yawAngleR20() is place after HLControl(). And only reset once for each event detection.
     HLsensorFeedbackPro() should be connected directly with HLcontrol() and senData() without more processing of sensor feedback to guarantee the real-time of sensor info.
 
+20210427
+    If velocity is calculated in MCU, attention that the real ADC feedback update frequency is not identically to the setted value in the program
+   
+

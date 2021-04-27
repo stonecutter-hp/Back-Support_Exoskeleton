@@ -12,6 +12,9 @@ extern uint16 PWMperiod_R = 500;    // period of right PWM
 /**
  * Initialize timer for controller, ADC update and Sending data to PC update
  *                     Timer3(CH4), Timer3(CH4),   Timer4(CH3)(PB8)      
+ * Timer3(CH4) is assigned for ADC and Low-level control frequency 
+ * Timer4(CH3)(PB8) is assigned for data sending and High-level control frequency
+ * Notice the Overflow value should range in 0~65535
  */
 void Timers_Init(void) {
   Timer3.init();   // stop the timers before configuring them

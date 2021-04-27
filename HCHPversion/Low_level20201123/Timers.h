@@ -22,7 +22,7 @@
 
 /**************************************** PWM related timers parameter definition ********************************/
 // Timer1_CH1(PA8) is assigned for the first channel PWM for left motor
-// Timer2_CH2(PA1) is assigned for the seconed channel PWM for right motor
+// Timer2_CH2(PA1) is assigned for the second channel PWM for right motor
 #define MotorPWM_L PA8    // pin for left PWM
 #define MotorPWM_R PA1    // pin for right PWM
 #define TIM1_CH1 1  // timer1 channel1

@@ -7,7 +7,7 @@
 
 /* High-level controller program running info */
 bool HLControl_update = true;  // high-level control update flag
-float HLUpdateFre;             // hihg-level control frequency
+float HLUpdateFre;             // high-level control frequency
 
 /* Status flag for UID strategy */
 MotionType mode;               // this time's motion mode flag
@@ -144,6 +144,7 @@ void UID_Init(void) {
     HipAngMeanPre[i] = 0;
     HipAngDiffPre[i] = 0;
     HipAngStdPre[i] = 0;
+    HipAngDiffStdPre[i] = 0;
   }
   HipAngMeanBar = 0;
   HipAngDiffBar = 0;
@@ -226,7 +227,9 @@ void yawAngleR20(uint8_t yawInitmode, IMUAlo aloMode){
         YawAngleUpdate = false;
       }
     }
-    YawAngleUpdate = true;
+    else {
+      YawAngleUpdate = true;
+    }
   }
   
 }
@@ -250,6 +253,7 @@ void HLsensorFeedbackPro() {
   HipAngMean = (HipAngL+HipAngR)/2;
   HipAngDiff = HipAngL-HipAngR;
   HipAngStd = HipAngStdCal(UID_Subject1.StdRange);
+  HipAngVel = (HipAngMeanPre[FilterCycles-1] - HipAngMeanPre[FilterCycles-2])*ADC_updateFre;
   ThighAngL = HipAngL - TrunkFleAng;
   ThighAngR = HipAngR - TrunkFleAng;
   ThighAngMean = (ThighAngL+ThighAngR)/2;
@@ -448,8 +452,8 @@ void LoweringPhase() {
     mode = Grasping;
     PreMode = Lowering;
     //Record max hip joint bending angle
-    HipAngL_MaxValue = HipAngL;
-    HipAngR_MaxValue = HipAngR;
+    if(HipAngL > HipAngL_MaxValue) {HipAngL_MaxValue = HipAngL;}
+    if(HipAngR > HipAngR_MaxValue) {HipAngR_MaxValue = HipAngR;}
   }
   else {mode = Lowering;}
 }
@@ -460,11 +464,20 @@ void LoweringPhase() {
  *   Reference torque generation strategy adjustment indication
  */
 void GraspingPhase() {
+  float Auxpara;
   if(abs(HipAngMean) > UID_Subject1.ThrHipAngMean_1 && HipAngStd > UID_Subject1.ThrHipAngStd_4) {
     mode = Lifting;
     PreMode = Grasping;
   }
-  else {mode = Grasping;}
+  else {
+    mode = Grasping;
+    Auxpara = PeakvalueDetect(HipAngMeanPre,1);
+    if(Auxpara != 0) {
+      //Keep updating max hip joint bending angle
+      if(HipAngL > HipAngL_MaxValue) {HipAngL_MaxValue = HipAngL;}
+      if(HipAngR > HipAngR_MaxValue) {HipAngR_MaxValue = HipAngR;}     
+    }
+  }
 }
 
 /**
@@ -517,7 +530,7 @@ void BendTechClassify() {
   && ThighAngMean > UID_Subject1.ThrThighAngMean_2) {
     tech = Squat;
   }
-  else tech = SemiSquat;
+  else {tech = SemiSquat;}
 }
 
 /**
@@ -530,8 +543,10 @@ void BendTechClassify() {
  */
 bool ConThresReqCheck(float threshold, float *Covalue, int cycles, uint8_t ThreRequire) {
   uint8_t Auxpara;
+  uint8_t interPara;
   bool CheckFlag;
   Auxpara = 1;
+  interPara = 1;
   if(cycles > FilterCycles) {
     cycles = FilterCycles;
   }
@@ -541,16 +556,16 @@ bool ConThresReqCheck(float threshold, float *Covalue, int cycles, uint8_t ThreR
   
   if(ThreRequire == 0) {
     for(int i=FilterCycles-cycles; i<FilterCycles; i++) {
-      if(Covalue[i] < threshold) {Auxpara=1;}
-      else {Auxpara=0;}
-      Auxpara = Auxpara*Auxpara;
+      if(Covalue[i] < threshold) {interPara=1;}
+      else {interPara=0;}
+      Auxpara = Auxpara*interPara;
     }
   }
   else if(ThreRequire == 1) {
     for(int i=FilterCycles-cycles; i<FilterCycles; i++) {
-      if(Covalue[i] > threshold) {Auxpara=1;}
-      else {Auxpara=0;}
-      Auxpara = Auxpara*Auxpara;
+      if(Covalue[i] > threshold) {interPara=1;}
+      else {interPara=0;}
+      Auxpara = Auxpara*interPara;
     }    
   }
   

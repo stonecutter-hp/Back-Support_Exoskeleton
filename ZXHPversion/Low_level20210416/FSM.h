@@ -12,7 +12,7 @@
 
 /* High-level controller program running info */
 extern bool HLControl_update;   // high-level control update flag
-extern float HLUpdateFre;       // hihg-level control frequency
+extern float HLUpdateFre;       // high-level control frequency
 
 /* Motion type define */
 typedef enum {
