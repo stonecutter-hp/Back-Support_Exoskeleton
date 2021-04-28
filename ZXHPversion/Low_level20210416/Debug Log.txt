@@ -1,6 +1,0 @@
-20210427
-  IMU Angle feedback range: 
-    Roll:-90~90 deg
-    Pitch: -180~180 deg
-    Yaw: -180~180 deg
-  For present yaw angle reset strategy: Reset once after other motion --> standing, cannot guarantee the small step moving of yaw angle changing. Or the strategy can be replaced by: Keep resetting yaw angle as long as during standing phase 

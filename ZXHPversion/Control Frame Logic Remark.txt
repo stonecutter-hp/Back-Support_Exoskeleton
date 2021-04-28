@@ -1,0 +1,12 @@
+20210428
+At present the high-level and low-level controller are compacted in the MCU without upper computer
+Logic: 
+  Setup all the control parameters
+  --> Sensor pre process to reset at expected initial position for sensor feedback initial value setup
+  --> Pre-detection of user posture until Standing posture is comfirmed
+  --> Running main func
+  --> Sensor feedback update
+  --> High-level control:  -> Yaw angle reset detection -> High-level sensor feedback processing -> UID -> RTG
+  --> Low-level control 
+  --> Send data to PC
+  
