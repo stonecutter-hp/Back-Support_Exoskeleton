@@ -99,10 +99,10 @@ void loop() {
 //  unsigned long looptime;
 //  starttime = millis();
   if(ADC_update) {
-  	getADCaverage(1);              // get ADC value
+    getADCaverage(1);              // get ADC value
     getIMUangleT();                // get human trunk flexion angle
     getIMUvelT();                  // get human trunk flexion velocity
-  	ADC_update = false;
+    ADC_update = false;
   }
   if(HLControl_update) {
     // Notice Yaw angle will be reset to zero if last time trigger event others --> Standing is detected 
@@ -116,11 +116,11 @@ void loop() {
   }
   if(Control_update) {
     sensorFeedbackPro();           // processing sensor feedback for low-level closed-loop control
-  	Control(1);                    // calculate controlled command: PWM duty cycles
-  	Control_update = false;        // At present the frequency of low-level control is the same as ADC sensor feedback update frequency
+    Control(1);                    // calculate controlled command: PWM duty cycles
+    Control_update = false;        // At present the frequency of low-level control is the same as ADC sensor feedback update frequency
   }
   if(SendPC_update) {
-  	sendDatatoPC();                // send sensor data to PC and allow next receiving cycle
+    sendDatatoPC();                // send sensor data to PC and allow next receiving cycle
     SendPC_update = false;
   } 
 //  stoptime = millis();
