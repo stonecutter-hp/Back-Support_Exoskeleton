@@ -595,3 +595,26 @@ float PeakvalueDetect(float *Pevalue, uint8_t Peakmode) {
   if(Findout) {return Pevalue[FilterCycles-2];}
   else {return 0;}
 }
+
+/**
+ * Functional function to detect the direction of angle variation
+ * Notice this function usually be called after variation is exceed certain threshold
+ * @param float[] - The array to be detected 
+ * @param int - interval between process involved data point
+ * @return unsigned char - detected direction: 1-increasing direction, 2-decreasing direction, 0-uncertain
+ */
+uint8_t DireStdDetect(float *Angvalue, int cycles) {
+  uint8_t DirectFlag;
+  float InTervalue;
+  InTervalue = Angvalue[FilterCycles] - Angvalue[FilterCycles-cycles];
+  if(InTervalue > 0) {
+    DirectFlag = 1;
+  }
+  else if(InTervalue < 0) {
+    DirectFlag = 2;
+  }
+  else {
+    DirectFlag = 0;
+  }
+  return DirectFlag;
+}

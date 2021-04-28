@@ -260,4 +260,13 @@ bool ConThresReqCheck(float threshold, float *value, int cycles, uint8_t ThreReq
  */
 float PeakvalueDetect(float *Pevalue, uint8_t Peakmode);
 
+/**
+ * Functional function to detect the direction of angle variation
+ * Notice this function usually be called after variation is exceed certain threshold
+ * @param float[] - The array to be detected 
+ * @param int - interval between process involved data point
+ * @return unsigned char - detected direction: 1-increasing direction, 2-decreasing direction, 0-uncertain
+ */
+uint8_t DireStdDetect(float *Angvalue, int cycles); 
+
 #endif
