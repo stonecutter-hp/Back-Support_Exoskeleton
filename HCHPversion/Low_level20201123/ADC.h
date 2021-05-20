@@ -21,27 +21,31 @@ const int attRatio[16] = {1,  1,  1,  1,  22.5,   2,  2,  2,  2,  2,   1,   1,  
 #define MotorCurrR 8         //ADC channel assigned for right motor current feedback
 #define MotorVeloL 5         //ADC channel assigned for left motor velocity feedback
 #define MotorVeloR 7         //ADC channel assigned for right motor velocity feedback
-#define PotentioLP1 10       //ADC channel assigned for left potentiometer 1(P1)
-#define PotentioLP2 11       //ADC channel assigned for left potentiometer 2(P2)
-#define PotentioRP3 12       //ADC channel assigned for right potentiometer 1(P3)
-#define PotentioRP4 13       //ADC channel assigned for right potentiometer 2(P4)
+#define PotentioLP1 10       //ADC channel assigned for left potentiometer 1(P1 left torsion spring rotation)
+#define PotentioLP2 11       //ADC channel assigned for left potentiometer 2(P2 left hip angle)
+#define PotentioRP3 12       //ADC channel assigned for right potentiometer 1(P3 right torsion spring rotation)
+#define PotentioRP4 13       //ADC channel assigned for right potentiometer 2(P4 right hip angle)
 #define LoadCellL 0          //ADC channel assigned for left load cell
 #define LoadCellR 1          //ADC channel assigned for right load cell
 #define FilterCycles 10      //FilterCycles for moving/exponetial average filter
 
 // Parameters for ADC raw data processing for sensors
 #define LoadCellL_Sensitivity 0.00166    //for load cell calibration
+#define LoadCellR_Sensitivity 0.00166    //for load cell calibration
 #define PotentioLP1_Sensitivity 0.0083   //0.0083 = 2.5/300 (v/deg); for potentiometer calibration 
+#define PotentioLP2_Sensitivity 0.0083   //0.0083 = 2.5/300 (v/deg); for potentiometer calibration 
+#define PotentioLP3_Sensitivity 0.0083   //0.0083 = 2.5/300 (v/deg); for potentiometer calibration 
+#define PotentioLP4_Sensitivity 0.0083   //0.0083 = 2.5/300 (v/deg); for potentiometer calibration 
+
+
 
 /* ADC conversion data and STATUS register */
 extern byte ADC_data[ENABLED_CH][4];             // store raw data from ADC
-extern bool ADC_update;                   // ADC_update enable flag 
+extern bool ADC_update;                          // ADC_update enable flag 
 extern unsigned long ADC_value[ENABLED_CH];      // store ADC value in long format  
 extern double Aver_ADC_value[ENABLED_CH];        // store the transferred ADC value for calculation
 extern double Aver_ADC_value_unfiltered[ENABLED_CH][FilterCycles];
 extern double Aver_ADC_value_Prev[ENABLED_CH];
-/* load cell force transfer */
-extern double LoadCell[4];                      // store the transferred force value
 
 
 /**

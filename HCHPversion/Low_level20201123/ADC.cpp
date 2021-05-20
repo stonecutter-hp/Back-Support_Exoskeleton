@@ -17,8 +17,7 @@ double Aver_ADC_value[ENABLED_CH];        // store the transferred ADC value for
 double Aver_ADC_value_unfiltered[ENABLED_CH][FilterCycles];
 // Store inter value for moving average & exponential filter
 double Aver_ADC_value_Prev[ENABLED_CH];
-/* load cell force transfer */
-double LoadCell[4];                      // store the transferred force value
+
 
 
 /**

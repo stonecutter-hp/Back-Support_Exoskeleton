@@ -33,6 +33,14 @@ double IMUC_value_filtered[3][IMUFilterCycles];  // store data from IMUC for fil
 double IMU_value_Prev[3][3];                     // store last time filtered angle of 3 IMU * 3 channel
 
 unsigned char yaw2zero[2] = {0x04, 0x00};  // The command for IMU yaw angle return to zero (only for 6-axis algorithm)
+
+/* Intermediate auxiliary parameters from IMU feedback processing */
+float TrunkYawAng;             // deg, Trunk yaw angle
+float TrunkYaw_InitValue;      // deg, Auxiliary parameter for trunk yaw angle
+float TrunkFleAng;             // deg, Trunk flexion angle
+float TrunkFleAng_InitValue;   // deg, Auxiliary parameter for trunk pitch angle
+float TrunkFleVel;             // deg/s, Trunk flexion angular velocity
+
 /**
  * IMU angle feedback return to zero
  */
@@ -66,6 +74,13 @@ void IMU_Init(void)  {
   OperaitonAloIMUA = IMU9Axis;
   OperaitonAloIMUB = IMU9Axis;
   OperaitonAloIMUC = IMU9Axis;
+
+  /* Initialize the processed feedback from IMU */
+  TrunkYawAng = 0;             // deg, Trunk yaw angle
+  TrunkYaw_InitValue = 0;      // deg, Auxiliary parameter for trunk yaw angle
+  TrunkFleAng = 0;             // deg, Trunk flexion angle
+  TrunkFleAng_InitValue = 0;   // deg, Auxiliary parameter for trunk pitch angle
+  TrunkFleVel = 0;             // deg/s, Trunk flexion angular velocity
 }
 
 /**

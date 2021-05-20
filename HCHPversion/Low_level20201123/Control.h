@@ -12,8 +12,11 @@
 #include "ADC.h"
 #include "IMU.h"
 
-/**************************************** Low level PID control parameters definition ********************************/
-// Here use increment PID algorithm: Delta.U = Kp*( (ek-ek_1) + (Tcontrol/Ti)*ek + (Td/Tcontrol)*(ek+ek_2-2*ek_1) )
+#define d2r M_PI/180
+
+/* Low level PID control parameters definition */
+// Here use increment PID algorithm: 
+// Delta.U = Kp*( (ek-ek_1) + (Tcontrol/Ti)*ek + (Td/Tcontrol)*(ek+ek_2-2*ek_1) )
 typedef struct
 {
   float currT;  //current torque feedback
@@ -57,32 +60,93 @@ extern bool Control_update;    // control update flag
 #define LimitTotal_TaR 7      // Limitation of total control command of motor R
 #define LimitInput 15         // Limitation of input command, here for open-loop is Ta, for closed loop is Td
 
-/**************************************** Transmissio system parameters definition ********************************/
+/* Transmissio system parameters definition */
 // The output ability of the actuation unit with 19:1 gear ratio is better restricted to 0~8.9 Nm (0.0525*9*19)
 // The following parameter may be adjusted after calibrateds
-#define MotorCurrentConstant 0.0437      //motor current constant Nm/A
-#define MotorMaximumCurrent 9            //motor maximum current A configured in EXCON studio
-#define GearRatio 19                     //gear ratio is 19:1
-#define TorsionStiffnessL 0.47           //Left side torsion spring's stiffness
-#define TorsionStiffnessR 0.47           //Right side torsion spring's stiffness
-#define PulleyRadius 0.045               //pulley radius
-extern float Estimated_ImuAssistiveTorqueL;
-extern float Estimated_PoAssistiveTorqueL;
-extern float Estimated_ImuAssistiveTorqueR;
-extern float Estimated_PoAssistiveTorqueR;
-extern float PotentioLP1_InitValue;
-extern float SupportBeamAngleL_InitValue;
-extern float TrunkYaw_InitValue;
-extern float TrunkFlexionVel;
+#define MotorCurrentConstant 0.0437      // Nm/A, Motor current constant 
+#define MotorMaximumCurrent 9            // A, Motor maximum current A configured in EXCON studio
+#define GearRatio 19                     // Gear ratio
+#define HumanBackLength 0.6              // m, Human back length
+
+#define PulleyRadiusL 0.045              // m, Left side pulley radius
+#define SupportBeamLengthL 0.5           // m, Length of left side support beam
+#define TorsionStiffnessL 0.47           // Nm/deg, Left side torsion spring's stiffness
+#define MechConsAngleL 80                // deg, Mechanical constraint setting angle of left side
+#define PulleyRadiusR 0.045              // m, Right side pulley radius
+#define TorsionStiffnessR 0.47           // Nm/deg, Right side torsion spring's stiffness
+#define MechConsAngleR 80                // deg, Mechanical constraint setting angle of right side
+#define SupportBeamLengthR 0.5           // m, Length of left side support beam
+
+/* Sensor feedback calibration value definition */
+// Expected initial value range (CaliValue +- Tol) of sensor feedback for initial calibration
+// the initial values should be adjusted along with prototype design
+#define TdL_CaliValue 0
+#define TdL_Tol 0
+#define TdR_CaliValue 0
+#define TdR_Tol 0
+#define HipAngL_CaliValue 0
+#define HipAngL_Tol 0
+#define HipAngR_CaliValue 0
+#define HipAngR_Tol 0
+#define FcL_CaliValue 0
+#define FcL_Tol 0
+#define FcR_CaliValue 0
+#define FcR_Tol 0
+#define Theta0_L 10             // deg, Iniital angle between left suppport beam and human back
+#define Theta0_R 10             // deg, Iniital angle between right suppport beam and human back
+
+/* Intermediate auxiliary parameters reagrding torque and hip angle feedback for low-level control */
+extern float HipAngL;                    // deg, Left hip joint angle
+extern float HipAngL_InitValue;          // deg, Auxiliary parameter for left hip joint angle
+extern float Estimated_TdL;              // Nm, Td feedback of left side from torsion spring
+extern float TdL_InitValue;              // Nm, Auxiliary parameter for left Td
+extern float Estimated_FcL;              // N,  Cable force feedback of left side from load cell
+extern float FcL_InitValue;              // N, Auxiliary parameter for left cable forve
+
+extern float HipAngR;                    // deg, Right hip joint angle
+extern float HipAngR_InitValue;          // deg, Auxiliary parameter for right hip joint angle
+extern float Estimated_TdR;              // Nm, Td feedback of right side from torsion spring
+extern float TdR_InitValue;              // Nm, Auxiliary parameter for right Td
+extern float Estimated_FcR;              // N,  Cable force feedback of right side from load cell
+extern float FcR_InitValue;              // N, Auxiliary parameter for right cable forve
+
+extern float CableTorqueL;               // Nm, Left torque feedback from cable force 
+extern float CableTorqueR;               // Nm, Right torque feedback from cable force 
+// Nm, Compact Td feedback of left side actuation system for closed-loop 
+// control from torsion spring torque feedback and cable force feedback
+extern float Feedback_TdL;               
+// Nm, Compact Td feedback of right side actuation system for closed-loop 
+// control from torsion spring torque feedback and cable force feedback
+extern float Feedback_TdR;  
+
+/* Parameters for phase index determination */
+// Nm, Critical torque value for left actuation system
+extern float Critical_TdL;               
+// Nm, Critical torque value for left actuation system
+extern float Critical_TdR;
+// Auxiliary parameter for slope of phase index profile determination, 0~1
+extern float PhaseIndexCo;
+// 0~1, 0 for DD and 1 for SEA, operation index of the left actuation system
+extern float phaseIndexL;                
+// 0~1, 0 for DD and 1 for SEA, operation index of the right actuation system
+extern float phaseIndexR; 
 
 /**
  * Control parameter initialization for Low-level controller
  * Initial parameters including: 
- * PID struct parameters (PID controller parameters); Iterative force feedback; 
  * Reference torque command and Intermediate quantities related to PWM command.
- * Here use increment PID algorithm: Delta.U = Kp*( (ek-ek_1) + (Tcontrol/Ti)*ek + (Td/Tcontrol)*(ek+ek_2-2*ek_1) )
+ * Intermediate value of Interative force and hip angle feedback; 
+ * PID struct parameters (PID controller parameters);  
+ * Here use increment PID algorithm: 
+ * Delta.U = Kp*( (ek-ek_1) + (Tcontrol/Ti)*ek + (Td/Tcontrol)*(ek+ek_2-2*ek_1) )
  */
 void Control_Init(void);
+
+/**
+ * Pre-processing for sensor feedback to make sure 
+ * the initial status of sensor is good for calibration
+ */
+void LLPreproSensorInit(void);
 
 /**
  * Set the yaw angle of human trunk to zero
@@ -90,6 +154,34 @@ void Control_Init(void);
  * @param IMUAlo - IMU operation algorithm
  */
 void yawAngleR20(uint8_t yawInitmode, IMUAlo aloMode);
+
+/**
+ * Yaw angle processing for practical control 
+ */
+void TrunkYawAngPro(void);
+
+/**
+ * Update operation status of the actuation system
+ * @param float - Present Td feedback
+ * @param float - Critical torque value
+ * @param float - Slope determination parameter (0~1)
+ * @return float - phase index (1 for SEA, 0 for DD)
+ */
+float PhaseIndexUpdate(float FeedbackTd, float CriticalTd, float SlopeK);
+
+/**
+ * Update the sin value of the angle between cable and human back 
+ * for calculation of assistive torque feedback from cable force for left side
+ * @return float - the angle between cable and human back of left side
+ */
+float sinofangleBetweenCableHB_L(void);
+
+/**
+ * Update the sin value of the angle between cable and human back 
+ * for calculation of assistive torque feedback from cable force for right side
+ * @return float - the angle between cable and human back of right side
+ */
+float sinofangleBetweenCableHB_R(void);
 
 /**
  * Processing sensor feedback for closed-loop control and data sending to PC

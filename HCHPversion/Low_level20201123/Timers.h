@@ -10,16 +10,17 @@
 #include "Control.h"
 
 /*********************************** Timer configuration parameter definition ************************************/
-// Timer3(CH4) is assigned for ADC and Control(PWM) command frequency arrangement
+// Timer3(CH4) is assigned for ADC and Low-level control frequency
 // Timer4(CH3)(PB8) is assigned for frequency of data sending to PC
 // Notice the Overflow value should range in 0~65535
 #define TIM3_CH4 4               // timer3 channel4
-#define TIM3preScale 72          // 72MHz/72 = 1Mhz
-#define TIM3_OverflowValue 1000  // 1Mhz/1000 = 1kHz
+#define TIM3preScale 72          // 72MHz/TIM3preScale
+// Determine timer 3 fre = 72MHz/TIM3preScale/TIM3_OverflowValue
+#define TIM3_OverflowValue 1000  // For example: 72MHz/72/1000 = 1 kHz
 #define TIM4_CH3 3               // timer4 channel3
-#define TIM4preScale 72          // 72MHz/72 = 1MHz
-#define TIM4_OverflowValue 2500  // 1Mhz/5000 = 200Hz
-
+#define TIM4preScale 72          // 72MHz/TIM4preScale
+// Determine timer 4 fre = 72MHz/TIM4preScale/TIM4_OverflowValue
+#define TIM4_OverflowValue 2500  // For example: 72MHz/72/5000 = 200 Hz
 /**************************************** PWM related timers parameter definition ********************************/
 // Timer1_CH1(PA8) is assigned for the first channel PWM for left motor
 // Timer2_CH2(PA1) is assigned for the second channel PWM for right motor

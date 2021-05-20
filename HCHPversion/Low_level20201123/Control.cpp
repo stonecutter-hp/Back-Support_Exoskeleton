@@ -12,39 +12,96 @@ int16_t PWM_commandL;   // range: 0.1*PWMperiod_L~0.9*PWMperiod_L
 int16_t PWM_commandR;   // range: 0.1*PWMperiod_R~0.9*PWMperiod_R
 bool Control_update = true;  // control update flag
 
-float Estimated_ImuAssistiveTorqueL;
-float Estimated_PoAssistiveTorqueL;
-float Estimated_ImuAssistiveTorqueR;
-float Estimated_PoAssistiveTorqueR;
-float PotentioLP1_InitValue;
-float SupportBeamAngleL_InitValue;
-float TrunkYaw_InitValue;
-float TrunkFlexionVel;
+/* Intermediate auxiliary parameters directly from sensor processing for controller feedback */
+float HipAngL;                    // deg, Left hip joint angle
+float HipAngL_InitValue;          // deg, Auxiliary parameter for left hip joint angle
+float Estimated_TdL;              // Nm, Td feedback of left side from torsion spring
+float TdL_InitValue;              // Nm, Auxiliary parameter for left Td
+float Estimated_FcL;              // N,  Cable force feedback of left side from load cell
+float FcL_InitValue;              // N, Auxiliary parameter for left cable forve
+
+float HipAngR;                    // deg, Right hip joint angle
+float HipAngR_InitValue;          // deg, Auxiliary parameter for right hip joint angle
+float Estimated_TdR;              // Nm, Td feedback of right side from torsion spring
+float TdR_InitValue;              // Nm, Auxiliary parameter for right Td
+float Estimated_FcR;              // N,  Cable force feedback of right side from load cell
+float FcR_InitValue;              // N, Auxiliary parameter for right cable forve
+
+float CableTorqueL;               // Nm, Left torque feedback from cable force 
+float CableTorqueR;               // Nm, Right torque feedback from cable force
+// Nm, Compact Td feedback of left side actuation system for closed-loop 
+// control from torsion spring torque feedback and cable force feedback
+float Feedback_TdL;               
+// Nm, Compact Td feedback of right side actuation system for closed-loop 
+// control from torsion spring torque feedback and cable force feedback
+float Feedback_TdR;  
+
+/* Parameters for phase index determination */
+// Nm, Critical torque value for left actuation system
+float Critical_TdL;               
+// Nm, Critical torque value for left actuation system
+float Critical_TdR;
+// Auxiliary parameter for slope of phase index profile determination, 0~1
+float PhaseIndexCo;
+// 0~1, 0 for DD and 1 for SEA, operation index of the left actuation system
+float phaseIndexL;                
+// 0~1, 0 for DD and 1 for SEA, operation index of the right actuation system
+float phaseIndexR;
 
 /**
  * Control parameter initialization for Low-level controller
  * Initial parameters including: 
- * PID struct parameters (PID controller parameters); Iterative force feedback; 
  * Reference torque command and Intermediate quantities related to PWM command.
- * Here use increment PID algorithm: Delta.U = Kp*( (ek-ek_1) + (Tcontrol/Ti)*ek + (Td/Tcontrol)*(ek+ek_2-2*ek_1) )
+ * Intermediate value of Interative force and hip angle feedback; 
+ * PID struct parameters (PID controller parameters);  
+ * Here use increment PID algorithm: 
+ * Delta.U = Kp*( (ek-ek_1) + (Tcontrol/Ti)*ek + (Td/Tcontrol)*(ek+ek_2-2*ek_1) )
  */
 void Control_Init(void) {
+  /* Initialize PWM command and reference torque command */
   PWM_commandL = 0;
   PWM_commandR = 0;
   desiredTorqueL = 0;
   desiredTorqueR = 0;
+
+  /* Initialize mode and side from high-level UID strategy */
   mode = 1;   // Motion detection mode, default is 1 (other motion)
   PreMode = mode;
   side = 0;   // Asymmetric side, default is 0 (no asymmetric)
-  Estimated_ImuAssistiveTorqueL = 0;
-  Estimated_PoAssistiveTorqueL = 0;
-  Estimated_ImuAssistiveTorqueR = 0;
-  Estimated_PoAssistiveTorqueR = 0;
-  PotentioLP1_InitValue = 0;
-  SupportBeamAngleL_InitValue = 0;
-  TrunkYaw_InitValue = 0;
-  TrunkFlexionVel = 0;
-  // initialize the control parameter of left motor
+
+  /* Initialize intermediate value of sensor feedback */
+  HipAngL = 0;
+  HipAngL_InitValue = 0;
+  Estimated_TdL = 0;
+  TdL_InitValue = 0;
+  Estimated_FcL = 0;
+  FcL_InitValue = 0;
+
+  HipAngR = 0;
+  HipAngR_InitValue = 0;
+  Estimated_TdR = 0;
+  TdR_InitValue = 0;
+  Estimated_FcR = 0;
+  FcR_InitValue = 0;
+
+  CableTorqueL = 0;
+  CableTorqueR = 0;
+  Feedback_TdL = 0;
+  Feedback_TdR = 0;
+  
+  /* Parameters for phase index determination */
+  // Nm, Critical torque value for left actuation system
+  Critical_TdL = TorsionStiffnessL*MechConsAngleL;               
+  // Nm, Critical torque value for left actuation system
+  Critical_TdR = TorsionStiffnessR*MechConsAngleR;
+  // Auxiliary parameter for slope of phase index profile determination, 0~1
+  PhaseIndexCo = 0.2;
+  // 0~1, 0 for DD and 1 for SEA, operation index of the left actuation system
+  phaseIndexL = 1;  // initial as SEA status                
+  // 0~1, 0 for DD and 1 for SEA, operation index of the right actuation system
+  phaseIndexR = 1;  // initial as SEA status
+
+  /* Initialize the control parameter of left motor */
   pidL.set = desiredTorqueL;
   pidL.currTa = 0;
   pidL.currCurrent = pidL.currTa/MotorCurrentConstant;
@@ -59,7 +116,7 @@ void Control_Init(void) {
   pidL.Err_p = 0;
   pidL.Err_pp = 0;
 
-  // initialize the control parameter of right motor
+  /* initialize the control parameter of right motor */
   pidR.set = desiredTorqueR;
   pidR.currTa = 0;
   pidR.currCurrent = pidR.currTa/MotorCurrentConstant;
@@ -73,6 +130,68 @@ void Control_Init(void) {
   pidR.Err = 0;
   pidR.Err_p = 0;
   pidR.Err_pp = 0;
+}
+
+/**
+ * Pre-processing for sensor feedback to make sure 
+ * the initial status of sensor is good for calibration
+ */
+void LLPreproSensorInit() {
+  int8_t SensorReady;
+  int8_t SensorReady_TdL;
+  int8_t SensorReady_TdR;
+  int8_t SensorReady_HipAngL;
+  int8_t SensorReady_HipAngR;
+  int8_t SensorReady_FcL;
+  int8_t SensorReady_FcR;  
+  int8_t SensorReady_FlxAng;
+
+  SensorReady = 0;
+  while(SensorReady == 0){
+    // Collect info from ADC including: Hip angle, Cable force, Torsion spring torque and Motor status 
+    getADCaverage(1);
+    delay(1);
+    // Initialize present yaw angle as 0 reference. Notice inside the function info will be collected
+    // from IMUC simultaneously including: TrunkAng, TrunkVel
+    yawAngleR20(ForcedInit,OperaitonAloIMUC);
+    delay(1);
+    // Initialize the inital value for each sensor feedback
+    // Notice to check the Initial value is ADC raw data or Processed data
+    TdL_InitValue = Aver_ADC_value[PotentioLP1]/PotentioLP1_Sensitivity*TorsionStiffnessL;
+    TdR_InitValue = Aver_ADC_value[PotentioRP3]/PotentioLP3_Sensitivity*TorsionStiffnessR;
+    HipAngL_InitValue = Aver_ADC_value[PotentioLP2]/PotentioLP2_Sensitivity;
+    HipAngR_InitValue = Aver_ADC_value[PotentioRP4]/PotentioLP4_Sensitivity;
+    FcL_InitValue = (Aver_ADC_value[LoadCellL]-1.25)/LoadCellL_Sensitivity;
+    FcR_InitValue = (Aver_ADC_value[LoadCellR]-1.25)/LoadCellR_Sensitivity;
+    TrunkFleAng_InitValue = angleActualC[rollChan];
+    // Here place program to check if these initial value of each sensor is near the expected position. 
+    // If not, recalibration the initial value of the sensor feedback 
+    if(TdL_InitValue > TdL_CaliValue + TdL_Tol || TdL_InitValue < TdL_CaliValue - TdL_Tol)
+    {SensorReady_TdL = 0;}  
+    else {SensorReady_TdL = 1;}
+    if(TdR_InitValue > TdR_CaliValue + TdR_Tol || TdR_InitValue < TdR_CaliValue - TdR_Tol)
+    {SensorReady_TdR = 0;}
+    else {SensorReady_TdR = 1;}
+    if(HipAngL_InitValue > HipAngL_CaliValue + HipAngL_Tol || HipAngL_InitValue < HipAngL_CaliValue - HipAngL_Tol)
+    {SensorReady_HipAngL = 0;}
+    else {SensorReady_HipAngL = 1;}
+    if(HipAngR_InitValue > HipAngR_CaliValue + HipAngR_Tol || HipAngR_InitValue < HipAngR_CaliValue - HipAngR_Tol)
+    {SensorReady_HipAngR = 0;}
+    else {SensorReady_HipAngR = 1;}
+    if(FcL_InitValue > FcL_CaliValue + FcL_Tol || FcL_InitValue < FcL_CaliValue - FcL_Tol)
+    {SensorReady_FcL = 0;}  
+    else {SensorReady_FcL = 1;}
+    if(FcR_InitValue > FcR_CaliValue + FcR_Tol || FcR_InitValue < FcR_CaliValue - FcR_Tol)
+    {SensorReady_FcR = 0;}  
+    else {SensorReady_FcR = 1;}    
+    if(TrunkFleAng_InitValue > TrunkFleAng_CaliValue + TrunkFleAng_Tol || TrunkFleAng_InitValue < TrunkFleAng_CaliValue - TrunkFleAng_Tol)
+    {SensorReady_FlxAng = 0;}  
+    else {SensorReady_FlxAng = 1;} 
+
+    SensorReady = SensorReady_TdL*SensorReady_TdR*SensorReady_HipAngL*SensorReady_HipAngR;
+    SensorReady = SensorReady*SensorReady_FcL*SensorReady_FcR*SensorReady_FlxAng;
+  }
+  Serial.println("Sensor Ready for Low-level Controller.");  
 }
 
 /**
@@ -115,48 +234,132 @@ void yawAngleR20(uint8_t yawInitmode, IMUAlo aloMode){
 }
 
 /**
+ * Yaw angle processing for practical control 
+ */
+void TrunkYawAngPro() {
+  // Trunk yaw angle feedback info procesisng for high-level controller
+  TrunkYawAng = angleActualC[yawChan] - TrunkYaw_InitValue;
+  if(TrunkYawAng > 180) {
+    TrunkYawAng = TrunkYawAng-360;
+  }
+  else if(TrunkYawAng < -180) {
+    TrunkYawAng = TrunkYawAng+360;
+  }
+}
+
+
+/**
+ * Update operation status of the actuation system
+ * @param float - Present Td feedback
+ * @param float - Critical torque value
+ * @param float - Slope determination parameter (0~1)
+ * @return float - phase index (1 for SEA, 0 for DD)
+ */
+float PhaseIndexUpdate(float FeedbackTd, float CriticalTd, float SlopeK) {
+  float PhaseIndex;
+  float intervalue1;
+  float intervalue2;
+  intervalue1 = pow(min(0,(FeedbackTd*FeedbackTd-CriticalTd*CriticalTd)),2);
+  intervalue2 = pow(pow(SlopeK*CriticalTd,2) - pow(CriticalTd,2),2);
+  PhaseIndex = 1-pow(min(0,intervalue1-intervalue2),2)/pow(intervalue2,2);
+  
+  return PhaseIndex;
+}
+
+/**
+ * Update the sin value of the angle between cable and human back 
+ * for calculation of assistive torque feedback from cable force for left side
+ * @return float - the angle between cable and human back of left side
+ */
+float sinofangleBetweenCableHB_L() {
+  float sinofAngleCableHB;
+  float cableLength;
+  float AngleSupportBeamHB;
+
+  // Calculate the angle between support beam and human back (deg)
+  AngleSupportBeamHB = TrunkFleAng + Theta0_L - Estimated_TdL/TorsionStiffnessL;
+  // Calculate the cable length through law of cosines
+  cableLength = sqrt(pow(SupportBeamLengthL,2)+pow(HumanBackLength,2)-2*SupportBeamLengthL*HumanBackLength*cos(AngleSupportBeamHB*d2r));
+  // Calculate the sin value through law of sines
+  sinofAngleCableHB = SupportBeamLengthL*sin(AngleSupportBeamHB*d2r)/cableLength;
+
+  return sinofAngleCableHB;
+}
+
+/**
+ * Update the sin value of the angle between cable and human back 
+ * for calculation of assistive torque feedback from cable force for right side
+ * @return float - the angle between cable and human back of right side
+ */
+float sinofangleBetweenCableHB_R() {
+  float sinofAngleCableHB;
+  float cableLength;
+  float AngleSupportBeamHB;
+
+  // Calculate the angle between support beam and human back (deg)
+  AngleSupportBeamHB = TrunkFleAng + Theta0_R - Estimated_TdR/TorsionStiffnessR;
+  // Calculate the cable length through law of cosines
+  cableLength = sqrt(pow(SupportBeamLengthR,2)+pow(HumanBackLength,2)-2*SupportBeamLengthR*HumanBackLength*cos(AngleSupportBeamHB*d2r));
+  // Calculate the sin value through law of sines
+  sinofAngleCableHB = SupportBeamLengthR*sin(AngleSupportBeamHB*d2r)/cableLength;
+
+  return sinofAngleCableHB;
+}
+
+/**
  * Processing sensor feedback for closed-loop control and data sending to PC
  */
 void sensorFeedbackPro(void) {
-  // ------------------------ Motor status processing -------------------
+  /* Motor status processing for stop mode */
   // if high-level command stop state
   if(mode == 0) {
   	// Set zero for reference torque
   	desiredTorqueR = 0;
   	desiredTorqueL = 0;
-  	// disable motor control
+  	// Disable motor control
   	digitalWrite(MotorEnableL,LOW);
+    digitalWrite(MotorEnableR,LOW);
   }
   else {
-    digitalWrite(MotorEnableL,HIGH); //Enable motor control	
+    // Enable motor control
+    digitalWrite(MotorEnableL,HIGH); 	
+    digitalWrite(MotorEnableR,HIGH);
   }
 
-  // ------- Interation torque feedback info processing for low-level controller ------------------
+  /* Interation torque feedback info processing */
   // Estimated_ImuAssistiveTorqueL = (angleActualA[0]-SupportBeamAngleL_InitValue)*TorsionStiffnessL;
-  Estimated_PoAssistiveTorqueL = (Aver_ADC_value[PotentioLP1]-PotentioLP1_InitValue)/PotentioLP1_Sensitivity*TorsionStiffnessL; 
-  if(Estimated_PoAssistiveTorqueL < 0)
-  {
-  	Estimated_PoAssistiveTorqueL = 0;
-  }
-
-  // -------------------------- Cable force feedback info processing -------------------
-  // Aver_ADC_value[LoadCellL] = (Aver_ADC_value[LoadCellL]-1.25)/LoadCellL_Sensitivity; 
-  // if(Aver_ADC_value[LoadCellL] < 0) {
-  //   Aver_ADC_value[LoadCellL] = 0; // only cable tension is detected
-  // }
+  Estimated_TdL = Aver_ADC_value[PotentioLP1]/PotentioLP1_Sensitivity*TorsionStiffnessL - TdL_InitValue; 
+  if(Estimated_TdL < 0)  {Estimated_TdL = 0;}
+  Estimated_TdR = Aver_ADC_value[PotentioRP3]/PotentioLP3_Sensitivity*TorsionStiffnessR - TdR_InitValue; 
+  if(Estimated_TdR < 0)  {Estimated_TdR = 0;}
   
-  // --------- Trunk yaw angle feedback info procesisng for high-level controller -----------------
-  angleActualC[yawChan] = angleActualC[yawChan] - TrunkYaw_InitValue;
-  if(angleActualC[yawChan] > 180) {
-    angleActualC[yawChan] = angleActualC[yawChan]-360;
-  }
-  else if(angleActualC[yawChan] < -180) {
-    angleActualC[yawChan] = angleActualC[yawChan]+360;
-  }
-  
-  // --------- Trunk flexion velocity info processing for high-level controller ------------ 
-  TrunkFlexionVel = velActualC[rollChan];
+  /* Cable force feedback info processing */
+  Estimated_FcL = (Aver_ADC_value[LoadCellL]-1.25)/LoadCellL_Sensitivity - FcL_InitValue; 
+  if(Estimated_FcL < 0)  {Estimated_FcL = 0;}
+  Estimated_FcR = (Aver_ADC_value[LoadCellR]-1.25)/LoadCellR_Sensitivity - FcR_InitValue; 
+  if(Estimated_FcR < 0)  {Estimated_FcR = 0;}
 
+  /* Hip angle info processing */
+  HipAngL = Aver_ADC_value[PotentioLP2]/PotentioLP2_Sensitivity - HipAngL_InitValue;
+  HipAngR = Aver_ADC_value[PotentioRP4]/PotentioLP4_Sensitivity - HipAngR_InitValue;
+
+  /* Trunk yaw and pitch angle & pitch velocity feedback info procesisng */
+  TrunkYawAngPro();
+  TrunkFleAng = angleActualC[rollChan] - TrunkFleAng_InitValue;
+  TrunkFleVel = velActualC[rollChan];
+
+  /* Compact torque feedback calculation for low-level feedback controller */
+  // Calculate the torque from cable force
+  CableTorqueL = Estimated_FcL*HumanBackLength*sinofangleBetweenCableHB_L();
+  CableTorqueR = Estimated_FcR*HumanBackLength*sinofangleBetweenCableHB_R();
+  // Notice here update phasindex after torque feedback update so that if cable torque
+  // is larger than practical torque, then transition phase occurs with SEA dynamics
+  // Update compact assistive torque feedback
+  Feedback_TdL = phaseIndexL*Estimated_TdL + (1-phaseIndexL)*CableTorqueL;
+  Feedback_TdR = phaseIndexR*Estimated_TdR + (1-phaseIndexR)*CableTorqueR;
+  // Update actuation system operation status index
+  phaseIndexL = PhaseIndexUpdate(Feedback_TdL, Critical_TdL, PhaseIndexCo);
+  phaseIndexR = PhaseIndexUpdate(Feedback_TdR, Critical_TdR, PhaseIndexCo);
 
   // Estimated_PoAssistiveTorqueR = (Aver_ADC_value[PotentioLP2]-PotentioRP1_InitValue)/PotentioRP1_Sensitivity*TorsionStiffnessR; 
   // Aver_ADC_value[MotorCurrL] =  (Aver_ADC_value[MotorCurrL]-2)*9/2;   // here ESCON set 0~4V:-9~9A
@@ -185,8 +388,8 @@ void Control(uint8_t ContMode) {
   if(ContMode == 1) {
     /************************ PID control for left motor *************************/
     pidL.set = desiredTorqueL;
-    pidL.currT = Estimated_PoAssistiveTorqueL;    // get current toruqe feedback
-    pidL.Err = pidL.set - pidL.currT;             // calculate the error of this time
+    pidL.currT = Feedback_TdL;                 // get current toruqe feedback
+    pidL.Err = pidL.set - pidL.currT;          // calculate the error of this time
     // P
     dk1L = pidL.Err - pidL.Err_p;
     PoutL = pidL.Kp*dk1L;
@@ -231,8 +434,8 @@ void Control(uint8_t ContMode) {
 
     /************************ PID control for right motor *************************/
     pidR.set = desiredTorqueR;
-    pidR.currT = Estimated_PoAssistiveTorqueR;   // get current toruqe feedback
-    pidR.Err = pidR.set - pidR.currT;            // calculate the error of this time
+    pidR.currT = Feedback_TdR;                // get current toruqe feedback
+    pidR.Err = pidR.set - pidR.currT;         // calculate the error of this time
     // P
     dk1R = pidR.Err - pidR.Err_p;
     PoutR = pidR.Kp*dk1R;

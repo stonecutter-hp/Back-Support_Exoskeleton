@@ -17,8 +17,7 @@
 #define AddrIMUC  0x52
 #define IMU_UpdateRate 200            // Hz
 #define IMUFilterCycles 6
-#define ForcedInit 1
-#define LogicInit  0
+
 /* IMU alogorithm 6 axis or 9 axis */
 typedef enum {
   IMU9Axis = 0,
@@ -50,6 +49,23 @@ extern double IMUA_value_filtered[3][IMUFilterCycles];  // store data from IMUA 
 extern double IMUB_value_filtered[3][IMUFilterCycles];  // store data from IMUB for filtering
 extern double IMUC_value_filtered[3][IMUFilterCycles];  // store data from IMUC for filtering
 extern double IMU_value_Prev[3][3];                     // store last time angle of 3 IMU * 3 channel
+
+/* IMU feedback calibration value definition */
+// Expected initial value range (CaliValue +- Tol) of sensor feedback for initial calibration
+// the initial values should be adjusted along with prototype design
+#define TrunkFleAng_CaliValue 0
+#define TrunkFleAng_Tol 0
+#define TrunkFleYaw_CaliValue 0
+#define TrunkFleYaw_Tol 0
+#define ForcedInit 1
+#define LogicInit  0
+
+/* Intermediate auxiliary parameters from IMU feedback processing */
+extern float TrunkYawAng;             // deg, Trunk yaw angle
+extern float TrunkYaw_InitValue;      // deg, Auxiliary parameter for trunk yaw angle
+extern float TrunkFleAng;             // deg, Trunk flexion angle
+extern float TrunkFleAng_InitValue;   // deg, Auxiliary parameter for trunk pitch angle
+extern float TrunkFleVel;             // deg/s, Trunk flexion angular velocity
 
 /**
  * IMU angle feedback return to zero
