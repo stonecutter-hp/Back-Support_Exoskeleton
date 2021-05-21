@@ -100,7 +100,7 @@ void receivedDataPro(void) {
         desiredTorqueL = LimitInput;
       }
       else if(desiredTorqueL < 0) {
-      	desiredTorqueL = 0;
+        desiredTorqueL = 0;
       } 
     }
     if(USART_RX_BUF[6] == 'T' && USART_RX_BUF[7] == 'R') {
@@ -111,13 +111,13 @@ void receivedDataPro(void) {
         desiredTorqueR = LimitInput;
       }
       else if(desiredTorqueR < 0) {
-      	desiredTorqueR = 0;
+        desiredTorqueR = 0;
       } 
     }
     if(USART_RX_BUF[12] == 'M') {
       PreMode = mode;
-    	mode = USART_RX_BUF[13]-48;
-    	side = USART_RX_BUF[14]-48;
+      mode = USART_RX_BUF[13]-48;
+      side = USART_RX_BUF[14]-48;
     }    
     // Here add more process for data decomposition ...
     
@@ -135,9 +135,9 @@ void receivedDataPro(void) {
 
 /**
  * @ MCU to PC protocol: MxTLxxxxLLxxxxALxxxxxTRxxxxLRxxxxARxxxxxPxxxxxYxxxxxVxxxxx\r\n
- * TL/Rxxxx: (Nm) Torsion spring torque for left/right transmission system 
- * LL/Rxxxx: (N) Load cell for cable force of left/right transmission system
- * AL/Rxxxxx: (deg) Potentiometer/IMU feedback for angle between left/right thigh and vertical direction
+ * TL/Rxxxx: (Nm) Torque feedback for left/right transmission system 
+ * LL/Rxxxx: (N) Load cell feedback for cable force of left/right transmission system
+ * AL/Rxxxxx: (deg) Potentiometer feedback for hip angle feedback
  *                  first number indicate sign: 0 for -, 1 for +
  * Pxxxxx: (deg) Pitch angle for trunk
  * Yxxxxx: (deg) yaw angle for trunk
@@ -171,7 +171,7 @@ void sendDatatoPC(void) {
   	  USART_TX_BUF[position++] = 'T';
   	  USART_TX_BUF[position++] = 'L';
       // xx.xx
-  	  dec = Estimated_PoAssistiveTorqueL*Calcu_Pow(10,2);
+  	  dec = Feedback_TdL*Calcu_Pow(10,2);
   	  for(int t=0; t<4; t++) {
   	  	inter = (dec/Calcu_Pow(10,3-t))%10;
   	  	USART_TX_BUF[position++] = inter+48;
@@ -182,7 +182,7 @@ void sendDatatoPC(void) {
       USART_TX_BUF[position++] = 'L';
       USART_TX_BUF[position++] = 'L';
       // xxx.x
-      dec = Aver_ADC_value[LoadCellL]*Calcu_Pow(10,1);
+      dec = Estimated_FcL*Calcu_Pow(10,1);
   	  for(int t=0; t<4; t++) {
   	  	inter = (dec/Calcu_Pow(10,3-t))%10;
   	  	USART_TX_BUF[position++] = inter+48;
@@ -192,15 +192,15 @@ void sendDatatoPC(void) {
   	if(SendItemFlag[2] == true) {
       USART_TX_BUF[position++] = 'A';
       USART_TX_BUF[position++] = 'L';
-      SignMark = Value_sign(angleActualA[pitchChan]);
+      SignMark = Value_sign(HipAngL);
       if(SignMark == PosSign) {
       	USART_TX_BUF[position++] = PosSign+48;
       }
       else {
         USART_TX_BUF[position++] = NegSign+48;
       }
-      // ±xx.xx
-      dec = SignMark*angleActualA[pitchChan]*Calcu_Pow(10,2);
+      // ±xxx.x
+      dec = SignMark*HipAngL*Calcu_Pow(10,1);
   	  for(int t=0; t<4; t++) {
   	  	inter = (dec/Calcu_Pow(10,3-t))%10;
   	  	USART_TX_BUF[position++] = inter+48;
@@ -211,7 +211,7 @@ void sendDatatoPC(void) {
   	  USART_TX_BUF[position++] = 'T';
   	  USART_TX_BUF[position++] = 'R';
       // xx.xx
-  	  dec = Estimated_PoAssistiveTorqueR*Calcu_Pow(10,2);
+  	  dec = Feedback_TdR*Calcu_Pow(10,2);
   	  for(int t=0; t<4; t++) {
   	  	inter = (dec/Calcu_Pow(10,3-t))%10;
   	  	USART_TX_BUF[position++] = inter+48;
@@ -222,25 +222,25 @@ void sendDatatoPC(void) {
       USART_TX_BUF[position++] = 'L';
       USART_TX_BUF[position++] = 'R';
       // xxx.x
-      dec = Aver_ADC_value[LoadCellR]*Calcu_Pow(10,1);
+      dec = Estimated_FcR*Calcu_Pow(10,1);
   	  for(int t=0; t<4; t++) {
   	  	inter = (dec/Calcu_Pow(10,3-t))%10;
   	  	USART_TX_BUF[position++] = inter+48;
   	  }      
   	}
-  	// ALxxxxx
+  	// ARxxxxx
   	if(SendItemFlag[5] == true) {
       USART_TX_BUF[position++] = 'A';
       USART_TX_BUF[position++] = 'R';
-      SignMark = Value_sign(angleActualB[pitchChan]);
+      SignMark = Value_sign(HipAngR);
       if(SignMark == PosSign) {
       	USART_TX_BUF[position++] = PosSign+48;
       }
       else {
         USART_TX_BUF[position++] = NegSign+48;
       }
-      // ±xx.xx
-      dec = SignMark*angleActualB[pitchChan]*Calcu_Pow(10,2);
+      // ±xxx.x
+      dec = SignMark*HipAngR*Calcu_Pow(10,1);
   	  for(int t=0; t<4; t++) {
   	  	inter = (dec/Calcu_Pow(10,3-t))%10;
   	  	USART_TX_BUF[position++] = inter+48;
@@ -249,7 +249,7 @@ void sendDatatoPC(void) {
   	// Pxxxxx, Notice the X-axis (practical pitch angle) is assigned as roll channel in the program
   	if(SendItemFlag[6] == true) {
       USART_TX_BUF[position++] = 'P';
-      SignMark = Value_sign(angleActualC[rollChan]);
+      SignMark = Value_sign(TrunkFleAng);
       if(SignMark == PosSign) {
       	USART_TX_BUF[position++] = PosSign+48;
       }
@@ -257,7 +257,7 @@ void sendDatatoPC(void) {
         USART_TX_BUF[position++] = NegSign+48;
       }
       // ±xxx.x
-      dec = SignMark*angleActualC[rollChan]*Calcu_Pow(10,1);
+      dec = SignMark*TrunkFleAng*Calcu_Pow(10,1);
   	  for(int t=0; t<4; t++) {
   	  	inter = (dec/Calcu_Pow(10,3-t))%10;
   	  	USART_TX_BUF[position++] = inter+48;
@@ -266,15 +266,15 @@ void sendDatatoPC(void) {
   	// Yxxxxx
   	if(SendItemFlag[7] == true) {
       USART_TX_BUF[position++] = 'Y';
-      SignMark = Value_sign(angleActualC[yawChan]);
+      SignMark = Value_sign(TrunkYawAng);
       if(SignMark == PosSign) {
       	USART_TX_BUF[position++] = PosSign+48;
       }
       else {
         USART_TX_BUF[position++] = NegSign+48;
       }
-      // ±xx.xx
-      dec = SignMark*angleActualC[yawChan]*Calcu_Pow(10,2);
+      // ±xxx.x
+      dec = SignMark*TrunkYawAng*Calcu_Pow(10,1);
   	  for(int t=0; t<4; t++) {
   	  	inter = (dec/Calcu_Pow(10,3-t))%10;
   	  	USART_TX_BUF[position++] = inter+48;
@@ -283,7 +283,7 @@ void sendDatatoPC(void) {
   	// Vxxxxx
   	if(SendItemFlag[8] == true) {
   	  USART_TX_BUF[position++] = 'V';
-  	  SignMark = Value_sign(TrunkFlexionVel);
+  	  SignMark = Value_sign(TrunkFleVel);
       if(SignMark == PosSign) {
       	USART_TX_BUF[position++] = PosSign+48;
       }
@@ -291,7 +291,7 @@ void sendDatatoPC(void) {
         USART_TX_BUF[position++] = NegSign+48;
       }
       // ±xxx.x
-      dec = SignMark*TrunkFlexionVel*Calcu_Pow(10,1);
+      dec = SignMark*TrunkFleVel*Calcu_Pow(10,1);
   	  for(int t=0; t<4; t++) {
   	  	inter = (dec/Calcu_Pow(10,3-t))%10;
   	  	USART_TX_BUF[position++] = inter+48;

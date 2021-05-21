@@ -88,7 +88,6 @@ void loop() {
     Control(1);                // calculate controlled command: PWM duty cycles
     Control_update = false;
   }
-  //---------------------
   if(SendPC_update) {
     sendDatatoPC();            // send sensor data to PC and allow next receiving cycle
     SendPC_update = false;

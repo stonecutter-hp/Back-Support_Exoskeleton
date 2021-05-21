@@ -257,11 +257,11 @@ void TrunkYawAngPro() {
  */
 float PhaseIndexUpdate(float FeedbackTd, float CriticalTd, float SlopeK) {
   float PhaseIndex;
-  float intervalue1;
-  float intervalue2;
-  intervalue1 = pow(min(0,(FeedbackTd*FeedbackTd-CriticalTd*CriticalTd)),2);
+  double intervalue1;
+  double intervalue2;
+  intervalue1 = pow(min(0.0,(double) (FeedbackTd*FeedbackTd-CriticalTd*CriticalTd)),2);
   intervalue2 = pow(pow(SlopeK*CriticalTd,2) - pow(CriticalTd,2),2);
-  PhaseIndex = 1-pow(min(0,intervalue1-intervalue2),2)/pow(intervalue2,2);
+  PhaseIndex = 1-pow(min(0.0,intervalue1-intervalue2),2)/pow(intervalue2,2);
   
   return PhaseIndex;
 }
@@ -352,8 +352,10 @@ void sensorFeedbackPro(void) {
   // Calculate the torque from cable force
   CableTorqueL = Estimated_FcL*HumanBackLength*sinofangleBetweenCableHB_L();
   CableTorqueR = Estimated_FcR*HumanBackLength*sinofangleBetweenCableHB_R();
-  // Notice here update phasindex after torque feedback update so that if cable torque
-  // is larger than practical torque, then transition phase occurs with SEA dynamics
+  /* Notice here update phasindex after torque feedback update so that if cable torque
+     is larger than practical torque. For example, practical SEA status < Critical Td 
+     with DD phase index. Then transition phase occurs with SEA dynamics as expected
+  */
   // Update compact assistive torque feedback
   Feedback_TdL = phaseIndexL*Estimated_TdL + (1-phaseIndexL)*CableTorqueL;
   Feedback_TdR = phaseIndexR*Estimated_TdR + (1-phaseIndexR)*CableTorqueR;

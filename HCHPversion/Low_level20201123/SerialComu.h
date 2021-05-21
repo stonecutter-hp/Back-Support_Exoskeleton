@@ -62,9 +62,9 @@ void receivedDataPro(void);
 
 /**
  * @ MCU to PC protocol: MxTLxxxxLLxxxxALxxxxxTRxxxxLRxxxxARxxxxxPxxxxxYxxxxxVxxxxx\r\n
- * TL/Rxxxx: (Nm) Torsion spring torque for left/right transmission system 
- * LL/Rxxxx: (N) Load cell for cable force of left/right transmission system
- * AL/Rxxxxx: (deg) Potentiometer feedback for hip angle
+ * TL/Rxxxx: (Nm) Torque feedback for left/right transmission system 
+ * LL/Rxxxx: (N) Load cell feedback for cable force of left/right transmission system
+ * AL/Rxxxxx: (deg) Potentiometer feedback for hip angle feedback
  *                  first number indicate sign: 0 for -, 1 for +
  * Pxxxxx: (deg) Pitch angle for trunk
  * Yxxxxx: (deg) yaw angle for trunk
