@@ -7,4 +7,3 @@ Two versions of back-support exoskeleton: <br>
 ## Hardware
 High-level controller: MATLAB on PC <br>
 Low-level controller: Ardunio-STM32F1
-
