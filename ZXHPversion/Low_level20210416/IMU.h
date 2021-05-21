@@ -9,17 +9,22 @@
 #include "IIC.h"
 
 /**************************************** IMU parameters definition ********************************/
-#define rollChan  0
+#define rollChan  0                // Notice that seems the practical pitch angle corresponds to rollChan in this program
 #define pitchChan 1
 #define yawChan   2
 #define AddrIMUA  0x50
 #define AddrIMUB  0x51
 #define AddrIMUC  0x52
-#define IMU_UpdateRate 200            // Hz
+#define IMU_UpdateFre 200          // Hz, Assumed IMU data updated frequency
 #define IMUFilterCycles 6
-#define OperaitonAloIMUA 9         // IMUA alogorithm 6-6 axis, 9-9axis 
-#define OperaitonAloIMUB 9         // IMUB alogorithm 6-6 axis, 9-9axis
-#define OperaitonAloIMUC 9         // IMUC alogorithm 6-6 axis, 9-9axis
+/* IMU alogorithm 6 axis or 9 axis */
+typedef enum {
+  IMU9Axis = 0,
+  IMU6Axis = 1
+} IMUAlo;
+extern IMUAlo OperaitonAloIMUA;     
+extern IMUAlo OperaitonAloIMUB; 
+extern IMUAlo OperaitonAloIMUC; 
 
 extern unsigned char yaw2zero[2];  // The command for IMU yaw angle return to zero (only for 6-axis algorithm)
 
@@ -109,24 +114,24 @@ void set2zeroT(void);
 
 /**
  * Mean Moving filter for the IMUA feedback
- * @param int - cycles: 1~IMUFilterCycles
  * @param int - channel: rollChan/pitchChan/yawChan
+ * @param int - cycles: 1~IMUFilterCycles
  */
-void MovingAverFilterIMUA(int cycles, int channel);
+void MovingAverFilterIMUA(int channel, int cycles);
 
 /**
  * Mean Moving filter for the IMUB feedback
- * @param int - cycles: 1~IMUFilterCycles
  * @param int - channel: rollChan/pitchChan/yawChan
+ * @param int - cycles: 1~IMUFilterCycles
  */
-void MovingAverFilterIMUB(int cycles, int channel);
+void MovingAverFilterIMUB(int channel, int cycles);
 
 /**
  * Mean Moving filter for the IMUC feedback
- * @param int - cycles: 1~IMUFilterCycles
  * @param int - channel: rollChan/pitchChan/yawChan
+ * @param int - cycles: 1~IMUFilterCycles
  */
-void MovingAverFilterIMUC(int cycles, int channel);
+void MovingAverFilterIMUC(int channel, int cycles);
 
 
 #endif

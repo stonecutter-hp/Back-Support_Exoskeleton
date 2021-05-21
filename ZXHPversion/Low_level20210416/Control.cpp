@@ -1,46 +1,53 @@
 /***********************************************************************
- * The PID control configuration and processing function 
+ * The PID control configuration and processing function &
  * System model parameters
  **********************************************************************/
 
 #include "Control.h"
 
+/**************************************** Low level PID control parameters definition ********************************/
 PID pidL;  // control parameter of left motor
 PID pidR;  // control parameter of right motor
 // the desired torque from PC is defined in communication receiving parameter part
 int16_t PWM_commandL;   // range: 0.1*PWMperiod_L~0.9*PWMperiod_L
 int16_t PWM_commandR;   // range: 0.1*PWMperiod_R~0.9*PWMperiod_R
-bool Control_update = true;  // control update flag
+bool Control_update = true;    // control update flag
 
-float Estimated_ImuAssistiveTorqueL;
-float Estimated_PoAssistiveTorqueL;
-float Estimated_ImuAssistiveTorqueR;
-float Estimated_PoAssistiveTorqueR;
-float PotentioLP1_InitValue;
-float SupportBeamAngleL_InitValue;
-float TrunkYaw;
-float TrunkFlexionVel;
+
+
+/*************************************** Intermediate auxiliary parameters for control ****************************/ 
+// Parameters for lowe-level control
+float Estimated_TdMotorCurrentL;   // Td feedback from left motor current feedback
+float Estimated_TdMotorCurrentR;   // Td feedback from right motor current feedback
+float Estimated_TdForceSensorL;    // Td feedback from left force sensor
+float ForceSensorL_InitValue;      // Auxiliary parameter for left force sensor
+float Estimated_TdForceSensorR;    // Td feedback from right force sensor
+float ForceSensorR_InitValue;      // Auxiliary parameter for right force sensor
+float Estimated_TdL;               // Estimated compact Td feedback of left side
+float Estimated_TdR;               // Estimated compact Td feedback of right side
 
 /**
- * Control parameter initialization
+ * Control parameter initialization for Low-level controller
+ * Initial parameters including: 
+ * PWM commands; Iterative force feedback; PID struct parameters (PID controller parameters) related to PWM command.
  * Here use increment PID algorithm: Delta.U = Kp*( (ek-ek_1) + (Tcontrol/Ti)*ek + (Td/Tcontrol)*(ek+ek_2-2*ek_1) )
  */
 void Control_Init(void) {
+  /* Initialize PWM command */
   PWM_commandL = 0;
   PWM_commandR = 0;
-  desiredTorqueL = 0;
-  desiredTorqueR = 0;
-  mode = 1;   // Motion detection mode, default is 1 (other motion)
-  PreMode = mode;
-  side = 0;   // Asymmetric side, default is 0 (no asymmetric)
-  Estimated_ImuAssistiveTorqueL = 0;
-  Estimated_PoAssistiveTorqueL = 0;
-  Estimated_ImuAssistiveTorqueR = 0;
-  Estimated_PoAssistiveTorqueR = 0;
-  PotentioLP1_InitValue = 0;
-  SupportBeamAngleL_InitValue = 0;
-  TrunkYaw = 0;
-  TrunkFlexionVel = 0;
+  
+  /* Initialize interation torque feedback */
+  Estimated_TdMotorCurrentL = 0;
+  Estimated_TdMotorCurrentR = 0;
+  Estimated_TdForceSensorL = 0;
+  ForceSensorL_InitValue = 0;
+  Estimated_TdForceSensorR = 0;
+  ForceSensorR_InitValue = 0;
+  Estimated_TdL = 0;
+  Estimated_TdR = 0;
+
+  /* Initialize PID struct parameters*/
   // initialize the control parameter of left motor
   pidL.set = desiredTorqueL;
   pidL.currTa = 0;
@@ -73,92 +80,51 @@ void Control_Init(void) {
 }
 
 /**
- * Set the yaw angle of human trunk to zero
- * @param unsigned char - IMU operation mode: 1-force to set, other number-logic set
+ * Pre-processing for sensor feedback related to low-level controller 
+ * to make sure the initial status of sensor is good for calibration
  */
-void yawAngleR20(uint8_t aloMode) {
-  // Roughly yaw angle return to zero logic: 
-  // Detect mode 1 and premode is larger than 3
-  // i.e., From bending back to other motion
-  if(aloMode == 1) {
-    if(OperaitonAloIMUC == 9) {
-      getIMUangleT();
-      TrunkYaw = angleActualC[yawChan];
-    }
-    else if(OperaitonAloIMUC == 6) {
-      // set2zeroL();
-      // set2zeroR();
-      set2zeroT();
-      getIMUangleT();
-      TrunkYaw = 0;
-    }
+void LLPreproSensorInit() {
+  int8_t SensorReady;
+  int8_t SensorReady_1;
+  int8_t SensorReady_2;
+  SensorReady = 0;
+  while(SensorReady == 0){
+    // Collect info from ADC including: ForceSensors(Interaction force) and Motor status 
+    getADCaverage(1);
+    delay(1);
+    // Initialize the inital value for each sensor feedback
+    // Notice to check the Initial value is ADC raw data or Processed data
+    ForceSensorL_InitValue = Aver_ADC_value[ForceSensorL]/ForceSensorL_Sensitivity;
+    ForceSensorR_InitValue = Aver_ADC_value[ForceSensorR]/ForceSensorR_Sensitivity;
+    // Here place program to check if these initial value of each sensor is near the expected position. 
+    // If not, recalibration the initial value of the sensor feedback 
+    if(ForceSensorL_InitValue > ForceSensorL_CaliValue + ForceSensorL_Tol || ForceSensorL_InitValue < ForceSensorL_CaliValue - ForceSensorL_Tol)
+    {SensorReady_1 = 0;}  
+    else {SensorReady_1 = 1;}
+    if(ForceSensorR_InitValue > ForceSensorR_CaliValue + ForceSensorR_Tol || ForceSensorR_InitValue < ForceSensorR_CaliValue - ForceSensorR_Tol)
+    {SensorReady_2 = 0;}
+    else {SensorReady_2 = 1;}
+    SensorReady = SensorReady_1*SensorReady_2;
   }
-  else {
-    if(mode == 1 && PreMode > 3) {
-      if(OperaitonAloIMUC == 9) {
-        getIMUangleT();
-        TrunkYaw = angleActualC[yawChan];
-      }
-      else if(OperaitonAloIMUC == 6) {
-        // set2zeroL();
-        // set2zeroR();
-        set2zeroT();
-        getIMUangleT();
-        TrunkYaw = 0;        
-      }
-    }
-  }
-
-
+  Serial.println("Sensor Ready for Low-level Controller.");  
 }
 
-
-
 /**
- * Processing sensor feedback for closed-loop control and data sending to PC
+ * Processing sensor feedback for Low-level closed-loop control
  */
 void sensorFeedbackPro(void) {
-  // ------------------------ Motor status processing -------------------
-  // if high-level command stop state
-  if(mode == 0) {
-  	// Set zero for reference torque
-  	desiredTorqueR = 0;
-  	desiredTorqueL = 0;
-  	// disable motor control
-  	digitalWrite(MotorEnableL,LOW);
-  }
-  else {
-    digitalWrite(MotorEnableL,HIGH); //Enable motor control	
-  }
-
   // ------- Interation torque feedback info processing for low-level controller ------------------
-  // Estimated_ImuAssistiveTorqueL = (angleActualA[0]-SupportBeamAngleL_InitValue)*TorsionStiffnessL;
-  Estimated_PoAssistiveTorqueL = (Aver_ADC_value[PotentioLP1]-PotentioLP1_InitValue)/PotentioLP1_Sensitivity*TorsionStiffnessL; 
-  if(Estimated_PoAssistiveTorqueL < 0)
-  {
-  	Estimated_PoAssistiveTorqueL = 0;
-  }
-
-  // -------------------------- Cable force feedback info processing -------------------
-  // Aver_ADC_value[LoadCellL] = (Aver_ADC_value[LoadCellL]-1.25)/LoadCellL_Sensitivity; 
-  // if(Aver_ADC_value[LoadCellL] < 0) {
-  //   Aver_ADC_value[LoadCellL] = 0; // only cable tension is detected
-  // }
+//  Estimated_TdMotorCurrentL = (Aver_ADC_value[MotorCurrL]-2)*9/2;                    // Td feedback from motor driver, here ESCON set 0~4V:-9~9A
+//  Estimated_TdForceSensorL = Aver_ADC_value[ForceSensorL]*ForceSensorL_Sensitivity;  // Td feedback from Force sensor L
+//  Estimated_TdL = 0.1*Estimated_TdForceSensorL+0.9*Estimated_TdMotorCurrentL;        // Td feedback used for low-level closed-loop control
   
-  // --------- Trunk yaw angle feedback info procesisng for high-level controller -----------------
-  angleActualC[yawChan] = angleActualC[yawChan] - TrunkYaw;
-  if(angleActualC[yawChan] > 180) {
-    angleActualC[yawChan] = angleActualC[yawChan]-360;
-  }
-  else if(angleActualC[yawChan] < -180) {
-    angleActualC[yawChan] = angleActualC[yawChan]+360;
-  }
+  // --------- Trunk flexion velocity info processing for high-level controller ------------ 
 
-  // Estimated_PoAssistiveTorqueR = (Aver_ADC_value[PotentioLP2]-PotentioRP1_InitValue)/PotentioRP1_Sensitivity*TorsionStiffnessR; 
-  // Aver_ADC_value[MotorCurrL] =  (Aver_ADC_value[MotorCurrL]-2)*9/2;   // here ESCON set 0~4V:-9~9A
-  // Aver_ADC_value[MotorVeloL] = (Aver_ADC_value[MotorVeloL]-2)*4000/2; // here ESCON set 0~4V:-4000~4000rpm
+  // --------- Hip joint angle feedback info processing for high-level controller ----------
+//  HipAngleL = (Aver_ADC_value[PotentioLP1]-HipAngleL_InitValue)/PotentioLP1_Sensitivity;
 
-
+  // --------- Thigh angle feedback info processing for high-level controller --------------
+//  ThighAngL = 180-HipAngL-angleActualC[rollChan];  //(TrunkFleAng = angleActualC[rollChan])
 }
 
 /**
@@ -181,7 +147,7 @@ void Control(uint8_t ContMode) {
   if(ContMode == 1) {
     /************************ PID control for left motor *************************/
     pidL.set = desiredTorqueL;
-    pidL.currT = Estimated_PoAssistiveTorqueL;    // get current toruqe feedback
+    pidL.currT = Estimated_TdL;    // get current toruqe feedback
     pidL.Err = pidL.set - pidL.currT;             // calculate the error of this time
     // P
     dk1L = pidL.Err - pidL.Err_p;
@@ -227,7 +193,7 @@ void Control(uint8_t ContMode) {
 
     /************************ PID control for right motor *************************/
     pidR.set = desiredTorqueR;
-    pidR.currT = Estimated_PoAssistiveTorqueR;   // get current toruqe feedback
+    pidR.currT = Estimated_TdR;   // get current toruqe feedback
     pidR.Err = pidR.set - pidR.currT;            // calculate the error of this time
     // P
     dk1R = pidR.Err - pidR.Err_p;
@@ -304,4 +270,3 @@ void MotorPWMoutput(uint16_t PWMcommandL, uint16_t PWMcommandR) {
   delay(1);
   Timer2.setCompare(TIM2_CH2,PWM_commandR);
 }
-

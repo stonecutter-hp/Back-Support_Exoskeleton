@@ -5,6 +5,11 @@
 
 #include "IMU.h"
 
+/* IMU alogorithm 6 axis or 9 axis */
+IMUAlo OperaitonAloIMUA;     
+IMUAlo OperaitonAloIMUB; 
+IMUAlo OperaitonAloIMUC;
+
 /**************************************** IMU parameters definition ********************************/
 unsigned char angleTempA[6];   // store the raw data get from IMU A(addr 0x50)
 unsigned char angleTempB[6];   // store the raw data get from IMU B(addr 0x51)
@@ -16,7 +21,7 @@ unsigned char velTempC[6];     // store the raw data get from IMU C(addr 0x52)
 float angleActualA[3];         // store the angle of IMU A(addr 0x50) for calculation
 float angleActualB[3];         // store the angle of IMU B(addr 0x51) for calculation
 float angleActualC[3];         // store the angle of IMU C(addr 0x52) for calculation
-float angleActual_p[3][3];     // store the last time angle of IMU C(addr 0x52) for calculation of velocity
+float angleActual_p[3][3];     // store the last time angle of IMU feedback for calculation of velocity
 
 float velActualA[3];           // store the velocity of IMU A(addr 0x50)
 float velActualB[3];           // store the velocity of IMU B(addr 0x51)
@@ -28,6 +33,14 @@ double IMUC_value_filtered[3][IMUFilterCycles];  // store data from IMUC for fil
 double IMU_value_Prev[3][3];                     // store last time filtered angle of 3 IMU * 3 channel
 
 unsigned char yaw2zero[2] = {0x04, 0x00};  // The command for IMU yaw angle return to zero (only for 6-axis algorithm)
+
+/* Intermediate auxiliary parameters from IMU feedback processing */
+float TrunkYawAng;             // deg, Trunk yaw angle
+float TrunkYaw_InitValue;      // deg, Auxiliary parameter for trunk yaw angle
+float TrunkFleAng;             // deg, Trunk flexion angle
+float TrunkFleAng_InitValue;   // deg, Auxiliary parameter for trunk pitch angle
+float TrunkFleVel;             // deg/s, Trunk flexion angular velocity
+
 /**
  * IMU angle feedback return to zero
  */
@@ -39,8 +52,6 @@ void IMU_Init(void)  {
     velActualA[i] = 0;
     velActualB[i] = 0;
     velActualC[i] = 0;
-
-
     for(int t=0; t<IMUFilterCycles; t++) {
       IMUA_value_filtered[i][t] = 0;
       IMUB_value_filtered[i][t] = 0;
@@ -51,6 +62,7 @@ void IMU_Init(void)  {
       angleActual_p[i][j] = 0;
     }
   }
+
   for(int i=0;i<6;i++) {
     angleTempA[i] = 0;
     angleTempB[i] = 0;
@@ -59,6 +71,16 @@ void IMU_Init(void)  {
     velTempB[i] = 0;
     velTempC[i] = 0;
   }
+  OperaitonAloIMUA = IMU9Axis;
+  OperaitonAloIMUB = IMU9Axis;
+  OperaitonAloIMUC = IMU9Axis;
+
+  /* Initialize the processed feedback from IMU */
+  TrunkYawAng = 0;             // deg, Trunk yaw angle
+  TrunkYaw_InitValue = 0;      // deg, Auxiliary parameter for trunk yaw angle
+  TrunkFleAng = 0;             // deg, Trunk flexion angle
+  TrunkFleAng_InitValue = 0;   // deg, Auxiliary parameter for trunk pitch angle
+  TrunkFleVel = 0;             // deg/s, Trunk flexion angular velocity
 }
 
 /**
@@ -66,7 +88,7 @@ void IMU_Init(void)  {
  */
 void getIMUangleL(void) {
   IICreadBytes(AddrIMUA,0x3d,6,&angleTempA[0]);  // read angle from IMUA
-  // transfer cahr format to float format for the convenience of calculation
+  // transfer char format to float format for the convenience of calculation
   // angleActual_p[1][rollChan] = angleActualA[rollChan];
   // angleActual_p[1][pitchChan] = angleActualA[pitchChan];
   // angleActual_p[1][yawChan] = angleActualA[yawChan];
@@ -98,15 +120,15 @@ void set2zeroL(void) {
  */
 void getIMUangleR(void) {
   IICreadBytes(AddrIMUB,0x3d,6,&angleTempB[0]);  // read angle from IMUA
-  // transfer cahr format to float format for the convenience of calculation
+  // transfer char format to float format for the convenience of calculation
   // update last time's angle feedback
   // angleActual_p[2][rollChan] = angleActualB[rollChan];
   // angleActual_p[2][pitchChan] = angleActualB[pitchChan];
   // angleActual_p[2][yawChan] = angleActualB[yawChan];
 
-  angleActualB[rollChan] = (float)CharToShort(&angleTempB[0])/32768*180;   // roll A
-  angleActualB[pitchChan] = (float)CharToShort(&angleTempB[2])/32768*180;  // pitch A
-  angleActualB[yawChan] = (float)CharToShort(&angleTempB[4])/32768*180;    // yaw A
+  angleActualB[rollChan] = (float)CharToShort(&angleTempB[0])/32768*180;   // roll B
+  angleActualB[pitchChan] = (float)CharToShort(&angleTempB[2])/32768*180;  // pitch B
+  angleActualB[yawChan] = (float)CharToShort(&angleTempB[4])/32768*180;    // yaw B
 }
 
 /**
@@ -132,15 +154,15 @@ void set2zeroR(void) {
  */
 void getIMUangleT(void) {
   IICreadBytes(AddrIMUC,0x3d,6,&angleTempC[0]);  // read angle from IMUA
-  // transfer cahr format to float format for the convenience of calculation
-  // update last time's angle feedback
-  angleActual_p[3][rollChan] = angleActualC[rollChan];
-  angleActual_p[3][pitchChan] = angleActualC[pitchChan];
-  angleActual_p[3][yawChan] = angleActualC[yawChan];
+  // transfer char format to float format for the convenience of calculation
+  // // update last time's angle feedback
+  // angleActual_p[3][rollChan] = angleActualC[rollChan];
+  // angleActual_p[3][pitchChan] = angleActualC[pitchChan];
+  // angleActual_p[3][yawChan] = angleActualC[yawChan];
 
-  angleActualC[rollChan] = (float)CharToShort(&angleTempC[0])/32768*180;   // roll A
-  angleActualC[pitchChan] = (float)CharToShort(&angleTempC[2])/32768*180;  // pitch A
-  angleActualC[yawChan] = (float)CharToShort(&angleTempC[4])/32768*180;    // yaw A
+  angleActualC[rollChan] = (float)CharToShort(&angleTempC[0])/32768*180;   // roll C
+  angleActualC[pitchChan] = (float)CharToShort(&angleTempC[2])/32768*180;  // pitch C
+  angleActualC[yawChan] = (float)CharToShort(&angleTempC[4])/32768*180;    // yaw C
 }
 
 /**
@@ -170,6 +192,7 @@ void getIMUangle(void) {
   getIMUangleR();
   delay(1);
   getIMUangleT();
+  delay(1);
 }
 
 /**
@@ -187,57 +210,75 @@ void getIMUvel(void) {
 
 /**
  * Mean Moving filter for the IMUA feedback
- * @param int - cycles: 1~IMUFilterCycles
  * @param int - channel: rollChan/pitchChan/yawChan
+ * @param int - cycles: 1~IMUFilterCycles
  */
-void MovingAverFilterIMUA(int cycles, int channel) {
+void MovingAverFilterIMUA(int channel, int cycles) {
   float interValue;
+  if(cycles > IMUFilterCycles) {
+    cycles = IMUFilterCycles;
+  }
+  else if(cycles < 1) {
+    cycles = 1;
+  }
   interValue = angleActualA[channel];
   // get this times filtered results
-  angleActualA[channel] = IMU_value_Prev[1][channel] + (angleActualA[channel]-IMUA_value_filtered[channel][0])/cycles;
+  angleActualA[channel] = IMU_value_Prev[1][channel] + (angleActualA[channel]-IMUA_value_filtered[channel][IMUFilterCycles-cycles])/cycles;
   // update the data in the moving window
-  for(int j=0; j<cycles-1; j++) {
+  for(int j=0; j<IMUFilterCycles-1; j++) {
     IMUA_value_filtered[channel][j] = IMUA_value_filtered[channel][j+1];
   }
-  IMUA_value_filtered[channel][cycles-1] = interValue;
+  IMUA_value_filtered[channel][IMUFilterCycles-1] = interValue;
   // store this time's results for next calculation
   IMU_value_Prev[1][channel] = angleActualA[channel];
 }
 
 /**
  * Mean Moving filter for the IMUB feedback
- * @param int - cycles: 1~IMUFilterCycles
  * @param int - channel: rollChan/pitchChan/yawChan
+ * @param int - cycles: 1~IMUFilterCycles
  */
-void MovingAverFilterIMUB(int cycles, int channel) {
+void MovingAverFilterIMUB(int channel, int cycles) {
   float interValue;
+  if(cycles > IMUFilterCycles) {
+    cycles = IMUFilterCycles;
+  }
+  else if(cycles < 1) {
+    cycles = 1;
+  }
   interValue = angleActualB[channel];
   // get this times filtered results
-  angleActualB[channel] = IMU_value_Prev[2][channel] + (angleActualB[channel]-IMUB_value_filtered[channel][0])/cycles;
+  angleActualB[channel] = IMU_value_Prev[2][channel] + (angleActualB[channel]-IMUB_value_filtered[channel][IMUFilterCycles-cycles])/cycles;
   // update the data in the moving window
-  for(int j=0; j<cycles-1; j++) {
+  for(int j=0; j<IMUFilterCycles-1; j++) {
     IMUB_value_filtered[channel][j] = IMUB_value_filtered[channel][j+1];
   }
-  IMUB_value_filtered[channel][cycles-1] = interValue;
+  IMUB_value_filtered[channel][IMUFilterCycles-1] = interValue;
   // store this time's results for next calculation
   IMU_value_Prev[2][channel] = angleActualB[channel];
 }
 
 /**
  * Mean Moving filter for the IMUC feedback
- * @param int - cycles: 1~IMUFilterCycles
  * @param int - channel: rollChan/pitchChan/yawChan
+ * @param int - cycles: 1~IMUFilterCycles
  */
-void MovingAverFilterIMUC(int cycles, int channel) {
+void MovingAverFilterIMUC(int channel, int cycles) {
   float interValue;
+  if(cycles > IMUFilterCycles) {
+    cycles = IMUFilterCycles;
+  }
+  else if(cycles < 1) {
+    cycles = 1;
+  }
   interValue = angleActualC[channel];
   // get this times filtered results
-  angleActualC[channel] = IMU_value_Prev[3][channel] + (angleActualC[channel]-IMUC_value_filtered[channel][0])/cycles;
+  angleActualC[channel] = IMU_value_Prev[3][channel] + (angleActualC[channel]-IMUC_value_filtered[channel][IMUFilterCycles-cycles])/cycles;
   // update the data in the moving window
-  for(int j=0; j<cycles-1; j++) {
+  for(int j=0; j<IMUFilterCycles-1; j++) {
     IMUC_value_filtered[channel][j] = IMUC_value_filtered[channel][j+1];
   }
-  IMUC_value_filtered[channel][cycles-1] = interValue;
+  IMUC_value_filtered[channel][IMUFilterCycles-1] = interValue;
   // store this time's results for next calculation
   IMU_value_Prev[3][channel] = angleActualC[channel];
 }

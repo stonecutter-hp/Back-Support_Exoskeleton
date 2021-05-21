@@ -17,8 +17,7 @@ end
 %     receiving last command from PC
 % TL/Rxxxx: (Nm) Torsion spring torque for left/right transmission system 
 % LL/Rxxxx: (N) Load cell for cable force of left/right transmission system
-% AL/Rxxxxx: (deg) Potentiometer/IMU feedback for angle between left/right
-%                  thigh and vertical direction
+% AL/Rxxxxx: (deg) Potentiometer feedback for hip angle
 %            first number indicate sign: 0 for -, 1 for +
 % Pxxxxx: (deg) Pitch angle for trunk
 %               first number indicate sign: 0 for -, 1 for +
@@ -79,8 +78,8 @@ if(Control_Update)
     % ALxxxxx
     if(P.RecItem(3) == 1)
         if(TransState(position) == 'A' && TransState(position+1) == 'L')
-            TransAngleAL = (TransState(position+3)-48)*10+(TransState(position+4)-48)*1+...
-                           (TransState(position+5)-48)*0.1+(TransState(position+6)-48)*0.01;
+            TransAngleAL = (TransState(position+3)-48)*100+(TransState(position+4)-48)*10+...
+                           (TransState(position+5)-48)*1+(TransState(position+6)-48)*0.1;
             if(TransState(position+2) == '0')
                 TransAngleAL = -1*TransAngleAL;
             end
@@ -109,8 +108,8 @@ if(Control_Update)
     % ARxxxxx
     if(P.RecItem(6) == 1)
         if(TransState(position) == 'A' && TransState(position+1) == 'R')
-            TransAngleAR = (TransState(position+3)-48)*10+(TransState(position+4)-48)*1+...
-                           (TransState(position+5)-48)*0.1+(TransState(position+6)-48)*0.01;
+            TransAngleAR = (TransState(position+3)-48)*100+(TransState(position+4)-48)*10+...
+                           (TransState(position+5)-48)*1+(TransState(position+6)-48)*0.1;
             if(TransState(position+2) == '0')
                 TransAngleAR = -1*TransAngleAR;
             end
@@ -133,8 +132,8 @@ if(Control_Update)
     % Yxxxxx
     if(P.RecItem(8) == 1)
         if(TransState(position) == 'Y')
-            TransAngleY = (TransState(position+2)-48)*10+(TransState(position+3)-48)*1+...
-                          (TransState(position+4)-48)*0.1+(TransState(position+5)-48)*0.01;
+            TransAngleY = (TransState(position+2)-48)*100+(TransState(position+3)-48)*10+...
+                          (TransState(position+4)-48)*1+(TransState(position+5)-48)*0.1;
             if(TransState(position+1) == '0')
                 TransAngleY = -1*TransAngleY;
             end

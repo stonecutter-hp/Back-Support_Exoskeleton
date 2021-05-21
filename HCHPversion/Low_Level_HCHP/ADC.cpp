@@ -9,10 +9,15 @@ byte ADC_data[ENABLED_CH][4];             // store raw data from ADC
 bool ADC_update = true;                   // ADC_update enable flag 
 unsigned long ADC_value[ENABLED_CH];      // store ADC value in long format  
 double Aver_ADC_value[ENABLED_CH];        // store the transferred ADC value for calculation
-double Aver_ADC_value_filtered[ENABLED_CH][FilterCycles];
+// A window store the historical unfiltered ADC value of certain cycle
+// for ADC feedback moving average and standard deviation calculation
+// Notice in ZXHP version EXO:
+// some ADC channels are for High-level control with high-level controlfrequency time interval
+// some ADC channels are for Low-level control with low-level control frequency time interval
+double Aver_ADC_value_unfiltered[ENABLED_CH][FilterCycles];
+// Store inter value for moving average & exponential filter
 double Aver_ADC_value_Prev[ENABLED_CH];
-/* load cell force transfer */
-double LoadCell[4];                      // store the transferred force value
+
 
 
 /**
@@ -85,13 +90,14 @@ void ADC_Init(void) {
 }
 
 /**
- * Initial the matrix for average filter Aver_ADC_value_filtered[ENABLED_CH][FilterCycles]
+ * Initial the matrix for average filter Aver_ADC_value_unfiltered[ENABLED_CH][FilterCycles]
  */
 void Filter_Init() {
   for(int i=0; i<ENABLED_CH; i++) {
     for(int j=0; j<FilterCycles; j++) {
-      Aver_ADC_value_filtered[i][j] = 0.0;
+      Aver_ADC_value_unfiltered[i][j] = 0.0;
     }
+    ADC_value[i] = 0;
     Aver_ADC_value_Prev[i] = 0.0;
     Aver_ADC_value[i] = 0.0;
     ADC_data[i][3] = 'G';   //Initialize the ADC status flag
@@ -100,29 +106,43 @@ void Filter_Init() {
 
 /**
  * Mean Moving filter for the ADC value
- * @param double - cycles: 1~FilterCycles
+ * @param int - channel: 0~ENABLED_CH-1
+ * @param int - cycles: 1~FilterCycles
  */
-void MovingAverageFilter(int cycles) {
-  for(int i=0;i<3;i++) {
-    for(int j=0; j<cycles-1; j++) {  // update the ADC data
-      Aver_ADC_value_filtered[(6-i)*i+i][j] = Aver_ADC_value_filtered[(6-i)*i+i][j+1];
-    }
-    Aver_ADC_value_filtered[(6-i)*i+i][cycles-1] = Aver_ADC_value[(6-i)*i+i];
-    // get this time's filtered ADC value
-    Aver_ADC_value[(6-i)*i+i] = Aver_ADC_value_Prev[(6-i)*i+i] + (Aver_ADC_value_filtered[(6-i)*i+i][cycles-1] - Aver_ADC_value_filtered[(6-i)*i+i][0])/cycles;
-    Aver_ADC_value_Prev[(6-i)*i+i] = Aver_ADC_value[(6-i)*i+i];
+void MovingAverageFilter(int channel, int cycles) {
+  double interValue;
+  if(cycles > FilterCycles) {
+    cycles = FilterCycles;
   }
+  else if(cycles < 1) {
+    cycles = 1;
+  }
+  interValue = Aver_ADC_value[channel];
+  // get this times filtered results
+  Aver_ADC_value[channel] = Aver_ADC_value_Prev[channel] + (Aver_ADC_value[channel] - Aver_ADC_value_unfiltered[channel][FilterCycles-cycles])/cycles;
+  // update the data in the moving window
+  for(int j=0; j<cycles-1; j++) {
+    Aver_ADC_value_unfiltered[channel][j] = Aver_ADC_value_unfiltered[channel][j+1];
+  }
+  Aver_ADC_value_unfiltered[channel][cycles-1] = interValue;
+  // store this time's results for next calculation
+  Aver_ADC_value_Prev[channel] = Aver_ADC_value[channel];
 }
 
 /**
  * Exponential moving average filter for the ADC value
- * @param double - weighting decreasing coefficient alpha (0~1)
+ * @param int - channel: 0~ENABLED_CH-1
+ * @param float - alpha: weighting decreasing coefficient (0~1)
  */
-void ExponentialMovingFilter(double alpha) {
-  for(int i=0;i<3;i++) {
-    Aver_ADC_value[(6-i)*i+i] = alpha*Aver_ADC_value[(6-i)*i+i]+(1-alpha)*Aver_ADC_value_Prev[(6-i)*i+i];
-    Aver_ADC_value_Prev[(6-i)*i+i] = Aver_ADC_value[(6-i)*i+i];
+void ExponentialMovingFilter(int channel, float alpha) {
+  if(alpha > 1) {
+    alpha = 1;
   }
+  else if(alpha < 0) {
+    alpha = 0;
+  } 
+  Aver_ADC_value[channel] = alpha*Aver_ADC_value[channel]+(1-alpha)*Aver_ADC_value_Prev[channel];
+  Aver_ADC_value_Prev[channel] = Aver_ADC_value[channel];
 }
 
 /**
