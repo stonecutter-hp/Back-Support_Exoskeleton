@@ -2,7 +2,7 @@
 ## Content
 Control programs of high-level controller and low-level controller for prototype control <br>
 Two versions: HCHP version and ZXHP version
-## First Prototype Description <br>
+## Overall Description of First Prototype <br>
 ### HCHP version: <br>
 Actuation system: cable-driven series elastic actuation system <br>
 Characteristics: Stoop bending; CSEA system <br>
