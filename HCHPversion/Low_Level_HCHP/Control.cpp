@@ -65,7 +65,8 @@ void Control_Init(void) {
   desiredTorqueR = 0;
 
   /* Initialize mode and side from high-level UID strategy */
-  mode = 1;   // Motion detection mode, default is 1 (other motion)
+  // Motion detection mode, default is 0 (stop state) to wait for high-level control instruction
+  mode = 0;   
   PreMode = mode;
   side = 0;   // Asymmetric side, default is 0 (no asymmetric)
 

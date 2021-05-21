@@ -49,4 +49,5 @@ Notice
 receiveCompleted || !PC_started
 
 20210521
-The yawAngleR20 logic is waited to be complete for high-level control
+HandsShake logic need to be added
+Optimal compact Td feedback calculation to reduce calculation burden

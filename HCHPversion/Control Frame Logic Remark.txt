@@ -1,3 +1,4 @@
+20210421
 For PC High-level controller:
   Setup all the control parameters 
   --> Configure Timer 
@@ -9,7 +10,7 @@ For PC High-level controller:
   --> Check if running time is exceed maximum allowable time, if it is, then stop timer
   --> When stop timer for high-level controller, timer object is deleted; Stop command for low-level controller is sended; Stop and delete PC Serial port object; finally saving experiment data.
 
-
+20210521
 For MCU Low-level controller:
   Set all the control parameters
   --> Sensor pre process to reset at expected initial position for sensor feedback initial value setup
@@ -19,3 +20,6 @@ For MCU Low-level controller:
   --> Sensor feedback processing: -> Motor status update -> Torsion spring torque feedback update -> Trunk angle&velocity and hip angle feedback update -> Cable torque feedback update -> Compact assistive torque feedback calculation -> Phase index update
   --> Low level Control based on the compact assistive torque feedback
   --> Send info package to PC
+
+For prototype operation logic:
+  Referring to system description document
