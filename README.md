@@ -6,7 +6,7 @@ Two versions: HCHP version and ZXHP version
 ## Overall Description of First Prototype
 
 ### HCHP version
-#### Actuation system
+> #### Actuation system
 Cable-driven series elastic actuation system <br>
 #### Characteristics
 Stoop bending; CSEA system <br>
