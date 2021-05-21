@@ -1,4 +1,4 @@
-# Augmentation_Exoskeleton——Test bnech version
+# Back-SUpport Exoskeleton——Test bnech version
 ## Content
 Control programs of high-level controller and low-level controller for testing based on test bench <br>
 Two versions: HCHP version and ZXHP version
