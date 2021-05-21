@@ -3,8 +3,9 @@
 Control programs of high-level controller and low-level controller for prototype control <br>
 Two versions: HCHP version and ZXHP version
 ## Overall Description of First Prototype <br>
-### HCHP version: <br>
->>Actuation system: cable-driven series elastic actuation system <br>
+### HCHP version <br>
+#### > Actuation system <br>
+Cable-driven series elastic actuation system <br>
 >>Characteristics: Stoop bending; CSEA system <br>
 >>Control Hardware: MATLAB on PC (high-level); Ardunio-STM32F1 (low-level)
 ### ZXHP version: <br>
