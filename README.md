@@ -9,8 +9,12 @@ Cable-driven series elastic actuation system <br>
 #### Characteristics
 Stoop bending; CSEA system <br>
 #### Control Hardware
-MATLAB on PC (high-level); Ardunio-STM32F1 (low-level)
+MATLAB on PC (high-level); Ardunio-STM32F1 (low-level) <br>
 ### ZXHP version: <br>
->>Actuation system: derect-driven actuator from previous exoksleleton <br>
->>Characteristics: Independent hip joint torque control; Multi-posture supportive including stoop, squat, semi-squat and step standing bending <br>
->>Control Hardware: Ardunio-STM32F1 (high-level+low-level)
+#### Actuation system
+Direct-driven actuator from previous exoksleleton <br>
+#### Characteristics
+Independent hip joint torque control; <be>
+Multi-posture supportive including stoop, squat, semi-squat and step standing bending.
+#### Control Hardware
+Ardunio-STM32F1 (high-level+low-level)
