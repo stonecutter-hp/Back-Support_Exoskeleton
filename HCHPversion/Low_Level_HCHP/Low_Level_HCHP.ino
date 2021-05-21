@@ -84,6 +84,7 @@ void loop() {
     ADC_update = false;
   }
   if(Control_update) {
+    // yawAngleR20(LogicInit, OperaitonAloIMUC);  // Here inside operation is for IMUC address
     sensorFeedbackPro();       // processing sensor feedback for closed-loop control 
     Control(1);                // calculate controlled command: PWM duty cycles
     Control_update = false;

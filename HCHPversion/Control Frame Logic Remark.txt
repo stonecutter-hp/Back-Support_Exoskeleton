@@ -11,5 +11,11 @@ For PC High-level controller:
 
 
 For MCU Low-level controller:
-  Initialization --> Get info package from PC (If received, update information, if not received, continue next step) --> Get ADC and IMU feedback --> Sensor feedback processing, including yaw angle set to zero --> Control --> Send info package to PC
-  
+  Set all the control parameters
+  --> Sensor pre process to reset at expected initial position for sensor feedback initial value setup
+  --> Get info package from High-level controller(If received, update information, if not received, continue next step) 
+  --> Get ADC and IMU feedback 
+  --> Yaw angle set to zero 
+  --> Sensor feedback processing: -> Motor status update -> Torsion spring torque feedback update -> Trunk angle&velocity and hip angle feedback update -> Cable torque feedback update -> Compact assistive torque feedback calculation -> Phase index update
+  --> Low level Control based on the compact assistive torque feedback
+  --> Send info package to PC
