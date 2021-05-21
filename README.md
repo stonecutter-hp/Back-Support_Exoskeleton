@@ -1,8 +1,8 @@
 # Back-Support Exoskeleton Control Program
 ## Content
 Updated control programs for two versions of back-support exoskeleton: <br>
-> One is a back-support exoskeleton with novel cable-driven series parallel elastic actuation syste; <br>
-> Another is a back-support exoskeleton with high power direct-driven structure.
+> One is a back-support exoskeleton with novel cable-driven series parallel elastic actuation system; <br>
+> Another is a back-support exoskeleton with high power direct-driven system.
 
 
 ## Overall Description of Present Prototype
