@@ -1,9 +1,11 @@
-# Back-Support Exoskeleton——First Prototype Version
+# Back-Support Exoskeleton Control Program
 ## Content
-Control programs of high-level controller and low-level controller for prototype control <br>
-Two versions: HCHP version and ZXHP version
+Updated control programs for two versions of back-support exoskeleton: <br>
+> One is a back-support exoskeleton with novel cable-driven series parallel elastic actuation syste; <br>
+> Another is a back-support exoskeleton with high power direct-driven structure.
 
-## Overall Description of First Prototype
+
+## Overall Description of Present Prototype
 
 ### HCHP version
 #### Actuation system
