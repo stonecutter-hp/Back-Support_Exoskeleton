@@ -1,9 +1,25 @@
-# Back-Support Exoskeleton Control Poragream
+# Back-Support Exoskeleton Control Program
 ## Content
-Control programs of high-level controller and low-level controller <br>
-Two versions of back-support exoskeleton: <br>
->>One is a back-support exoskeleton with novel cable-driven series parallel elastic actuation syste; <br>
->>Another is a back-support exoskeleton with high power direct-driven structure.
-## Hardware
-High-level controller: MATLAB on PC <br>
-Low-level controller: Ardunio-STM32F1
+Updated control programs for two versions of back-support exoskeleton: <br>
+> One is a back-support exoskeleton with novel cable-driven series parallel elastic actuation syste; <br>
+> Another is a back-support exoskeleton with high power direct-driven structure.
+
+
+## Overall Description of Present Prototype
+
+### HCHP version
+#### Actuation system
+> Cable-driven series elastic actuation system <br>
+#### Characteristics
+> Stoop bending; CSEA system <br>
+#### Control Hardware
+> MATLAB on PC (high-level); Ardunio-STM32F1 (low-level) <br>
+
+### ZXHP version: <br>
+#### Actuation system
+> Direct-driven actuator from previous exoksleleton <br>
+#### Characteristics
+> Independent hip joint torque control; <br>
+> Multi-posture supportive including stoop, squat, semi-squat and step standing bending.
+#### Control Hardware
+> Ardunio-STM32F1 (high-level+low-level)
