@@ -76,6 +76,11 @@ void loop() {
 //  starttime = millis();
   receiveDatafromPC();         // receive data from PC
   receivedDataPro();           // decomposite data received from PC
+  /* For handshake with high-level controller with mode = Stop state */
+  if(mode == 0) {
+    // Ensure the initial state until successful handshake
+    LLPreproSensorInit();
+  }
   if(ADC_update) {
     getADCaverage(1);          // get ADC value
     getIMUangleT();            // get human trunk flexion angle
@@ -89,7 +94,8 @@ void loop() {
     Control(1);                // calculate controlled command: PWM duty cycles
     Control_update = false;
   }
-  if(SendPC_update) {
+  // No sensor feedback with Stop state
+  if(SendPC_update && mode != 0) {
     sendDatatoPC();            // send sensor data to PC and allow next receiving cycle
     SendPC_update = false;
     receiveCompleted = false;  // Mark this correct receiving infomation is used up 

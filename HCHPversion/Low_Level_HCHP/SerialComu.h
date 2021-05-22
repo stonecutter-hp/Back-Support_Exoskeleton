@@ -28,7 +28,7 @@ extern bool SendItemFlag[9];                   // for convinient of adjust feedb
 /*********************************** Communication receiving data definition ************************************/
 extern float desiredTorqueL;    // desired motor torque of left motor
 extern float desiredTorqueR;    // desired motor torque of right motor
-// motion type: 1-other motion;       2-Symmetric Holding; 
+// motion type: 1-exit state;         2-Symmetric Holding; 
 //              3-Asymmetric Holding; 4-Asymmetric Lowering;
 //              5-Asymmetric Lifting; 6-Symmetric Lowering;
 //              7-Symmetric Lifting;  0-Stop state

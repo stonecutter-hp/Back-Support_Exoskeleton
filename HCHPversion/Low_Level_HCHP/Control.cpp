@@ -65,7 +65,8 @@ void Control_Init(void) {
   desiredTorqueR = 0;
 
   /* Initialize mode and side from high-level UID strategy */
-  // Motion detection mode, default is 0 (stop state) to wait for high-level control instruction
+  // Motion detection mode, default is 0 (stop state) to send Ready signal for 
+  // for handshake with high-level controller
   mode = 0;   
   PreMode = mode;
   side = 0;   // Asymmetric side, default is 0 (no asymmetric)
@@ -192,7 +193,7 @@ void LLPreproSensorInit() {
     SensorReady = SensorReady_TdL*SensorReady_TdR*SensorReady_HipAngL*SensorReady_HipAngR;
     SensorReady = SensorReady*SensorReady_FcL*SensorReady_FcR*SensorReady_FlxAng;
   }
-  Serial.println("Sensor Ready for Low-level Controller.");  
+  Serial.println("Ready.");  
 }
 
 /**
@@ -312,8 +313,8 @@ float sinofangleBetweenCableHB_R() {
  */
 void sensorFeedbackPro(void) {
   /* Motor status processing for stop mode */
-  // if high-level command stop state
-  if(mode == 0) {
+  // if high-level command stop state/exit unit/error state exceed certain number
+  if(mode < 2 || mode > 7) {
   	// Set zero for reference torque
   	desiredTorqueR = 0;
   	desiredTorqueL = 0;
@@ -350,9 +351,20 @@ void sensorFeedbackPro(void) {
   TrunkFleVel = velActualC[rollChan];
 
   /* Compact torque feedback calculation for low-level feedback controller */
-  // Calculate the torque from cable force
-  CableTorqueL = Estimated_FcL*HumanBackLength*sinofangleBetweenCableHB_L();
-  CableTorqueR = Estimated_FcR*HumanBackLength*sinofangleBetweenCableHB_R();
+  // Calculate the torque from cable force; here if..else... is to reduce 
+  // the calculation burden
+  if(phaseIndexL < 1) {
+    CableTorqueL = Estimated_FcL*HumanBackLength*sinofangleBetweenCableHB_L();
+  }
+  else {
+    CableTorqueL = 0;
+  }
+  if(phaseIndexR < 1) {
+   CableTorqueR = Estimated_FcR*HumanBackLength*sinofangleBetweenCableHB_R();
+  }
+  else {
+    CableTorqueR = 0;
+  }
   /* Notice here update phasindex after torque feedback update so that if cable torque
      is larger than practical torque. For example, practical SEA status < Critical Td 
      with DD phase index. Then transition phase occurs with SEA dynamics as expected

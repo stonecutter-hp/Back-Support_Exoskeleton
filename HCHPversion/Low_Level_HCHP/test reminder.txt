@@ -48,6 +48,11 @@ Notice
 
 receiveCompleted || !PC_started
 
+---------------------------------------
 20210521
-HandsShake logic need to be added
-Optimal compact Td feedback calculation to reduce calculation burden
+HandsShake logic need to be added √
+Optimal compact Td feedback calculation to reduce calculation burden   √
+
+20210522
+The phase index calculation function
+The 'mode' meaning should be adjusted along with the UID strategy
