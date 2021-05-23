@@ -94,8 +94,7 @@ void loop() {
     Control(1);                // calculate controlled command: PWM duty cycles
     Control_update = false;
   }
-  // No sensor feedback with Stop state
-  if(SendPC_update && mode != 0) {
+  if(SendPC_update) {
     sendDatatoPC();            // send sensor data to PC and allow next receiving cycle
     SendPC_update = false;
     receiveCompleted = false;  // Mark this correct receiving infomation is used up 
