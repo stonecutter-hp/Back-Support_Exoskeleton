@@ -9,6 +9,7 @@ P.d2r = pi/180;         % deg to rad
 % P.config{1,1} for serial port configuration
 % P.config{2,1} for timer configuration
 P.config = cell(2,1);     
+P.stopFlag = 0;
 
 %% For time information saving in TimerCallback
 P.TransTime = [];   % time of every send running loop

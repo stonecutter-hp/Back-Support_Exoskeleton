@@ -1,0 +1,99 @@
+<deployment-project plugin="plugin.apptool" plugin-version="1.0">
+  <configuration file="C:\Users\Hongp\OneDrive - The Chinese University of Hong Kong\CUHK\major material\project info\exo\human-robot augmentation\system\control\Back-Support Exoskeleton\HCHPversion\PC_prog_withGUI\HCHPEXOv1.prj" location="C:\Users\Hongp\OneDrive - The Chinese University of Hong Kong\CUHK\major material\project info\exo\human-robot augmentation\system\control\Back-Support Exoskeleton\HCHPversion\PC_prog_withGUI" name="HCHPEXOv1" target="target.mlapps" target-name="打包为 App">
+    <param.appname>HCHPEXOv1</param.appname>
+    <param.authnamewatermark />
+    <param.email />
+    <param.company />
+    <param.icon />
+    <param.icons />
+    <param.summary />
+    <param.description />
+    <param.screenshot>C:\Users\Hongp\AppData\Local\Temp\tp70e90d74_323a_49e3_acc2_4b37a65f0c71.png</param.screenshot>
+    <param.version>1.0</param.version>
+    <param.products.name />
+    <param.products.id />
+    <param.products.version />
+    <param.platforms />
+    <param.output>${PROJECT_ROOT}</param.output>
+    <param.guid>b800d4ea-cac5-476f-9584-e3269a85d7fb</param.guid>
+    <unset>
+      <param.authnamewatermark />
+      <param.email />
+      <param.company />
+      <param.icon />
+      <param.icons />
+      <param.summary />
+      <param.description />
+      <param.version />
+      <param.products.name />
+      <param.products.id />
+      <param.products.version />
+      <param.platforms />
+      <param.output />
+    </unset>
+    <fileset.main>
+      <file>${PROJECT_ROOT}\HCHPEXOv1.mlapp</file>
+    </fileset.main>
+    <fileset.depfun>
+      <file>${PROJECT_ROOT}\Control.m</file>
+      <file>${PROJECT_ROOT}\DataSaving.m</file>
+      <file>${PROJECT_ROOT}\EXOmain.m</file>
+      <file>${PROJECT_ROOT}\MotionDetection.m</file>
+      <file>${PROJECT_ROOT}\ProgStart.m</file>
+      <file>${PROJECT_ROOT}\ProgStop.m</file>
+      <file>${PROJECT_ROOT}\Receive_McuData.m</file>
+      <file>${PROJECT_ROOT}\Send_Data.m</file>
+      <file>${PROJECT_ROOT}\SerialPorts_Init.m</file>
+      <file>${PROJECT_ROOT}\SerialStop.m</file>
+      <file>${PROJECT_ROOT}\Set_Parameters.m</file>
+      <file>${PROJECT_ROOT}\Timer_Init.m</file>
+      <file>${PROJECT_ROOT}\TimerCallback.m</file>
+      <file>${PROJECT_ROOT}\TimerStop.m</file>
+      <file>${PROJECT_ROOT}\TorqueGenerate.m</file>
+    </fileset.depfun>
+    <fileset.resources />
+    <fileset.package />
+    <build-deliverables>
+      <file location="C:\Users\Hongp\OneDrive - The Chinese University of Hong Kong\CUHK\major material\project info\exo\human-robot augmentation\system\control\Back-Support Exoskeleton\HCHPversion" name="PC_prog_withGUI" optional="false">C:\Users\Hongp\OneDrive - The Chinese University of Hong Kong\CUHK\major material\project info\exo\human-robot augmentation\system\control\Back-Support Exoskeleton\HCHPversion\PC_prog_withGUI</file>
+    </build-deliverables>
+    <workflow />
+    <matlab>
+      <root>D:\R2019b</root>
+      <toolboxes>
+        <toolbox name="matlabcoder" />
+        <toolbox name="embeddedcoder" />
+        <toolbox name="neuralnetwork" />
+      </toolboxes>
+      <toolbox>
+        <matlabcoder>
+          <enabled>true</enabled>
+        </matlabcoder>
+      </toolbox>
+      <toolbox>
+        <embeddedcoder>
+          <enabled>true</enabled>
+        </embeddedcoder>
+      </toolbox>
+      <toolbox>
+        <neuralnetwork>
+          <enabled>true</enabled>
+        </neuralnetwork>
+      </toolbox>
+    </matlab>
+    <platform>
+      <unix>false</unix>
+      <mac>false</mac>
+      <windows>true</windows>
+      <win2k>false</win2k>
+      <winxp>false</winxp>
+      <vista>false</vista>
+      <linux>false</linux>
+      <solaris>false</solaris>
+      <osver>10.0</osver>
+      <os32>false</os32>
+      <os64>true</os64>
+      <arch>win64</arch>
+      <matlab>true</matlab>
+    </platform>
+  </configuration>
+</deployment-project>

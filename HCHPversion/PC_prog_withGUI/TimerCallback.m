@@ -43,8 +43,6 @@ end
 % flushinput(McuSerial);
 if (ExoP.TimeAll(end) > ExoP.MaxRunTime)
     stop(Ttimer);
-    pause(5/1000);
-    outPutStatus(TempApp,'Program Auto Stopped.');
 end
 
 

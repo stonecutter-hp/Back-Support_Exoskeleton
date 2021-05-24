@@ -4,15 +4,17 @@ function EXOmain()
 %   Handshake with low-level controller --> Set up Timer --> Timer loop:
 %     -> Receieve data from MCU -> Control calcualtion -> Send data to MCU
 %   --> Timer loop stop (Auto Stop / Manually Stop) --> Delete Serial Port
-%   and Timer Item --> Save Data
+%   and Timer Items --> Save Data
 
 
 global ExoP;
-% disp('Program Starts !');
-
-% ExoP = Set_Parameters();              % Set necessary parameters
-MainFreq = ExoP.MainFreq;             % Set program frequency
+% ExoP = Set_Parameters();           % Set necessary parameters
+MainFreq = ExoP.MainFreq;          % Set program frequency
+% Before start timer, initialize serial port and handshake process
+McuPort = ExoP.McuPort;            % Serial Port number for MCU and PC communication
+SerialPorts_Init(McuPort);
 Timer_Init(MainFreq);              % Initialize timer
+
 end
 
 

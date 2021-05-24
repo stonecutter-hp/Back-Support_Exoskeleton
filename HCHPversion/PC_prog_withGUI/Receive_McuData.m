@@ -1,5 +1,6 @@
 function [Control_Update,Send_Update] = Receive_McuData()
 global ExoP;
+global TempApp;
 %% Read data from MCU
 McuSerial = ExoP.config{1,1};
 % flushinput(McuSerial);
@@ -9,7 +10,8 @@ while numel(TransState) ~= ExoP.ReceiveDataNum
 %    flushinput(McuSerial);
     TransState = fscanf(McuSerial);
 end
-
+% TransState
+TempApp.txtInfo.Value = TransState;
 %% Decompose the data from MCU from characters to numbers
 % Here the specific form for recieved data is designed as: 
 % MxTLxxxxLLxxxxALxxxxxTRxxxxLRxxxxARxxxxxPxxxxxYxxxxxVxxxxx\r\n

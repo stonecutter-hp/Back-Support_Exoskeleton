@@ -20,7 +20,7 @@ McuSerial.OutputBufferSize = 512;
 McuSerial.Terminator = 'CR/LF';
 McuSerial.DataTerminalReady='on';
 McuSerial.RequestToSend='off';
-
+McuSerial.ErrorFcn = @SerialStop;
 % % ------------ Receiving interruption configuration ------------- %
 % % Specify if the bytes-available event is generated after a specified
 % % number of bytes is available in the input buffer, or after a terminator
@@ -38,7 +38,7 @@ ExoP.config{1,1} = McuSerial;
 % try to open the assigned MCU&PC communication port
 try
     fopen(McuSerial);
-    Transtate = fscanf(McuSerial); 
+    fscanf(McuSerial); 
     outPutStatus(TempApp,'Serial Port Opened.');
 catch
     outPutStatus(TempApp,'Serial Port Cannot Open!');
@@ -48,7 +48,10 @@ end
 
 % Wait for correct handshake ready signal
 % as the MCU should keep sending ReadyFlag  
-while strcmp(Transtate,ExoP.ReadyFlag)
+flushinput(McuSerial);
+Transtate = fscanf(McuSerial);
+while ~strcmp(Transtate,ExoP.ReadyFlag)
+%     flushinput(McuSerial);
     Transtate = fscanf(McuSerial);
 end
 

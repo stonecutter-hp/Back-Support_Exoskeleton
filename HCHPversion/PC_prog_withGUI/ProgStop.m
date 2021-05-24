@@ -1,5 +1,6 @@
 function ProgStop()
 % Program Stop Processing Function
+% Mainly send stop command and close the serial port
 global ExoP;
 global TempApp;
 %% Send command for stop status to low-level controller
@@ -18,9 +19,4 @@ delete(McuSerial);
 % disp('Serial port shut down!')
 outPutStatus(TempApp,'Serial Port Shut Down.');
 pause(5/1000);
-%% Saving data
-DataSaving();
-outPutStatus(TempApp,'Data Saved.');
-set(TempApp.btnRun,'value',0);
-
 end
