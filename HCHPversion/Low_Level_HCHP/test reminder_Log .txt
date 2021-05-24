@@ -56,3 +56,6 @@ Optimal compact Td feedback calculation to reduce calculation burden   √
 20210522
 The phase index calculation function
 The 'mode' meaning should be adjusted along with the UID strategy
+
+20210524
+Low-level control handshake logic √

@@ -1,11 +1,11 @@
 function [Control_Update,Send_Update] = Receive_McuData()
-global P;
+global ExoP;
 %% Read data from MCU
-McuSerial = P.config{1,1};
+McuSerial = ExoP.config{1,1};
 % flushinput(McuSerial);
 TransState = fscanf(McuSerial);   % read the input buffer
 % ensure the data completeness
-while numel(TransState) ~= P.ReceiveDataNum
+while numel(TransState) ~= ExoP.ReceiveDataNum
 %    flushinput(McuSerial);
     TransState = fscanf(McuSerial);
 end
@@ -31,22 +31,22 @@ position = 3;
 
 if(TransState(position-2) == 'M')
     % Store this time's delay flag
-    P.DelayMark = [P.DelayMark; TransState(position-1)];
-    if(~(P.DelayEnable) && P.DelayNumber < P.MaxDelay)
-        if(P.DelayMark(end) ~= P.SwitchFlag)
+    ExoP.DelayMark = [ExoP.DelayMark; TransState(position-1)];
+    if(~(ExoP.DelayEnable) && ExoP.DelayNumber < ExoP.MaxDelay)
+        if(ExoP.DelayMark(end) ~= ExoP.SwitchFlag)
             Control_Update = 1;
             Send_Update = 1;
-            P.SwitchFlag = P.DelayMark(end);
-            P.DelayNumber = 0;
+            ExoP.SwitchFlag = ExoP.DelayMark(end);
+            ExoP.DelayNumber = 0;
         else
             Control_Update = 0;
             Send_Update = 0;
-            P.DelayNumber = P.DelayNumber+1;
+            ExoP.DelayNumber = ExoP.DelayNumber+1;
         end
     else
         Control_Update = 1;
         Send_Update = 1;
-        P.DelayNumber = 0;
+        ExoP.DelayNumber = 0;
     end
 else
     % False recieve cycle
@@ -56,100 +56,100 @@ end
 
 % if 
 if(Control_Update)
-    P.TransTime = [P.TransTime; toc];
+    ExoP.TransTime = [ExoP.TransTime; toc];
     % TLxxxx
-    if(P.RecItem(1) == 1)
+    if(ExoP.RecItem(1) == 1)
         if(TransState(position) == 'T' && TransState(position+1) == 'L')
             TransTorqueTL = (TransState(position+2)-48)*10+(TransState(position+3)-48)*1+...
                             (TransState(position+4)-48)*0.1+(TransState(position+5)-48)*0.01;
-            P.torqueTL = [P.torqueTL; TransTorqueTL];
+            ExoP.torqueTL = [ExoP.torqueTL; TransTorqueTL];
         end
         position = position+6;
     end
     % LLxxxx
-    if(P.RecItem(2) == 1)
+    if(ExoP.RecItem(2) == 1)
         if(TransState(position) == 'L' && TransState(position+1) == 'L')
             TransForceLL = (TransState(position+2)-48)*100+(TransState(position+3)-48)*10+...
                            (TransState(position+4)-48)*1+(TransState(position+5)-48)*0.1;
-            P.forceLL = [P.forceLL; TransForceLL];
+            ExoP.forceLL = [ExoP.forceLL; TransForceLL];
         end
         position = position+6;
     end
     % ALxxxxx
-    if(P.RecItem(3) == 1)
+    if(ExoP.RecItem(3) == 1)
         if(TransState(position) == 'A' && TransState(position+1) == 'L')
             TransAngleAL = (TransState(position+3)-48)*100+(TransState(position+4)-48)*10+...
                            (TransState(position+5)-48)*1+(TransState(position+6)-48)*0.1;
             if(TransState(position+2) == '0')
                 TransAngleAL = -1*TransAngleAL;
             end
-            P.angleAL = [P.angleAL; TransAngleAL];
+            ExoP.angleAL = [ExoP.angleAL; TransAngleAL];
         end
         position = position+7;
     end
     % TRxxxx
-    if(P.RecItem(4) == 1)
+    if(ExoP.RecItem(4) == 1)
         if(TransState(position) == 'T' && TransState(position+1) == 'R')
             TransTorqueTR = (TransState(position+2)-48)*10+(TransState(position+3)-48)*1+...
                             (TransState(position+4)-48)*0.1+(TransState(position+5)-48)*0.01;
-            P.torqueTR = [P.torqueTR; TransTorqueTR];
+            ExoP.torqueTR = [ExoP.torqueTR; TransTorqueTR];
         end
         position = position+6;
     end
     % LRxxxx
-    if(P.RecItem(5) == 1)
+    if(ExoP.RecItem(5) == 1)
         if(TransState(position) == 'L' && TransState(position+1) == 'R')
             TransForceLR = (TransState(position+2)-48)*100+(TransState(position+3)-48)*10+...
                            (TransState(position+4)-48)*1+(TransState(position+5)-48)*0.1;
-            P.forceLR = [P.forceLR; TransForceLR];
+            ExoP.forceLR = [ExoP.forceLR; TransForceLR];
         end
         position = position+6;
     end
     % ARxxxxx
-    if(P.RecItem(6) == 1)
+    if(ExoP.RecItem(6) == 1)
         if(TransState(position) == 'A' && TransState(position+1) == 'R')
             TransAngleAR = (TransState(position+3)-48)*100+(TransState(position+4)-48)*10+...
                            (TransState(position+5)-48)*1+(TransState(position+6)-48)*0.1;
             if(TransState(position+2) == '0')
                 TransAngleAR = -1*TransAngleAR;
             end
-            P.angleAR = [P.angleAR; TransAngleAR];
+            ExoP.angleAR = [ExoP.angleAR; TransAngleAR];
         end
         position = position+7;
     end
     % Pxxxxx
-    if(P.RecItem(7) == 1)
+    if(ExoP.RecItem(7) == 1)
         if(TransState(position) == 'P')
             TransAngleP = (TransState(position+2)-48)*100+(TransState(position+3)-48)*10+...
                           (TransState(position+4)-48)*1+(TransState(position+5)-48)*0.1;
             if(TransState(position+1) == '0')
                 TransAngleP = -1*TransAngleP;
             end    
-            P.angleP = [P.angleP; TransAngleP];
+            ExoP.angleP = [ExoP.angleP; TransAngleP];
         end
         position = position+6;
     end
     % Yxxxxx
-    if(P.RecItem(8) == 1)
+    if(ExoP.RecItem(8) == 1)
         if(TransState(position) == 'Y')
             TransAngleY = (TransState(position+2)-48)*100+(TransState(position+3)-48)*10+...
                           (TransState(position+4)-48)*1+(TransState(position+5)-48)*0.1;
             if(TransState(position+1) == '0')
                 TransAngleY = -1*TransAngleY;
             end
-            P.angleY = [P.angleY; TransAngleY];
+            ExoP.angleY = [ExoP.angleY; TransAngleY];
         end
         position = position+6;
     end
     %Vxxxxx
-    if(P.RecItem(9) == 1)
+    if(ExoP.RecItem(9) == 1)
         if(TransState(position) == 'V')
             TransVeloV = (TransState(position+2)-48)*100+(TransState(position+3)-48)*10+...
                          (TransState(position+4)-48)*1+(TransState(position+5)-48)*0.1;
             if(TransState(position+1) == '0')
                 TransVeloV = -1*TransVeloV;
             end
-            P.adotPV = [P.adotPV; TransVeloV];
+            ExoP.adotPV = [ExoP.adotPV; TransVeloV];
         end
     end
     

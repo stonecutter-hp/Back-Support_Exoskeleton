@@ -1,8 +1,10 @@
 function ProgStart(Ttimer,~)
-global P;
-McuSerial = P.config{1,1};
-% Flush input buffer
-flushinput(McuSerial);
+global ExoP;
+global TempApp;
+% McuSerial = ExoP.config{1,1};
+% % Flush input buffer
+% flushinput(McuSerial);
+outPutStatus(TempApp,'High-level Control Running.');
 % Start to record time
 tic
 

@@ -1,5 +1,5 @@
 function Control()
-global P;
+global ExoP;
 %% Conducting motion detection and desired torque generation 
 [mode,ConInf] = MotionDetection();
 DesiredTorque = TorqueGenerate(mode,ConInf);
@@ -9,7 +9,7 @@ DesiredTorque = TorqueGenerate(mode,ConInf);
 % detection referred information (saving for further analysis)
 
 % mode is 1*2 vector: mode(1) refer to motion type, mode(2) refer to left/right asymmetric
-P.MotionMode = [P.MotionMode;mode];           
+ExoP.MotionMode = [ExoP.MotionMode;mode];           
 % DesiredTorque is 1*2 vector: (1) for left, (2) for right
-P.DesiredTorque = [P.DesiredTorque;DesiredTorque]; 
+ExoP.DesiredTorque = [ExoP.DesiredTorque;DesiredTorque]; 
 end

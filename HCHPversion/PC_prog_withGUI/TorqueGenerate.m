@@ -1,21 +1,21 @@
 function DesiredTorque = TorqueGenerate(mode,ConInf)
-global P;
+global ExoP;
 % calculate desired torque or impedence according to designed algorithm
 % Refer to Presentation_20200828
 %% necessary parameters for torque generation algorithm
-mt = P.TrunkM;
-ma = P.ArmM;
-Lt = P.TrunkHalfL;
-La = P.ArmL;
-Ls = P.ShoulderHalfL;
-Kg = P.GravityKg;
-Kd = P.DynamicKd;
-K = P.DynamicK;
-MaxV = P.DynamicVmax;
-g = P.g;
-Alpha = ConInf(1)*P.d2r;                % rad
-AlphaDot = ConInf(2)*P.d2r;             % rad/s
-Beta = abs(ConInf(3))*P.d2r;            % rad
+mt = ExoP.TrunkM;
+ma = ExoP.ArmM;
+Lt = ExoP.TrunkHalfL;
+La = ExoP.ArmL;
+Ls = ExoP.ShoulderHalfL;
+Kg = ExoP.GravityKg;
+Kd = ExoP.DynamicKd;
+K = ExoP.DynamicK;
+MaxV = ExoP.DynamicVmax;
+g = ExoP.g;
+Alpha = ConInf(1)*ExoP.d2r;                % rad
+AlphaDot = ConInf(2)*ExoP.d2r;             % rad/s
+Beta = abs(ConInf(3))*ExoP.d2r;            % rad
 % other motion no assist
 if mode(1) == 1
     Con = 0; 
@@ -60,10 +60,10 @@ end
 
 %% Torque generation based on impedance regulation, mainly for testing
 % Here Kp*(Alpha-Alpha0)+Kv*(AlphaDot-AlphaDot0) is for both side transmission systems
-Kp = P.ImpedanceKp;
-Kv = P.ImpedanceKv;
-Alpha0 = P.VirAlpha0; 
-AlphaDot0 = P.VirAlphadot0;
+Kp = ExoP.ImpedanceKp;
+Kv = ExoP.ImpedanceKv;
+Alpha0 = ExoP.VirAlpha0; 
+AlphaDot0 = ExoP.VirAlphadot0;
 DesiredTorque = [0.5, 0.5]*(Kp*(Alpha-Alpha0)+Kv*(AlphaDot-AlphaDot0));
 
 end

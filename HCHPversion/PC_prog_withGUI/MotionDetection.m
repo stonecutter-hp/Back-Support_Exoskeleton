@@ -7,32 +7,32 @@ function [mode,ConInf] = MotionDetection()
 %                        7-Symmetric Lifting;  0-Stop state
 % mode(2) - asymmetric direction: 1-left; 2-right; 0-none.
 % ConInf - Alpha, AlphaDot, Beta feedback for reference torque generation
-global P;
+global ExoP;
 % User motion detection threshold
-Alpha_Thre = P.Alpha_Thre;           % deg
-AlphaDot_Thre = P.AlphaDot_Thre;     % deg/s
-Beta_Thre = P.Beta_Thre;             % deg
+Alpha_Thre = ExoP.Alpha_Thre;           % deg
+AlphaDot_Thre = ExoP.AlphaDot_Thre;     % deg/s
+Beta_Thre = ExoP.Beta_Thre;             % deg
 %% Calculate the referenced information for both motion detection and desired torque generation
 % Flexion bending angle of trunk
-% P.AlphaMean = movmean(P.angleP,5);    % First moving mean is acquired for raw data
-P.AlphaMean = P.angleP;
-Alpha = P.AlphaMean(end);             % Obtain the alpha for this time's detection
+% ExoP.AlphaMean = movmean(ExoP.angleP,5);    % First moving mean is acquired for raw data
+ExoP.AlphaMean = ExoP.angleP;
+Alpha = ExoP.AlphaMean(end);             % Obtain the alpha for this time's detection
 % Flexion bending angular velocity of trunk
-cycles = size(P.adotPV,1);
+cycles = size(ExoP.adotPV,1);
 if cycles == 1
-    P.AlphaDot = P.adotPV;            % Fisrt cycle's alpha dot
+    ExoP.AlphaDot = ExoP.adotPV;            % Fisrt cycle's alpha dot
 elseif cycles > 1
     % Calculate the alpha dot again in PC
-    TransAlphaDot = (P.AlphaMean(end)-P.AlphaMean(end-1))/(P.TransTime(end)-P.TransTime(end-1));
-    P.AlphaDot = [P.AlphaDot; TransAlphaDot];
+    TransAlphaDot = (ExoP.AlphaMean(end)-ExoP.AlphaMean(end-1))/(ExoP.TransTime(end)-ExoP.TransTime(end-1));
+    ExoP.AlphaDot = [ExoP.AlphaDot; TransAlphaDot];
 end
 % Obtain the alpha dot for this time's detection based on MCU feedback and
 % PC calculation results
-% AlphaDot = (P.AlphaDot(end) + P.adotPV(end))/2; 
-AlphaDot = P.AlphaDot(end);
+% AlphaDot = (ExoP.AlphaDot(end) + ExoP.adotPV(end))/2; 
+AlphaDot = ExoP.AlphaDot(end);
 % yaw angle
-P.BetaMean = movmean(P.angleY,5);     % First moving mean is acquired for raw data
-Beta = P.BetaMean(end);               % Obtain the beta for this time's detection
+ExoP.BetaMean = movmean(ExoP.angleY,5);     % First moving mean is acquired for raw data
+Beta = ExoP.BetaMean(end);               % Obtain the beta for this time's detection
 
 
 %% Make use of the above sensor information to infer motion mode of human based on designed algorithm

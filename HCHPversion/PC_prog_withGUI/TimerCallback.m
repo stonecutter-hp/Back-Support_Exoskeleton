@@ -1,24 +1,25 @@
 function TimerCallback(Ttimer,~)
-global P;
+global ExoP;
+global TempApp;
 % need to consider about the time data saving
 % Update Flag: 1: Enable update;  0: Waiting for permission of update  
 
 
 %% Store each callback time, first "tic" is started in Timer_Init
-P.TimeAll = [P.TimeAll; toc];
+ExoP.TimeAll = [ExoP.TimeAll; toc];
 
 %% Receive --> Control --> Send
-%*********************** Receive ***********************
-[Control_Update,Send_Update] = Receive_McuData();
-
-%*********************** Control ***********************
-if Control_Update == 1
-    Control();
-end
-%************************ Send *************************
-if Send_Update == 1
-    Send_Data();
-end
+% %*********************** Receive ***********************
+% [Control_Update,Send_Update] = Receive_McuData();
+% 
+% %*********************** Control ***********************
+% if Control_Update == 1
+%     Control();
+% end
+% %************************ Send *************************
+% if Send_Update == 1
+%     Send_Data();
+% end
 
 % % % % % % %% For test only
 % % % % % % McuSerial = P.config{1,1};
@@ -33,13 +34,14 @@ end
 % % Potential stop condition for practical application: Make sure the main
 % % program only stop when info package feedback turn to resume to a safe
 % % operation point  
-% if (P.TimeAll(end) > P.MaxRunTime && (P.MotionMode(end,1) == 1 || P.MotionMode(end,1) == 0))
+% if (ExoP.TimeAll(end) > ExoP.MaxRunTime && (ExoP.MotionMode(end,1) == 1 || ExoP.MotionMode(end,1) == 0))
 %     stop(Ttimer);
 % end
 
 % Program stop condition for testing
-if (P.TimeAll(end) > P.MaxRunTime)
+if (ExoP.TimeAll(end) > ExoP.MaxRunTime)
     stop(Ttimer);
+    outPutStatus(TempApp,'Program Auto Stopped.');
 end
 
 

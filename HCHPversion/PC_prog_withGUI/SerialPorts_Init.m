@@ -1,5 +1,6 @@
 function SerialPorts_Init(McuPort)
-global P;
+global ExoP;
+global TempApp;
 delete(instrfindall('Type','serial'));         % delete the last configuration for serial ports
 
 % find if there have serial port for MCU port
@@ -33,21 +34,26 @@ McuSerial.RequestToSend='off';
 % McuSerial.BytesAvailableFcn = @ReceiveData;
 
 % store the serial port configuration
-P.config{1,1} = McuSerial;
+ExoP.config{1,1} = McuSerial;
 % try to open the assigned MCU&PC communication port
 try
     fopen(McuSerial);
     Transtate = fscanf(McuSerial); 
-    disp('MCU COM opened !');
+    outPutStatus(TempApp,'Serial Port Opened.');
 catch
-    msgbox('Can not open MCU COM !');
+    outPutStatus(TempApp,'Serial Port Cannot Open!');
+    msgbox('Can not open Serial Port !');
     return
 end
 
 % Wait for correct handshake ready signal
 % as the MCU should keep sending ReadyFlag  
-while strcmp(Transtate,P.ReadyFlag)
+while strcmp(Transtate,ExoP.ReadyFlag)
     Transtate = fscanf(McuSerial);
 end
 
+TransState = 'TL0000TR0000M10';
+flushoutput(McuSerial);           % flush the output buffer
+fprintf(McuSerial,TransState);    % send the data
+outPutStatus(TempApp,'Sucessful Handshake.');
 end

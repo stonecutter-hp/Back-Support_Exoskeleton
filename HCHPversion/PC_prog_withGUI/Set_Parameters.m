@@ -1,9 +1,9 @@
 function P = Set_Parameters()
 % Notice to ensure the unit of angle is rad/deg first
 %% Main program setting information
-P.McuPort = 'COM4';     % serial port of MCU&PC communication
+P.McuPort = 'COM3';     % serial port of MCU&PC communication
 P.MainFreq = 100;       % main program running frequency (Hz)
-P.MaxRunTime = 5;       % main program running time (s)
+P.MaxRunTime = 10;      % main program running time (s)
 P.d2r = pi/180;         % deg to rad 
 %% Configuration information
 % P.config{1,1} for serial port configuration
@@ -113,6 +113,9 @@ P.con = 1.02;            % co-constration index
 
 %% For fiber passive structure model
 % P.par1 = 1;       % just for example, maybe for the torque pattern equation parameter
+
+%% For global definition of handles for GUI
+% P.appHandles = [];
 
 
 end

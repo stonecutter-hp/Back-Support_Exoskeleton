@@ -4,7 +4,7 @@ function Timer_Init(Main_Freq)
 % --> Serial port initialization: -> Handshake with low-level controller
 % --> Start timer loop
 
-global P;
+global ExoP;
 
 % create and set timer properties
 % 1/Main_Freq should be larger than 0.001s which means the loop should run
@@ -17,12 +17,11 @@ Timer1 = timer('BusyMode','queue','ExecutionMode','fixedRate',...
 % Timer1.TimerFcn = {@TimerCallback,P};  % set the callback of the timer
 Timer1.StartFcn = @ProgStart;
 Timer1.StopFcn = @ProgStop;
-P.config{2,1} = Timer1;  % store the configuration of timer1
+ExoP.config{2,1} = Timer1;  % store the configuration of timer1
 
 % Before start timer, initialize serial port and handshake process
-McuPort = P.McuPort;          % Serial Port number for MCU and PC communication
-SerialPorts_Init(McuPort);
-
+McuPort = ExoP.McuPort;          % Serial Port number for MCU and PC communication
+% SerialPorts_Init(McuPort);
 start(Timer1);       % start the timer 
 
 

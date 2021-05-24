@@ -1,5 +1,5 @@
 function ReceiveData(obj,~)
-global P;
+global ExoP;
 %INSTRCALLBACK Display event information for the event.
 %
 %   INSTRCALLBACK(OBJ, EVENT) displays a message which contains the 
@@ -83,23 +83,23 @@ global P;
 % end
 
 
-P.TimeAll = [P.TimeAll toc];
+ExoP.TimeAll = [ExoP.TimeAll toc];
 %% Read data from MCU
 TransState = fscanf(obj);   % read the input buffer
 % flushinput(obj);
 % ensure the data completeness
-% while numel(TransState) ~= P.ReceiveDataNum
+% while numel(TransState) ~= ExoP.ReceiveDataNum
 % % flushinput(obj);
 %     TransState = fscanf(obj);
 % end
 TransTest = (TransState(1)-48)*1000 + (TransState(2)-48)*100 +...
             (TransState(3)-48)*10 + (TransState(4)-48)*1;
 % TransTest = str2double(TransState);
-% if(P.Send_Update == 0)
-    P.test = [P.test, TransTest];
-    P.Send_Update = 1;
+% if(ExoP.Send_Update == 0)
+    ExoP.test = [ExoP.test, TransTest];
+    ExoP.Send_Update = 1;
 % end
 
 % After receiving, allow next control and send cycle
-% P.Control_Update = 1;
+% ExoP.Control_Update = 1;
 end
