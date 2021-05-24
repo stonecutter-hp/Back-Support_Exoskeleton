@@ -1,20 +1,18 @@
 function EXOmain()
 % The high-level flow: 
-%   Initialization system parameters --> Handshake with low-level
-%   controller 
-%   --> Receieve data from MCU 
-%                      --> Control calcualtion --> Send data to MCU
-% The low-level controller should keep sending data to PC
-% Use stop(P.config{2,1}) to end the whole program
+%   Initialization system parameters --> Serial Initialization -->
+%   Handshake with low-level controller --> Set up Timer --> Timer loop:
+%     -> Receieve data from MCU -> Control calcualtion -> Send data to MCU
+%   --> Timer loop stop (Auto Stop / Manually Stop) --> Delete Serial Port
+%   and Timer Item --> Save Data
+
 
 global ExoP;
-global TempApp;
 % disp('Program Starts !');
-ExoP = Set_Parameters();              % Set necessary parameters
+
+% ExoP = Set_Parameters();              % Set necessary parameters
 MainFreq = ExoP.MainFreq;             % Set program frequency
-outPutStatus(TempApp,num2str(ExoP.MainFreq));
-outPutStatus(TempApp,num2str(ExoP.MaxRunTime));
-% Timer_Init(MainFreq);              % Initialize timer
+Timer_Init(MainFreq);              % Initialize timer
 end
 
 

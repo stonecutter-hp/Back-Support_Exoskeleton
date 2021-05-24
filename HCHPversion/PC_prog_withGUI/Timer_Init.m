@@ -5,12 +5,15 @@ function Timer_Init(Main_Freq)
 % --> Start timer loop
 
 global ExoP;
-
+global TempApp;
+% Before start timer, initialize serial port and handshake process
+McuPort = ExoP.McuPort;          % Serial Port number for MCU and PC communication
+SerialPorts_Init(McuPort);
 % create and set timer properties
 % 1/Main_Freq should be larger than 0.001s which means the loop should run
 % at frequncy of less than 1kHz
 % remind the main frequency here
-Timer1 = timer('BusyMode','queue','ExecutionMode','fixedRate',...
+Timer1 = timer('BusyMode','drop','ExecutionMode','fixedRate',...
                'Period',1/Main_Freq,'TimerFcn',@TimerCallback);  
 % Timer1 = timer('BusyMode','drop','ExecutionMode','fixedRate',...
 %                'Period',1/Main_Freq,'TimerFcn',@TimerCallback);
@@ -18,10 +21,8 @@ Timer1 = timer('BusyMode','queue','ExecutionMode','fixedRate',...
 Timer1.StartFcn = @ProgStart;
 Timer1.StopFcn = @ProgStop;
 ExoP.config{2,1} = Timer1;  % store the configuration of timer1
-
-% Before start timer, initialize serial port and handshake process
-McuPort = ExoP.McuPort;          % Serial Port number for MCU and PC communication
-% SerialPorts_Init(McuPort);
+outPutStatus(TempApp,'High-level Control Running.');
+pause(5/1000);
 start(Timer1);       % start the timer 
 
 

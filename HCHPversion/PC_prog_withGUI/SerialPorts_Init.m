@@ -53,7 +53,9 @@ while strcmp(Transtate,ExoP.ReadyFlag)
 end
 
 TransState = 'TL0000TR0000M10';
-flushoutput(McuSerial);           % flush the output buffer
+
 fprintf(McuSerial,TransState);    % send the data
+flushoutput(McuSerial);           % flush the output buffer
 outPutStatus(TempApp,'Sucessful Handshake.');
+pause(5/1000);
 end

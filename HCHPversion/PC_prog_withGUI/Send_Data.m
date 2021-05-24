@@ -30,7 +30,7 @@ end
 % TransState = [TransState,'M',num2str(MotionMode(1)),num2str(MotionMode(2))];
 
 % For test only
-TransState = 'TL0000TR0000M00';
+TransState = 'TL0000TR0000M10';
 %% Send data to serial port
 flushoutput(McuSerial);      % flush the output buffer
 fprintf(McuSerial,TransState);    % send the data

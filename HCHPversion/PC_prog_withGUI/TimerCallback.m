@@ -9,17 +9,17 @@ global TempApp;
 ExoP.TimeAll = [ExoP.TimeAll; toc];
 
 %% Receive --> Control --> Send
-% %*********************** Receive ***********************
-% [Control_Update,Send_Update] = Receive_McuData();
-% 
-% %*********************** Control ***********************
-% if Control_Update == 1
-%     Control();
-% end
-% %************************ Send *************************
-% if Send_Update == 1
-%     Send_Data();
-% end
+%*********************** Receive ***********************
+[Control_Update,Send_Update] = Receive_McuData();
+
+%*********************** Control ***********************
+if Control_Update == 1
+    Control();
+end
+%************************ Send *************************
+if Send_Update == 1
+    Send_Data();
+end
 
 % % % % % % %% For test only
 % % % % % % McuSerial = P.config{1,1};
@@ -39,8 +39,11 @@ ExoP.TimeAll = [ExoP.TimeAll; toc];
 % end
 
 % Program stop condition for testing
+% McuSerial = ExoP.config{1,1};
+% flushinput(McuSerial);
 if (ExoP.TimeAll(end) > ExoP.MaxRunTime)
     stop(Ttimer);
+    pause(5/1000);
     outPutStatus(TempApp,'Program Auto Stopped.');
 end
 
