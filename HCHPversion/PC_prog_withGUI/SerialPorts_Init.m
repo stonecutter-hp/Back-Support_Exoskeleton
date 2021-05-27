@@ -43,16 +43,29 @@ try
 catch
     outPutStatus(TempApp,'Serial Port Cannot Open!');
     msgbox('Can not open Serial Port !');
+    ExoP.stopFlag = 2;
+    stopStateDis();
     return
 end
 
 % Wait for correct handshake ready signal
-% as the MCU should keep sending ReadyFlag  
+% as the MCU should keep sending ReadyFlag 
+outPutStatus(TempApp,'Wait for Handshake...');
+pause(5/1000);
 flushinput(McuSerial);
 Transtate = fscanf(McuSerial);
+tic
 while ~strcmp(Transtate,ExoP.ReadyFlag)
 %     flushinput(McuSerial);
     Transtate = fscanf(McuSerial);
+    if(toc > 10)
+        ExoP.stopFlag = 3;
+        fclose(McuSerial);
+        delete(McuSerial);
+        DataSaving();
+        stopStateDis();
+        return
+    end
 end
 
 TransState = 'TL0000TR0000M10';

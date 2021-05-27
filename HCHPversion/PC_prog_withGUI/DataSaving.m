@@ -1,6 +1,7 @@
 function DataSaving()
 % Saving experimental data for further data analysis
 global ExoP;
+global TempApp;
 % %% Saving program time information
 % assignin('base','TimeAll',ExoP.TimeAll);
 % assignin('base','TimeTrans',ExoP.TransTime);
@@ -27,7 +28,7 @@ global ExoP;
 
 %% Saving P for experimental configuration parameters
 assignin('base','ExoP',ExoP);
-
+outPutStatus(TempApp,'Data Saved.');
 % fileName = input('File name:\n','s');
 % fileName = datetime('now');
 % fileName = datestr(fileName,'yyyymmddTHHMMSS');

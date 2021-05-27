@@ -19,17 +19,28 @@ Log
   Upgrate it for application of HCHP version exoskeleton prototype control
 
 ***Program logic***
-1) read desired torque command from PC 
-    (if no command recieved, keep sending sensor feedback with fixed frequncy
+1) Parameters initialization
+    Controller parameters initialization -->
+    State initialization as 'Stop' state -->
+    Sensor initial state initialization for convenience of 
+    fixed initial system state comfirmation for each starting up -->
+      Successful initialization -> Enter loop() with steady signal sending for hanshake
+      or Unsuccessful initialization -> Keep detecting Sensor initial state until successful
+      initialization 
+2）Read command from PC 
+    (If no command recieved, keep sending info feedback with fixed frequncy
     and use the initial/former command as reference command)--> 
-2) read sensor feedback including: 
+3) Check handshake  process with PC
+    If still in 'Stop' state, keep initializing sensor state and sending Ready signal
+    If not in 'Stop' state, skip this process -->
+2) Read sensor feedback including: 
     potentiometers for torque feedback, 
     potentiometers for hip joint
     motor drivers for motor current and velocity feedback (for potential cascaded control), 
     load cells for cable force feedback,
     and a IMU for human back bending motion -->
-3) calculate the actual control commmand for motor -->
-4) send sensor feedback to PC.
+3) Calculate the actual control commmand for motor -->
+4) Send sensor feedback to PC.
 */
 
 void setup() {

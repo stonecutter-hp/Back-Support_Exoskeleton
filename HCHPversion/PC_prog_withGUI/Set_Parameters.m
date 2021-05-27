@@ -9,6 +9,9 @@ P.d2r = pi/180;         % deg to rad
 % P.config{1,1} for serial port configuration
 % P.config{2,1} for timer configuration
 P.config = cell(2,1);     
+% Program stop Flag: 0-normal auto stop; 1-normal manually stop
+%                    2-cannot open serial port; 3-handshake error; 
+%                    4-serial communication error
 P.stopFlag = 0;
 
 %% For time information saving in TimerCallback

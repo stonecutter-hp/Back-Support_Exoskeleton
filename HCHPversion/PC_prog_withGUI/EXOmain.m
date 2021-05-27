@@ -13,7 +13,10 @@ MainFreq = ExoP.MainFreq;          % Set program frequency
 % Before start timer, initialize serial port and handshake process
 McuPort = ExoP.McuPort;            % Serial Port number for MCU and PC communication
 SerialPorts_Init(McuPort);
-Timer_Init(MainFreq);              % Initialize timer
+% Normal
+if(ExoP.stopFlag == 0)
+    Timer_Init(MainFreq);              % Initialize timer
+end
 
 end
 
