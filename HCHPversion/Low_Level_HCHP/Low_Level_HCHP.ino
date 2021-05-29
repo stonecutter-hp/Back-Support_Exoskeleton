@@ -31,7 +31,8 @@ Log
     (If no command recieved, keep sending info feedback with fixed frequncy
     and use the initial/former command as reference command)--> 
 3) Check handshake  process with PC
-    If still in 'Stop' state, keep initializing sensor state and sending Ready signal
+    If still in 'Stop' state, check sensor initialization state 
+    and sending Ready/NotReady signal correspondingly 
     If not in 'Stop' state, skip this process -->
 2) Read sensor feedback including: 
     potentiometers for torque feedback, 
@@ -70,7 +71,8 @@ void setup() {
   PWMmode_Init();
   
   /***************************** Sensor initial value calibration **********************/
-  LLPreproSensorInit();
+  while(LLPreproSensorInit() == 0) ;
+  
   // resume all the timers
   Timer1.resume();     // Motor L PWM
   Timer2.resume();     // Motor R PWM

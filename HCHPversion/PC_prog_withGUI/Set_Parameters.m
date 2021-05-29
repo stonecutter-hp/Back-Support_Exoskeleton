@@ -101,6 +101,7 @@ P.DelayMark = [];        % store the delay mark Mx from MCU
 % Ready feedback from low-level for handshake, should keep identical to
 % low-level setting
 P.ReadyFlag = ['Ready.',13,10];
+P.NotReadyFlag = ['NotReady',13,10];
 
 %% For biomechanical model parameter setting
 % refer to the P1C draft

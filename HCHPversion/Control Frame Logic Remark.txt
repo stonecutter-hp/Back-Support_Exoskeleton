@@ -10,7 +10,7 @@ For PC High-level controller:
   --> Check if running time is exceed maximum allowable time, if it is, then stop timer
   --> When stop timer for high-level controller, timer object is deleted; Stop command for low-level controller is sended; Stop and delete PC Serial port object; finally saving experiment data.
 
-20210526
+20210529
 For PC High-level controller with GUI:
   Run the GUI program
   --> Before Run the prorgram, click Reset button for state reset
@@ -23,7 +23,7 @@ For PC High-level controller with GUI:
   --> Time is up for Auto Stop or Manually Stop
   --> Stop and delete timer item
   --> Send stop command to low-level controller
-  --> (Wait to confirm stop command is recieved)
+  --> Wait to confirm stop command is recieved if Auto stopped/Manually stopped with normal serial port communcication ('Ready/NotReady' signal recieved)
   --> Close and delete serial port item
 
 20210526

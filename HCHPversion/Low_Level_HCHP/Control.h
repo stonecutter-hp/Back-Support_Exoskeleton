@@ -145,8 +145,9 @@ void Control_Init(void);
 /**
  * Pre-processing for sensor feedback to make sure 
  * the initial status of sensor is good for calibration
+ * @return int8_t - Sensor ready flag: 0-Not Ready; 1-Ready
  */
-void LLPreproSensorInit(void);
+int8_t LLPreproSensorInit(void);
 
 /**
  * Set the yaw angle of human trunk to zero

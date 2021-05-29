@@ -30,12 +30,12 @@ const int attRatio[16] = {1,  1,  1,  1,  22.5,   2,  2,  2,  2,  2,   1,   1,  
 #define FilterCycles 10      //FilterCycles for moving/exponetial average filter
 
 // Parameters for ADC raw data processing for sensors
-#define LoadCellL_Sensitivity 0.00166    //for load cell calibration
-#define LoadCellR_Sensitivity 0.00166    //for load cell calibration
-#define PotentioLP1_Sensitivity 0.0083   //0.0083 = 2.5/300 (v/deg); for potentiometer calibration 
-#define PotentioLP2_Sensitivity 0.0083   //0.0083 = 2.5/300 (v/deg); for potentiometer calibration 
-#define PotentioLP3_Sensitivity 0.0083   //0.0083 = 2.5/300 (v/deg); for potentiometer calibration 
-#define PotentioLP4_Sensitivity 0.0083   //0.0083 = 2.5/300 (v/deg); for potentiometer calibration 
+#define LoadCellL_Sensitivity 0.00170    //0.00166    //0.00191(1.5mv/v)    //for load cell calibration
+#define LoadCellR_Sensitivity 0.00162    //0.00166    //for load cell calibration
+#define PotentioLP1_Sensitivity 0.0077   //0.0083 = 2.5/325 (v/deg); for potentiometer calibration 
+#define PotentioLP2_Sensitivity 0.0077   //0.0083 = 2.5/325 (v/deg); for potentiometer calibration 
+#define PotentioLP3_Sensitivity 0.0077   //0.0083 = 2.5/325 (v/deg); for potentiometer calibration 
+#define PotentioLP4_Sensitivity 0.0077   //0.0083 = 2.5/325 (v/deg); for potentiometer calibration 
 
 
 
