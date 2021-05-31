@@ -504,6 +504,7 @@ void Control(uint8_t ContMode) {
     desiredCurrentL = desiredTorqueL/GearRatio/MotorCurrentConstant;
     desiredCurrentR = desiredTorqueR/GearRatio/MotorCurrentConstant;
     PWM_commandL = PWMperiod_L*(desiredCurrentL*0.8/MotorMaximumCurrent+0.1);
+    PWM_commandR = PWMperiod_R*(desiredCurrentR*0.8/MotorMaximumCurrent+0.1);
     if(PWM_commandL >= 0.9*PWMperiod_L) {
       PWM_commandL = 0.9*PWMperiod_L;
     }
