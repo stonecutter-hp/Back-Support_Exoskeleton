@@ -17,7 +17,7 @@ Updated control programs for two versions of back-support exoskeleton: <br>
 
 ### ZXHP version: <br>
 #### Actuation system
-> Direct-driven actuator from previous exoksleleton <br>
+> Direct-driven actuator from previous exoskeleton <br>
 #### Characteristics
 > Independent hip joint torque control; <br>
 > Multi-posture supportive including stoop, squat, semi-squat and step standing bending.
