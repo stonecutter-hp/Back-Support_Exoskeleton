@@ -341,9 +341,9 @@ void sensorFeedbackPro(void) {
   if(Estimated_TdR < 0)  {Estimated_TdR = 0;}
   
   /* Cable force feedback info processing */
-  Estimated_FcL = (Aver_ADC_value[LoadCellL]-1.25)/LoadCellL_Sensitivity - FcL_InitValue; 
+  Estimated_FcL = (Aver_ADC_value[LoadCellL]-1.25)/LoadCellL_Sensitivity + LoadCellL_Offset - FcL_InitValue; 
   if(Estimated_FcL < 0)  {Estimated_FcL = 0;}
-  Estimated_FcR = (Aver_ADC_value[LoadCellR]-1.25)/LoadCellR_Sensitivity - FcR_InitValue; 
+  Estimated_FcR = (Aver_ADC_value[LoadCellR]-1.25)/LoadCellR_Sensitivity + LoadCellR_Offset - FcR_InitValue; 
   if(Estimated_FcR < 0)  {Estimated_FcR = 0;}
 
   /* Hip angle info processing */
