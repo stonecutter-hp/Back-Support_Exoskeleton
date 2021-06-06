@@ -64,7 +64,10 @@ if(Control_Update)
         if(TransState(position) == 'T' && TransState(position+1) == 'L')
             TransTorqueTL = (TransState(position+2)-48)*10+(TransState(position+3)-48)*1+...
                             (TransState(position+4)-48)*0.1+(TransState(position+5)-48)*0.01;
-            ExoP.torqueTL = [ExoP.torqueTL; TransTorqueTL];
+        else
+            Control_Update = 0;
+            Send_Update = 0;
+            return;
         end
         position = position+6;
     end
@@ -73,7 +76,10 @@ if(Control_Update)
         if(TransState(position) == 'L' && TransState(position+1) == 'L')
             TransForceLL = (TransState(position+2)-48)*100+(TransState(position+3)-48)*10+...
                            (TransState(position+4)-48)*1+(TransState(position+5)-48)*0.1;
-            ExoP.forceLL = [ExoP.forceLL; TransForceLL];
+        else
+            Control_Update = 0;
+            Send_Update = 0;
+            return;
         end
         position = position+6;
     end
@@ -85,7 +91,10 @@ if(Control_Update)
             if(TransState(position+2) == '0')
                 TransAngleAL = -1*TransAngleAL;
             end
-            ExoP.angleAL = [ExoP.angleAL; TransAngleAL];
+        else
+            Control_Update = 0;
+            Send_Update = 0;
+            return;            
         end
         position = position+7;
     end
@@ -94,7 +103,10 @@ if(Control_Update)
         if(TransState(position) == 'T' && TransState(position+1) == 'R')
             TransTorqueTR = (TransState(position+2)-48)*10+(TransState(position+3)-48)*1+...
                             (TransState(position+4)-48)*0.1+(TransState(position+5)-48)*0.01;
-            ExoP.torqueTR = [ExoP.torqueTR; TransTorqueTR];
+        else
+            Control_Update = 0;
+            Send_Update = 0;
+            return; 
         end
         position = position+6;
     end
@@ -103,7 +115,10 @@ if(Control_Update)
         if(TransState(position) == 'L' && TransState(position+1) == 'R')
             TransForceLR = (TransState(position+2)-48)*100+(TransState(position+3)-48)*10+...
                            (TransState(position+4)-48)*1+(TransState(position+5)-48)*0.1;
-            ExoP.forceLR = [ExoP.forceLR; TransForceLR];
+        else
+            Control_Update = 0;
+            Send_Update = 0;
+            return;            
         end
         position = position+6;
     end
@@ -115,7 +130,10 @@ if(Control_Update)
             if(TransState(position+2) == '0')
                 TransAngleAR = -1*TransAngleAR;
             end
-            ExoP.angleAR = [ExoP.angleAR; TransAngleAR];
+        else
+            Control_Update = 0;
+            Send_Update = 0;
+            return;            
         end
         position = position+7;
     end
@@ -127,7 +145,10 @@ if(Control_Update)
             if(TransState(position+1) == '0')
                 TransAngleP = -1*TransAngleP;
             end    
-            ExoP.angleP = [ExoP.angleP; TransAngleP];
+        else
+            Control_Update = 0;
+            Send_Update = 0;
+            return;             
         end
         position = position+6;
     end
@@ -139,7 +160,10 @@ if(Control_Update)
             if(TransState(position+1) == '0')
                 TransAngleY = -1*TransAngleY;
             end
-            ExoP.angleY = [ExoP.angleY; TransAngleY];
+        else
+            Control_Update = 0;
+            Send_Update = 0;
+            return;             
         end
         position = position+6;
     end
@@ -151,10 +175,22 @@ if(Control_Update)
             if(TransState(position+1) == '0')
                 TransVeloV = -1*TransVeloV;
             end
-            ExoP.adotPV = [ExoP.adotPV; TransVeloV];
+        else
+            Control_Update = 0;
+            Send_Update = 0;
+            return;              
         end
     end
-    
+
+    ExoP.torqueTL = [ExoP.torqueTL; TransTorqueTL];
+    ExoP.forceLL = [ExoP.forceLL; TransForceLL];
+    ExoP.angleAL = [ExoP.angleAL; TransAngleAL];
+    ExoP.torqueTR = [ExoP.torqueTR; TransTorqueTR];
+    ExoP.forceLR = [ExoP.forceLR; TransForceLR];
+    ExoP.angleAR = [ExoP.angleAR; TransAngleAR];
+    ExoP.angleP = [ExoP.angleP; TransAngleP];
+    ExoP.angleY = [ExoP.angleY; TransAngleY];
+    ExoP.adotPV = [ExoP.adotPV; TransVeloV];
 end
 %%%%%%%%%%%%%%% Here can add more data decompostition processing %%%%%%%%%%%%%
 

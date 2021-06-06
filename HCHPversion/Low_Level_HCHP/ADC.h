@@ -31,10 +31,10 @@ const int attRatio[16] = {1,  1,  1,  1,  22.5,   2,  2,  2,  2,  2,   1,   1,  
 
 // Parameters for ADC raw data processing for sensors
 // Referring to the results from sensorCalibration.ino
-#define LoadCellL_Sensitivity 0.00166    //0.00166    //0.00191(1.5mv/v)    //0.00227(1.78mv/v)  //from load cell calibration
-#define LoadCellR_Sensitivity 0.00193    //0.00162    //0.00166    //from load cell calibration
-#define LoadCellL_Offset 0               //offset of left load cell
-#define LoadCellR_Offset 0               //offset of right load cell
+#define LoadCellL_Sensitivity 0.00193    //0.00166    //0.00191(1.5mv/v)    //0.00227(1.78mv/v)  //from load cell calibration
+#define LoadCellR_Sensitivity 0.00196    //0.00162    //0.00166    //from load cell calibration
+#define LoadCellL_Offset 1.5               //offset of left load cell
+#define LoadCellR_Offset 3.5               //offset of right load cell
 #define PotentioLP1_Sensitivity 0.0080   //0.0077 = 2.5/325 (v/deg); from potentiometer calibration 
 #define PotentioLP2_Sensitivity 0.0077   //0.0077 = 2.5/325 (v/deg); from potentiometer calibration 
 #define PotentioLP3_Sensitivity 0.0077   //0.0077 = 2.5/325 (v/deg); from potentiometer calibration 

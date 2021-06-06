@@ -66,16 +66,16 @@ extern bool Control_update;    // control update flag
 #define MotorCurrentConstant 0.0437      // Nm/A, Motor current constant 
 #define MotorMaximumCurrent 9            // A, Motor maximum current A configured in EXCON studio
 #define GearRatio 19                     // Gear ratio
-#define HumanBackLength 0.6              // m, Human back length
+#define HumanBackLength 0.51             // m, Human back length
 
 #define PulleyRadiusL 0.045              // m, Left side pulley radius
-#define SupportBeamLengthL 0.5           // m, Length of left side support beam
-#define TorsionStiffnessL 0.47           // Nm/deg, Left side torsion spring's stiffness
-#define MechConsAngleL 80                // deg, Mechanical constraint setting angle of left side
+#define SupportBeamLengthL 0.38          // m, Length of left side support beam
+#define TorsionStiffnessL 0.54           // Nm/deg, Left side torsion spring's stiffness
+#define MechConsAngleL 50                // deg, Mechanical constraint setting angle of left side
 #define PulleyRadiusR 0.045              // m, Right side pulley radius
-#define TorsionStiffnessR 0.47           // Nm/deg, Right side torsion spring's stiffness
-#define MechConsAngleR 80                // deg, Mechanical constraint setting angle of right side
-#define SupportBeamLengthR 0.5           // m, Length of left side support beam
+#define SupportBeamLengthR 0.38          // m, Length of left side support beam
+#define TorsionStiffnessR 0.54           // Nm/deg, Right side torsion spring's stiffness
+#define MechConsAngleR 50                // deg, Mechanical constraint setting angle of right side
 
 /* Sensor feedback calibration value definition */
 // Expected initial value range (CaliValue +- Tol) of sensor feedback for initial calibration

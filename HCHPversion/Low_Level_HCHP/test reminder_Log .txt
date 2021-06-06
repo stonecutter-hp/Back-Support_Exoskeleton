@@ -59,3 +59,6 @@ The 'mode' meaning should be adjusted along with the UID strategy
 
 20210524
 Low-level control handshake logic √
+
+20210603
+Update the recieveing logic with more strict data chekcing by using Control_update = 0; Send_update = 0; return; in each item depostion and move the updating data in ExoP in the end
