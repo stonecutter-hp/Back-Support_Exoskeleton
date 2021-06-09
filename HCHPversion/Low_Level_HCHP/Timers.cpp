@@ -5,8 +5,8 @@
 
 #include "Timers.h"
 
-extern uint16 PWMperiod_L = 500;    // period of left PWM  
-extern uint16 PWMperiod_R = 500;    // period of right PWM 
+uint16 PWMperiod_L = 500;    // period of left PWM  
+uint16 PWMperiod_R = 500;    // period of right PWM 
 
 
 /**

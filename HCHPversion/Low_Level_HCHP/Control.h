@@ -59,7 +59,7 @@ extern bool Control_update;    // control update flag
 #define LimitDelta_TaR 500000 // Limitation of delta control command of motor R
 #define LimitTotal_TaR 7      // Limitation of total control command of motor R
 #define LimitInput 15         // Limitation of input command, here for open-loop is Ta, for closed loop is Td
-
+#define ThreSupportVel 500     // deg/s, threshold for failure torque transmission
 /* Transmissio system parameters definition */
 // The output ability of the actuation unit with 19:1 gear ratio is better restricted to 0~8.9 Nm (0.0525*9*19)
 // The following parameter may be adjusted after calibrateds
@@ -131,6 +131,19 @@ extern float phaseIndexL;
 // 0~1, 0 for DD and 1 for SEA, operation index of the right actuation system
 extern float phaseIndexR; 
 
+/* Parameters for friction compensation */
+extern unsigned long starttime;
+extern unsigned long stoptime;
+extern unsigned long looptime;
+extern float lastTorqueL;
+extern float fricCoL;
+extern float fricOffsetL;
+extern float curveAngleL;
+extern float lastTOrqueR;
+extern float fricCoR;
+extern float fricOffsetR;
+extern float curveAngleR;
+
 /**
  * Control parameter initialization for Low-level controller
  * Initial parameters including: 
@@ -188,6 +201,12 @@ float sinofangleBetweenCableHB_R(void);
  * Processing sensor feedback for closed-loop control and data sending to PC
  */
 void sensorFeedbackPro(void);
+
+/**
+ * Modify the desired torque command according to the friction compensation law 
+ * for Bowden cable transmission friction feedforward compensation
+ */
+void frictionCompen(void);
 
 /**
  * Calculate control command (PWM duty cycle) accroding to command received from PC

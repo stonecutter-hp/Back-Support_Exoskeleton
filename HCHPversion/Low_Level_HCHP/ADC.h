@@ -13,7 +13,7 @@
 // Ch5~Ch9 is for motor driver signal detection with attenuation ratio 1:2
 // Ch10~Ch15 is for potentiometer with no attenuation
 // --------------------- CH0 CH1 CH2 CH3   CH4   CH5 CH6 CH7 CH8 CH9 CH10 CH11 CH12 CH13 CH14 CH15
-const int attRatio[16] = {1,  1,  1,  1,  22.5,   2,  2,  2,  2,  2,   1,   1,   1,   1,   1,   1};
+const double attRatio[16] = {1,  1,  1,  1,  22.5,   2,  2,  2,  2,  2,   1,   1,   1,   1,   1,   1};
 #define ADC_SS PA4           //SPI1_NSS-CS 
 #define ADC_MISO PA6         //SPI1_MISO-DOUT/RDY
 #define ENABLED_CH 16        //sum of ADC Channels

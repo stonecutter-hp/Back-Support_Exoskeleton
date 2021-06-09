@@ -1,5 +1,6 @@
 #include <AD7173.h>  // the library for ADC
 #include "ADC.h"
+#include "GenerIO.h"
 #include "Control.h"
 #include "IIC.h"
 #include "IMU.h"
@@ -83,10 +84,7 @@ void setup() {
 
 
 void loop() {
-//  unsigned long starttime;
-//  unsigned long stoptime;
-//  unsigned long looptime;
-//  starttime = millis();
+  starttime = millis();
   receiveDatafromPC();         // receive data from PC
   receivedDataPro();           // decomposite data received from PC
   /* For handshake with high-level controller with mode = Stop state */
@@ -104,6 +102,7 @@ void loop() {
   if(Control_update) {
     // yawAngleR20(LogicInit, OperaitonAloIMUC);  // Here inside operation is for IMUC address
     sensorFeedbackPro();       // processing sensor feedback for closed-loop control 
+    // frictionCompen();          // feedforward compensation for Bowden-Cable friciotn, should call after sensorFeedbackPro
     Control(1);                // calculate controlled command: PWM duty cycles
     Control_update = false;
   }
@@ -114,8 +113,8 @@ void loop() {
   }
   receiveContinuing = true;  // Enable next time's recieving
   USART_RX_STA = 0;          // Return to zero for receiving buffer 
-//  stoptime = millis();
-//  looptime = stoptime - starttime;
+  stoptime = millis();
+  looptime = stoptime - starttime;
 //  Serial.println(looptime);
 //  while(1);
 }

@@ -48,6 +48,19 @@ float phaseIndexL;
 // 0~1, 0 for DD and 1 for SEA, operation index of the right actuation system
 float phaseIndexR;
 
+/* Parameters for friction compensation */
+unsigned long starttime;
+unsigned long stoptime;
+unsigned long looptime;
+float lastTorqueL;
+float fricCoL;
+float fricOffsetL;
+float curveAngleL;
+float lastTorqueR;
+float fricCoR;
+float fricOffsetR;
+float curveAngleR;
+
 /**
  * Control parameter initialization for Low-level controller
  * Initial parameters including: 
@@ -103,6 +116,19 @@ void Control_Init(void) {
   // 0~1, 0 for DD and 1 for SEA, operation index of the right actuation system
   phaseIndexR = 1;  // initial as SEA status
 
+  /* Parameters for friction compensation */
+  starttime = 1;
+  stoptime = 2;
+  looptime = stoptime - starttime;
+  lastTorqueL = 0;
+  fricCoL = 0;
+  fricOffsetL = 0;
+  curveAngleL = 0;
+  lastTorqueR = 0;
+  fricCoR = 0;
+  fricOffsetR = 0;
+  curveAngleR = 0;
+  
   /* Initialize the control parameter of left motor */
   pidL.set = desiredTorqueL;
   pidL.currTa = 0;
@@ -386,6 +412,144 @@ void sensorFeedbackPro(void) {
   // Aver_ADC_value[MotorVeloL] = (Aver_ADC_value[MotorVeloL]-2)*4000/2; // here ESCON set 0~4V:-4000~4000rpm
 
 
+}
+
+/**
+ * Modify the desired torque command according to the friction compensation law 
+ * for Bowden cable transmission friction feedforward compensation
+ */
+void frictionCompen() {
+  float deltaTorqueL;
+  float deltaTorqueR;
+  
+  float supportVelL;
+  float lastDataL;
+  float fricComL;  // Here used as lumped friction coefficient to replace exp(-fricCoL*curveAngleL*cableVelSignL)
+  int8_t cableVelSignL;
+
+  float supportVelR;
+  float lastDataR;
+  float fricComR;  // Here used as lumped friction coefficient to replace exp(-fricCoL*curveAngleL*cableVelSignL)
+  int8_t cableVelSignR;
+
+  /* high-level strategy for open-loop Ta command generation */
+  // impedance strategy
+  desiredTorqueL = 0.15*TrunkFleAng; 
+  desiredTorqueR = 0.15*TrunkFleAng;   
+//  // gravity compensation strategy
+//  desiredTorqueL = 0.5*30*9.8*sin(TrunkFleAng*d2r);
+//  desiredTorqueR = 0.5*30*9.8*sin(TrunkFleAng*d2r);
+  
+  /* As this function is call after the sensorFeedbackPro(), the movemean process
+  here would not influence the data used for feedback control and the data uploaded
+  to high-level control. The filtering process only works for friction compensation */
+  
+/******************************************************************************************************  
+  // Friction compensation based on cableVel = supportVel - TrunkFleVel (Too noisy to be implemented)
+  // Left side
+  // Read last time ADC data before covered by this time in MoveingAverageFilter
+  lastDataL = Aver_ADC_value_Prev[PotentioLP1];
+  // Moving this time's ADC feedback and update previous data in it
+  MovingAverageFilter(PotentioLP1,3);
+  supportVelL = (Aver_ADC_value[PotentioLP1] - lastDataL)/PotentioLP1_Sensitivity/looptime;
+  cableVelSignL = Value_sign(supportVelL - TrunkFleVel); 
+  // Decide the friction compensation coeffeicent and offset
+  // The friction coefficients and offset from identification experiments
+  if(cableVelSignL < 0) {
+    fricCoL = xx;
+    fricOffsetL = 7.5;
+  }
+  else {
+    fricCoL = xx;
+    fricOffsetL = -5.1643;
+  }
+  fricComL = exp(-fricCoL*curveAngleL*cableVelSignL);
+  // Corrected open-loop Ta command with friction compensation
+  // Ta = (Td/Amplification-offset*pulleyR)/FrictionCoefficent
+  desiredTorqueL = (desiredTorqueL/9-fricOffsetL*PulleyRadiusL)/fricComL;
+  // Right side
+  // Read last time ADC data before covered by this time in MoveingAverageFilter
+  lastDataR = Aver_ADC_value_Prev[PotentioRP3];
+  // Moving this time's ADC feedback and update previous data in it
+  MovingAverageFilter(PotentioRP3,3);
+  supportVelR = (Aver_ADC_value[PotentioRP3] - lastDataR)/PotentioLP3_Sensitivity/looptime;
+  cableVelSignR = Value_sign(supportVelR - TrunkFleVel);
+  // Decide the friction compensation coeffeicent and offset
+  // The friction coefficients and offset from identification experiments
+  if(cableVelSignR < 0) {
+    fricCoR = xx;
+    fricOffsetR = 5.5;
+  }
+  else {
+    fricCoR = xx;
+    fricOffsetR = -4.3107;
+  }
+  fricComR = exp(-fricCoR*curveAngleR*cableVelSignR);
+  // Corrected open-loop Ta command with friction compensation
+  // Ta = (Td/Amplification-offset*pulleyR)/FrictionCoefficent 
+  desiredTorqueR = (desiredTorqueR/9-fricOffsetR*PulleyRadiusR)/fricComR;
+**********************************************************************************************************/
+  /* Seems the varying of FleVel is shaking to cause unstable compensation and better compensation is  
+  to decieded the cable velocity based on lifting/lowering status */
+  // Left side
+  // Check the motion status is lowering or lifting
+  if(mode == 1) {cableVelSignL = -1;}
+  else if(mode == 2) {cableVelSignL = 1;}
+  // Decide the friction compensation coeffeicent and offset
+  // The friction coefficients and offset from identification experiments  
+  if(cableVelSignL < 0) {
+    fricComL = 1.1616;
+    fricOffsetL = 7.5;
+  }
+  else {
+    fricComL = 0.7516;
+    fricOffsetL = -5.1643;
+  }
+  // Ta = (Td/Amplification-offset*pulleyR)/FrictionCoefficent
+  desiredTorqueL = (desiredTorqueL/9-fricOffsetL*PulleyRadiusL)/fricComL;
+  /* Seems the varying of FleVel is shaking to cause unstable compensation and better compensation is  
+  to decieded the cable velocity based on lifting/lowering status */
+  // Right side
+  // Check the motion status is lowering or lifting
+  if(mode == 1) {cableVelSignR = -1;}
+  else if(mode == 2) {cableVelSignR = 1;} 
+  // Decide the friction compensation coeffeicent and offset
+  // The friction coefficients and offset from identification experiments 
+  if(cableVelSignR < 0) {
+    fricComR = 1.17;
+    fricOffsetR = 5.5;
+  }
+  else {
+    fricComR = 0.7724;
+    fricOffsetR = -4.3107;
+  }
+  // Ta = (Td/Amplification-offset*pulleyR)/FrictionCoefficent
+  desiredTorqueR = (desiredTorqueR/9-fricOffsetR*PulleyRadiusR)/fricComR;
+
+  /* Final Ta command processing: limitation for bounded value and limited varying ratio */
+  deltaTorqueL = desiredTorqueL - lastTorqueL;
+  deltaTorqueR = desiredTorqueR - lastTorqueR;
+  // Restrict the varying ratio
+  if(deltaTorqueL>0.04) {deltaTorqueL = 0.04;}
+  else if(deltaTorqueL<-0.04) {deltaTorqueL = -0.04;}
+  if(deltaTorqueR>0.04) {deltaTorqueR = 0.04;}
+  else if(deltaTorqueR<-0.04) {deltaTorqueR = -0.04;}
+  desiredTorqueL = lastTorqueL + deltaTorqueL;
+  desiredTorqueR = lastTorqueR + deltaTorqueR;
+  // Bounded command
+  if(desiredTorqueL < 0) {desiredTorqueL = 0;}
+  else if(desiredTorqueL > 1.5) {desiredTorqueL = 1.5;}
+  if(desiredTorqueR < 0) {desiredTorqueR = 0;}
+  else if(desiredTorqueR > 1.5) {desiredTorqueR = 1.5;}
+  /* Following part need to implement in high-level control by change mode to exit mode*/
+  if(abs(supportVelL) >= ThreSupportVel || abs(supportVelR) >= ThreSupportVel) {
+    desiredTorqueL = 0;
+    desiredTorqueR = 0;
+  }
+  // Update last time's Ta command
+  lastTorqueL = desiredTorqueL;
+  lastTorqueR = desiredTorqueR;
+  
 }
 
 /**
