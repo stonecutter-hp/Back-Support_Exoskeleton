@@ -89,6 +89,10 @@ void loop() {
   receivedDataPro();           // decomposite data received from PC
   /* For handshake with high-level controller with mode = Stop state */
   if(mode == 0) {
+    // Initial low-level controller
+    Control_Init(); 
+    // Initial motor control pin mode
+    GeneralIO_Init();
     // Ensure the initial state until successful handshake
     LLPreproSensorInit();
   }

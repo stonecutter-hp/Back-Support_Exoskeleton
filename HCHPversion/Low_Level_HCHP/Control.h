@@ -136,13 +136,17 @@ extern unsigned long starttime;
 extern unsigned long stoptime;
 extern unsigned long looptime;
 extern float lastTorqueL;
+extern float deltaFricComL;
 extern float fricCoL;
 extern float fricOffsetL;
 extern float curveAngleL;
+extern float fricCompenTermL; // The friction compensation term
 extern float lastTOrqueR;
+extern float deltaFricComR;
 extern float fricCoR;
 extern float fricOffsetR;
 extern float curveAngleR;
+extern float fricCompenTermR; // The friction compensation term
 
 /**
  * Control parameter initialization for Low-level controller
@@ -207,6 +211,11 @@ void sensorFeedbackPro(void);
  * for Bowden cable transmission friction feedforward compensation
  */
 void frictionCompen(void);
+
+/**
+ * Friction compensation for closed-loop control
+ */
+void frictionCompenCL(void);
 
 /**
  * Calculate control command (PWM duty cycle) accroding to command received from PC

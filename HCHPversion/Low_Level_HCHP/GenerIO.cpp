@@ -17,9 +17,9 @@ void GeneralIO_Init(void) {
   pinMode(MotorEnableR, OUTPUT);
   pinMode(MotorRotationR, OUTPUT);
   // Initial pin status assignment fot left motor
-  digitalWrite(MotorRotationL,LOW);  // ensure the correct right rotation direction (CCW for work bench)
+  digitalWrite(MotorRotationL,HIGH);  // ensure the correct rotation direction (Cable Pulling Direction)
   digitalWrite(MotorEnableL,LOW);    // initially disable motor 
   // Initial pin status assignment for right motor
-  digitalWrite(MotorRotationL,LOW);  // ensure the correct right rotation direction 
+  digitalWrite(MotorRotationL,LOW);  // ensure the correct rotation direction (Cable Pulling Direction)
   digitalWrite(MotorEnableL,LOW);    // initially disable motor 
 }

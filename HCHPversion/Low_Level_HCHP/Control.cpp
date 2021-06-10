@@ -53,13 +53,17 @@ unsigned long starttime;
 unsigned long stoptime;
 unsigned long looptime;
 float lastTorqueL;
+float deltaFricComL;
 float fricCoL;
 float fricOffsetL;
 float curveAngleL;
+float fricCompenTermL; // The friction compensation term
 float lastTorqueR;
+float deltaFricComR;
 float fricCoR;
 float fricOffsetR;
 float curveAngleR;
+float fricCompenTermR; // The friction compensation term
 
 /**
  * Control parameter initialization for Low-level controller
@@ -123,11 +127,15 @@ void Control_Init(void) {
   lastTorqueL = 0;
   fricCoL = 0;
   fricOffsetL = 0;
-  curveAngleL = 0;
+  curveAngleL = 0;     // M_PI/2
+  fricCompenTermL = 0; // The friction compensation term
+  deltaFricComL = fricCompenTermL - lastTorqueL;
   lastTorqueR = 0;
   fricCoR = 0;
   fricOffsetR = 0;
-  curveAngleR = 0;
+  curveAngleR = 0;     // M_PI/2
+  fricCompenTermR = 0; // The friction compensation term
+  deltaFricComR = fricCompenTermR - lastTorqueR;
   
   /* Initialize the control parameter of left motor */
   pidL.set = desiredTorqueL;
@@ -527,15 +535,15 @@ void frictionCompen() {
   desiredTorqueR = (desiredTorqueR/9-fricOffsetR*PulleyRadiusR)/fricComR;
 
   /* Final Ta command processing: limitation for bounded value and limited varying ratio */
-  deltaTorqueL = desiredTorqueL - lastTorqueL;
-  deltaTorqueR = desiredTorqueR - lastTorqueR;
+  deltaFricComL = desiredTorqueL - lastTorqueL;
+  deltaFricComR = desiredTorqueR - lastTorqueR;
   // Restrict the varying ratio
-  if(deltaTorqueL>0.04) {deltaTorqueL = 0.04;}
-  else if(deltaTorqueL<-0.04) {deltaTorqueL = -0.04;}
-  if(deltaTorqueR>0.04) {deltaTorqueR = 0.04;}
-  else if(deltaTorqueR<-0.04) {deltaTorqueR = -0.04;}
-  desiredTorqueL = lastTorqueL + deltaTorqueL;
-  desiredTorqueR = lastTorqueR + deltaTorqueR;
+  if(deltaFricComL>0.04) {deltaFricComL = 0.04;}
+  else if(deltaFricComL<-0.04) {deltaFricComL = -0.04;}
+  if(deltaFricComR>0.04) {deltaFricComR = 0.04;}
+  else if(deltaFricComR<-0.04) {deltaFricComR = -0.04;}
+  desiredTorqueL = lastTorqueL + deltaFricComL;
+  desiredTorqueR = lastTorqueR + deltaFricComR;
   // Bounded command
   if(desiredTorqueL < 0) {desiredTorqueL = 0;}
   else if(desiredTorqueL > 1.5) {desiredTorqueL = 1.5;}
@@ -553,10 +561,85 @@ void frictionCompen() {
 }
 
 /**
+ * Friction compensation for closed-loop control
+ */
+void frictionCompenCL() { 
+  int8_t cableVelSignL;
+  float fricComL;  // Here used as lumped friction coefficient to replace exp(-fricCoL*curveAngleL*cableVelSignL) 
+  
+  int8_t cableVelSignR;
+  float fricComR;  // Here used as lumped friction coefficient to replace exp(-fricCoR*curveAngleR*cableVelSignR)
+
+  /* high-level strategy for open-loop Ta command generation */
+  // impedance strategy
+  desiredTorqueL = 0.2*TrunkFleAng; 
+  desiredTorqueR = 0.2*TrunkFleAng;   
+//  // gravity compensation strategy
+//  desiredTorqueL = 0.5*30*9.8*sin(TrunkFleAng*d2r);
+//  desiredTorqueR = 0.5*30*9.8*sin(TrunkFleAng*d2r);
+
+  // Update last time's compensation before the compensation is updated so that last time's
+  // value can keep for this loop until next updated loop. For convenience of seperate limit for deltaPID and deltaFricCom
+  lastTorqueL = fricCompenTermL;
+  lastTorqueR = fricCompenTermR;
+  
+  // Left side
+  // Check the motion status is lowering or lifting
+  if(mode == 1) {cableVelSignL = -1;}
+  else if(mode == 2) {cableVelSignL = 1;}  
+  // Decide the friction compensation coeffeicent and offset
+  // The friction coefficients and offset from identification experiments  
+  if(cableVelSignL < 0) {
+    fricComL = 1.1616;
+    fricOffsetL = 7.5;
+  }
+  else {
+    fricComL = 0.7516;
+    fricOffsetL = -5.1643;
+  }
+  fricCompenTermL = (desiredTorqueL/9-fricOffsetL*PulleyRadiusL)/fricComL - desiredTorqueL/9;
+
+  // Right side
+  // Check the motion status is lowering or lifting
+  if(mode == 1) {cableVelSignR = -1;}
+  else if(mode == 2) {cableVelSignR = 1;} 
+  // Decide the friction compensation coeffeicent and offset
+  // The friction coefficients and offset from identification experiments 
+  if(cableVelSignR < 0) {
+    fricComR = 1.17;
+    fricOffsetR = 5.5;
+  }
+  else {
+    fricComR = 0.7724;
+    fricOffsetR = -4.3107;
+  }
+  fricCompenTermR = (desiredTorqueR/9-fricOffsetR*PulleyRadiusR)/fricComR - desiredTorqueR/9;
+
+  // Bounded command
+  if(desiredTorqueL < 0) {desiredTorqueL = 0;}
+  else if(desiredTorqueL > 25) {desiredTorqueL = 25;}
+  if(desiredTorqueR < 0) {desiredTorqueR = 0;}
+  else if(desiredTorqueR > 25) {desiredTorqueR = 25;}
+
+  deltaFricComL = fricCompenTermL - lastTorqueL;
+  deltaFricComR = fricCompenTermR - lastTorqueR;
+//  // Restrict the varying ratio (If seperatly limited from PID)
+//  if(deltaFricComL>0.04) {deltaFricComL = 0.04;}
+//  else if(deltaFricComL<-0.04) {deltaFricComL = -0.04;}
+//  if(deltaFricComR>0.04) {deltaFricComR = 0.04;}
+//  else if(deltaFricComR<-0.04) {deltaFricComR = -0.04;}
+
+
+}
+
+
+/**
  * Calculate control command (PWM duty cycle) accroding to command received from PC
  * and information received from ADC and IMU
  * @para unsigned char - control mode: 1-PID control, 2-Open loop control
- * Here use increment PID algorithm: Delta.U = Kp*( (ek-ek_1) + (Tcontrol/Ti)*ek + (Td/Tcontrol)*(ek+ek_2-2*ek_1) )
+ * Here use increment PID algorithm: Delta.U = Kp*( (ek-ek_1) + (Tcontrol/Ti)*ek + (Td/Tcontrol)*(ek+ek_2-2*ek_1))
+ * Attention if the friction compensation processing is taking effect or not: 
+ * 1) deltaXX limitation; 2) no reverse under small assistive torque 
  */
 void Control(uint8_t ContMode) {
   // for PID control
@@ -585,16 +668,21 @@ void Control(uint8_t ContMode) {
     DoutL = (pidL.Kp*pidL.Td)/pidL.Tcontrol;
     DoutL = DoutL*dk2L;
     // calculate the delta value of this time
-    pidL.Delta_Ta = (PoutL+IoutL+DoutL);
-    // set limitation of surdden variation of control output
+    pidL.Delta_Ta = (PoutL+IoutL+DoutL)+deltaFricComL;
+    // set limitation of surdden variation of control output 
+    // If pidL.Delta_Ta = (PoutL+IoutL+DoutL)+deltaFricComL, then total limited for PID and friction simutenuosly
     if((Value_sign(pidL.Delta_Ta)*pidL.Delta_Ta) >= LimitDelta_TaL) {
-    	pidL.Delta_Ta = LimitDelta_TaL*Value_sign(pidL.Delta_Ta);
+      pidL.Delta_Ta = LimitDelta_TaL*Value_sign(pidL.Delta_Ta);
     }
     pidL.currTa += pidL.Delta_Ta;
-    // set limitation of total controller output
+    /* set limitation of total controller output */
+    // Bounded control output
     if((Value_sign(pidL.currTa)*pidL.currTa) >= LimitTotal_TaL) {
-    	pidL.currTa = LimitTotal_TaL*Value_sign(pidL.currTa);
+      pidL.currTa = LimitTotal_TaL*Value_sign(pidL.currTa);
     }
+    // Small torque cannnot extend cable due to friendly friction
+    if(pidL.currTa < 0 && pidL.currT < 4) {pidL.currTa = 0;}
+    
     pidL.currCurrent = Value_sign(pidL.currTa)*pidL.currTa/GearRatio/MotorCurrentConstant;
     pidL.currpwm = pidL.pwm_cycle*(pidL.currCurrent*0.8/MotorMaximumCurrent+0.1);
     // set limitation of PWM duty cycle
@@ -606,10 +694,10 @@ void Control(uint8_t ContMode) {
     }
     // determine motor rotation direction
     if(pidL.currTa >= 0) {
-    	digitalWrite(MotorRotationL,LOW);
+      digitalWrite(MotorRotationL,HIGH);
     }
     else if(pidL.currTa < 0) {
-    	digitalWrite(MotorRotationL,HIGH);
+      digitalWrite(MotorRotationL,LOW);
     }
     PWM_commandL = pidL.currpwm;
     //update the error
@@ -631,16 +719,21 @@ void Control(uint8_t ContMode) {
     DoutR = (pidR.Kp*pidR.Td)/pidR.Tcontrol;
     DoutR = DoutR*dk2R;
     // calculate the delta value of this time
-    pidR.Delta_Ta = (PoutR+IoutR+DoutR);
-    // set limitation of surdden variation of control output
+    pidR.Delta_Ta = (PoutR+IoutR+DoutR)+deltaFricComR;
+    // set limitation of surdden variation of control output 
+    // If pidR.Delta_Ta = (PoutR+IoutR+DoutR)+deltaFricComR, then total limited for PID and friction simutenuosly
     if((Value_sign(pidR.Delta_Ta)*pidR.Delta_Ta) >= LimitDelta_TaR) {
-    	pidR.Delta_Ta = LimitDelta_TaR*Value_sign(pidR.Delta_Ta);
+      pidR.Delta_Ta = LimitDelta_TaR*Value_sign(pidR.Delta_Ta);
     }
     pidR.currTa += pidR.Delta_Ta;
-    // set limitation of total controller output
+    /* set limitation of total controller output */
+    // Bounded control output
     if((Value_sign(pidR.currTa)*pidR.currTa) >= LimitTotal_TaR) {
-    	pidR.currTa = LimitTotal_TaR*Value_sign(pidR.currTa);
+      pidR.currTa = LimitTotal_TaR*Value_sign(pidR.currTa);
     }
+    // Small torque cannnot extend cable due to friendly friction
+    if(pidR.currTa < 0 && pidR.currT < 4) {pidR.currTa = 0;}
+    
     pidR.currCurrent = Value_sign(pidR.currTa)*pidR.currTa/GearRatio/MotorCurrentConstant;
     pidR.currpwm = pidR.pwm_cycle*(pidR.currCurrent*0.8/MotorMaximumCurrent+0.1);
     // set limitation of PWM duty cycle
@@ -652,10 +745,10 @@ void Control(uint8_t ContMode) {
     }
     // determine motor rotation direction
     if(pidR.currTa >= 0) {
-    	digitalWrite(MotorRotationR,LOW);
+      digitalWrite(MotorRotationR,LOW);
     }
     else if(pidR.currTa < 0) {
-    	digitalWrite(MotorRotationR,HIGH);
+      digitalWrite(MotorRotationR,HIGH);
     }
     PWM_commandR = pidR.currpwm;
     //update the error
@@ -665,8 +758,8 @@ void Control(uint8_t ContMode) {
 
   // Open-loop control
   else if(ContMode == 2) {
-    desiredCurrentL = desiredTorqueL/GearRatio/MotorCurrentConstant;
-    desiredCurrentR = desiredTorqueR/GearRatio/MotorCurrentConstant;
+    desiredCurrentL = desiredTorqueL/GearRatio/MotorCurrentConstant/9;
+    desiredCurrentR = desiredTorqueR/GearRatio/MotorCurrentConstant/9;
     PWM_commandL = PWMperiod_L*(desiredCurrentL*0.8/MotorMaximumCurrent+0.1);
     PWM_commandR = PWMperiod_R*(desiredCurrentR*0.8/MotorMaximumCurrent+0.1);
     if(PWM_commandL >= 0.9*PWMperiod_L) {
