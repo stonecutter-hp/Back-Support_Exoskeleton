@@ -1,0 +1,8 @@
+Testing reminder
+20210618
+Add a function to reset the recorded T0 initial value and Maximum value in UID strategy for RTG strategy
+
+
+
+Testing Log:
+

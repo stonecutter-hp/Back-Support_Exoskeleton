@@ -63,13 +63,15 @@ else
     end
 end
 
-% initial classification of left/right asymmetric
+% Initial classification of left/right asymmetric
+% Notice that it also indicates if the friction compensation is enabled or
+% not
 if sign(Beta) == 0 
-    mode(1,2) = 0;     % no aysmmetric
+    mode(1,2) = 0 + P.fricEnable*2;     % no aysmmetric
 elseif sign(Beta) > 0
-    mode(1,2) = 1;     % left
+    mode(1,2) = 1 + P.fricEnable*2;     % left
 else
-    mode(1,2) = 2;     % right
+    mode(1,2) = 2 + P.fricEnable*2;     % right
 end
 
 %% Necessary information for torque generation

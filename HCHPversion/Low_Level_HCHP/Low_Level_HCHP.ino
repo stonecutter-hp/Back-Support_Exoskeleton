@@ -18,6 +18,8 @@ Log
   Keep updated with the programming of ZXHP version control program
 20210520
   Upgrate it for application of HCHP version exoskeleton prototype control
+20210619
+  Update the interact logic to compact this low-level control to work with the high-level control
 
 ***Program logic***
 1) Parameters initialization
@@ -27,12 +29,14 @@ Log
     fixed initial system state comfirmation for each starting up -->
       Successful initialization -> Enter loop() with steady signal sending for hanshake
       or Unsuccessful initialization -> Keep detecting Sensor initial state until successful
-      initialization 
+      initialization -> Enter loop()
 2）Read command from PC 
     (If no command recieved, keep sending info feedback with fixed frequncy
     and use the initial/former command as reference command)--> 
 3) Check handshake  process with PC
-    If still in 'Stop' state, check sensor initialization state 
+    If still in 'Stop' state, check sensor initialization state while sending 'Ready.' or 'NotReady.' for handshake
+    (Can be seem as the base of global coordinate of sensor feedback for UID strategy while 
+    the local coordinate of sensor feedback for RTG strategy is recorded as the very beginning of lowering phase)
     and sending Ready/NotReady signal correspondingly 
     If not in 'Stop' state, skip this process -->
 2) Read sensor feedback including: 
@@ -84,29 +88,25 @@ void setup() {
 
 
 void loop() {
-  starttime = millis();
+//  starttime = millis();
   receiveDatafromPC();         // receive data from PC
   receivedDataPro();           // decomposite data received from PC
-  /* For handshake with high-level controller with mode = Stop state */
-  if(mode == 0) {
-    // Initial low-level controller
-    Control_Init(); 
-    // Initial motor control pin mode
-    GeneralIO_Init();
-    // Ensure the initial state until successful handshake
-    LLPreproSensorInit();
-  }
+  /* Manage low-level control system status under different mode indicator from 
+  high-level controller, including handshake with high-level controller under Stop state */
+  lowLevelStateMgr();
   if(ADC_update) {
     getADCaverage(1);          // get ADC value
     getIMUangleT();            // get human trunk flexion angle
     getIMUvelT();              // get human trunk flexion velocity
-    // MovingAverFilterIMUC(rollChan,3);   // Averaged moving filtered
+    // MovingAverFilterIMUC(rollChan,3);   // Averaged moving filtering for flexion angle from IMU
+    // MovingAverageFilter(LoadCellL,3);   // Avergaed moving filtering for force feedback from load cell
     ADC_update = false;
   }
   if(Control_update) {
     // yawAngleR20(LogicInit, OperaitonAloIMUC);  // Here inside operation is for IMUC address
     sensorFeedbackPro();       // processing sensor feedback for closed-loop control 
-    // frictionCompen();          // feedforward compensation for Bowden-Cable friciotn, should call after sensorFeedbackPro
+    // enable frictionCompensation according to side indicator
+    if(side > 2) {frictionCompenCL();}
     Control(1);                // calculate controlled command: PWM duty cycles
     Control_update = false;
   }
@@ -117,8 +117,8 @@ void loop() {
   }
   receiveContinuing = true;  // Enable next time's recieving
   USART_RX_STA = 0;          // Return to zero for receiving buffer 
-  stoptime = millis();
-  looptime = stoptime - starttime;
+//  stoptime = millis();
+//  looptime = stoptime - starttime;
 //  Serial.println(looptime);
 //  while(1);
 }

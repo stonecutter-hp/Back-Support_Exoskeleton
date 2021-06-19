@@ -28,24 +28,25 @@ extern bool SendItemFlag[9];                   // for convinient of adjust feedb
 /*********************************** Communication receiving data definition ************************************/
 extern float desiredTorqueL;    // desired motor torque of left motor
 extern float desiredTorqueR;    // desired motor torque of right motor
-// motion type: 1-exit state;         2-Symmetric Holding; 
-//              3-Asymmetric Holding; 4-Asymmetric Lowering;
-//              5-Asymmetric Lifting; 6-Symmetric Lowering;
-//              7-Symmetric Lifting;  0-Stop state
 extern uint8_t mode;            // detected motion mode
 extern uint8_t PreMode;         // last time's motion mode
-// 1-left; 2-right; 0-none
-extern uint8_t side;            // Asymmetric side
-extern char inChar1;
-extern char inChar2;
-
+extern uint8_t side;            // another auxiliary indicator for asymmetric and low-level compensation term from high-level control
 
 
 /**
  * @ PC to MCU Protocol: TLxxxxTRxxxxMxx\r\n (0x0D,0x0A)
  * TLxxxx: Reference torque for left transmission system
  * TRxxxx: Reference torque for right transmission system
- * Mxx: Detected user motion mode
+ * Mxx: Detected user motion mode and low-level control mode indicator
+ *  First number indicates motion type: 0-Stop state;      1-Exit state; 
+ *                                      2-Standing;        3-Walking;
+ *                                      4-Lowering;        5-Grasping;
+ *                                      6-Lifting;         7-Holding;
+ *  Second number indicates asymmetric side & low-level control compensation model:
+ *                                      0-none; 1-left; 2-right; 
+ *                                      3(0+3)-none + fricCom;
+ *                                      4(1+3)-left + fricCom;
+ *                                      5(2+3)-right + fricCom
  * Notice: With successful receiving process, USART_RX_STA indicates
  *         total reveived char number exclude '\r\n'; and they are stored
  *         in USART_RX_BUF[0~USART_RX_STA-1], i.e., TLxxxxTRxxxxMxx 

@@ -19,23 +19,25 @@ bool SendItemFlag[9] = {true, true, true, true, true, true, true, true, true};
 /*********************************** Communication receiving data definition ************************************/
 float desiredTorqueL;    // desired motor torque of left motor
 float desiredTorqueR;    // desired motor torque of right motor
-// motion type: 1-other motion;       2-Symmetric Holding; 
-//              3-Asymmetric Holding; 4-Asymmetric Lowering;
-//              5-Asymmetric Lifting; 6-Symmetric Lowering;
-//              7-Symmetric Lifting;  0-Stop state
 uint8_t mode;            // detected motion mode
 uint8_t PreMode;         // last time's motion mode
-// 1-left; 2-right; 0-none
-uint8_t side;            // Asymmetric side
-char inChar1;
-char inChar2;
+uint8_t side;            // another auxiliary indicator for asymmetric and low-level compensation term from high-level control
 
 
 /**
  * @ PC to MCU Protocol: TLxxxxTRxxxxMxx\r\n (0x0D,0x0A)
  * TLxxxx: Reference torque for left transmission system
  * TRxxxx: Reference torque for right transmission system
- * Mxx: Detected user motion mode
+ * Mxx: Detected user motion mode and low-level control mode indicator
+ *  First number indicates motion type: 0-Stop state;      1-Exit state; 
+ *                                      2-Standing;        3-Walking;
+ *                                      4-Lowering;        5-Grasping;
+ *                                      6-Lifting;         7-Holding;
+ *  Second number indicates asymmetric side & low-level control compensation model:
+ *                                      0-none; 1-left; 2-right; 
+ *                                      3(0+3)-none + fricCom;
+ *                                      4(1+3)-left + fricCom;
+ *                                      5(2+3)-right + fricCom
  * Notice: With successful receiving process, USART_RX_STA indicates
  *         total reveived char number exclude '\r\n'; and they are stored
  *         in USART_RX_BUF[0~USART_RX_STA-1], i.e., TLxxxxTRxxxxMxx 
@@ -43,6 +45,8 @@ char inChar2;
  *         allowable length will lead to fail data receiving
  */
 void receiveDatafromPC(void) {
+  char inChar1;
+  char inChar2;
   while(Serial.available() && receiveContinuing) {
     inChar1 = Serial.read();
     delayMicroseconds(20);  // delay to guarantee recieving correction under high buardrate

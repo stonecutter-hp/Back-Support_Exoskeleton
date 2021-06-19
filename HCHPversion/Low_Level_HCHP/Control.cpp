@@ -127,13 +127,13 @@ void Control_Init(void) {
   lastTorqueL = 0;
   fricCoL = 0;
   fricOffsetL = 0;
-  curveAngleL = 0;     // M_PI/2
+  curveAngleL = 0;     // curveAngleL = M_PI/2;
   fricCompenTermL = 0; // The friction compensation term
   deltaFricComL = fricCompenTermL - lastTorqueL;
   lastTorqueR = 0;
   fricCoR = 0;
   fricOffsetR = 0;
-  curveAngleR = 0;     // M_PI/2
+  curveAngleR = 0;     // curveAngleR = M_PI/2;
   fricCompenTermR = 0; // The friction compensation term
   deltaFricComR = fricCompenTermR - lastTorqueR;
   
@@ -197,8 +197,8 @@ int8_t LLPreproSensorInit() {
   TdR_InitValue = Aver_ADC_value[PotentioRP3]/PotentioLP3_Sensitivity*TorsionStiffnessR;
   HipAngL_InitValue = Aver_ADC_value[PotentioLP2]/PotentioLP2_Sensitivity;
   HipAngR_InitValue = Aver_ADC_value[PotentioRP4]/PotentioLP4_Sensitivity;
-  FcL_InitValue = (Aver_ADC_value[LoadCellL]-1.25)/LoadCellL_Sensitivity;
-  FcR_InitValue = (Aver_ADC_value[LoadCellR]-1.25)/LoadCellR_Sensitivity;
+  FcL_InitValue = (Aver_ADC_value[LoadCellL]-1.25)/LoadCellL_Sensitivity + LoadCellL_Offset;
+  FcR_InitValue = (Aver_ADC_value[LoadCellR]-1.25)/LoadCellR_Sensitivity + LoadCellR_Offset;
   TrunkFleAng_InitValue = angleActualC[rollChan];
   // Here place program to check if these initial value of each sensor is near the expected position. 
   // If not, recalibration the initial value of the sensor feedback 
@@ -233,6 +233,44 @@ int8_t LLPreproSensorInit() {
     Serial.println("Ready.");
   }
   return SensorReady;
+}
+
+/**
+ * Manage low-level control system status including:
+ *   Low-level controller status
+ *   Motor control pin status
+ *   Sensor initial value (Global coordinate for UID)
+ * For certain specific mode feedback including:
+ *   Stop state
+ *   Exit state
+ * motion type: 0-Stop state;      1-Exit state; 
+ *              2-Standing;        3-Walking;
+ *              4-Lowering;        5-Grasping;
+ *              6-Lifting;         7-Holding;
+ */
+void lowLevelStateMgr() {
+  /* State Manage for Stop state */
+  if(mode == 0) {
+    // Initial low-level controller
+    Control_Init(); 
+    // Initial motor control pin mode
+    GeneralIO_Init();
+    // Ensure the sensor initial state until successful handshake
+    LLPreproSensorInit();
+  }
+  /* State Manage for Exit state */
+  else if(mode == 1) {
+    // Initial low-level controller
+    Control_Init(); 
+    // Initial motor control pin mode
+    GeneralIO_Init();    
+  }
+  /* State Manage for other normal state */
+  else {
+    // Enable motor control
+    digitalWrite(MotorEnableL,HIGH);  
+    digitalWrite(MotorEnableR,HIGH);    
+  }
 }
 
 /**
@@ -351,22 +389,6 @@ float sinofangleBetweenCableHB_R() {
  * Processing sensor feedback for closed-loop control and data sending to PC
  */
 void sensorFeedbackPro(void) {
-  /* Motor status processing for stop mode */
-  // if high-level command stop state/exit unit/error state exceed certain number
-  if(mode < 2 || mode > 7) {
-  	// Set zero for reference torque
-  	desiredTorqueR = 0;
-  	desiredTorqueL = 0;
-  	// Disable motor control
-  	digitalWrite(MotorEnableL,LOW);
-    digitalWrite(MotorEnableR,LOW);
-  }
-  else {
-    // Enable motor control
-    digitalWrite(MotorEnableL,HIGH); 	
-    digitalWrite(MotorEnableR,HIGH);
-  }
-
   /* Interation torque feedback info processing */
   // Estimated_ImuAssistiveTorqueL = (angleActualA[0]-SupportBeamAngleL_InitValue)*TorsionStiffnessL;
   Estimated_TdL = Aver_ADC_value[PotentioLP1]/PotentioLP1_Sensitivity*TorsionStiffnessL - TdL_InitValue; 
@@ -382,13 +404,31 @@ void sensorFeedbackPro(void) {
 
   /* Hip angle info processing */
   HipAngL = Aver_ADC_value[PotentioLP2]/PotentioLP2_Sensitivity - HipAngL_InitValue;
-  HipAngR = Aver_ADC_value[PotentioRP4]/PotentioLP4_Sensitivity - HipAngR_InitValue;
+  // Notice the variation direction of right hip sensor
+  HipAngR = -Aver_ADC_value[PotentioRP4]/PotentioLP4_Sensitivity + HipAngR_InitValue;
 
   /* Trunk yaw and pitch angle & pitch velocity feedback info procesisng */
   TrunkYawAngPro();
   TrunkFleAng = angleActualC[rollChan] - TrunkFleAng_InitValue;
   TrunkFleVel = velActualC[rollChan];
 
+
+  /* Update torque feedback for low-level feedback control */
+  Feedback_TdL = Estimated_TdL;
+  Feedback_TdR = Estimated_TdR;  
+  // The following function should be comment out if only SEA status is considered 
+  // multiFeedbackPro();
+
+  // Aver_ADC_value[MotorCurrL] = (Aver_ADC_value[MotorCurrL]-2)*9/2;    // when ESCON set 0~4V:-9~9A
+  // Aver_ADC_value[MotorVeloL] = (Aver_ADC_value[MotorVeloL]-2)*4000/2; // when ESCON set 0~4V:-4000~4000rpm
+
+
+}
+
+/**
+ * Torque feedback and phase index processing for multi operation status control 
+ */
+void multiFeedbackPro() {
   /* Compact torque feedback calculation for low-level feedback controller */
   // Calculate the torque from cable force; here if..else... is to reduce 
   // the calculation burden
@@ -413,16 +453,11 @@ void sensorFeedbackPro(void) {
   Feedback_TdR = phaseIndexR*Estimated_TdR + (1-phaseIndexR)*CableTorqueR;
   // Update actuation system operation status index
   phaseIndexL = PhaseIndexUpdate(Feedback_TdL, Critical_TdL, PhaseIndexCo);
-  phaseIndexR = PhaseIndexUpdate(Feedback_TdR, Critical_TdR, PhaseIndexCo);
-
-  // Estimated_PoAssistiveTorqueR = (Aver_ADC_value[PotentioLP2]-PotentioRP1_InitValue)/PotentioRP1_Sensitivity*TorsionStiffnessR; 
-  // Aver_ADC_value[MotorCurrL] =  (Aver_ADC_value[MotorCurrL]-2)*9/2;   // here ESCON set 0~4V:-9~9A
-  // Aver_ADC_value[MotorVeloL] = (Aver_ADC_value[MotorVeloL]-2)*4000/2; // here ESCON set 0~4V:-4000~4000rpm
-
-
+  phaseIndexR = PhaseIndexUpdate(Feedback_TdR, Critical_TdR, PhaseIndexCo);  
 }
 
 /**
+ * ATTENTION: THIS FUNCTION IS SET FOR OPEN-LOOP CONTROL TEST ONLY
  * Modify the desired torque command according to the friction compensation law 
  * for Bowden cable transmission friction feedforward compensation
  */
@@ -497,12 +532,12 @@ void frictionCompen() {
   // Ta = (Td/Amplification-offset*pulleyR)/FrictionCoefficent 
   desiredTorqueR = (desiredTorqueR/9-fricOffsetR*PulleyRadiusR)/fricComR;
 **********************************************************************************************************/
-  /* Seems the varying of FleVel is shaking to cause unstable compensation and better compensation is  
+  /* Since the varying of FleVel is shaking to cause unstable compensation, better compensation is  
   to decieded the cable velocity based on lifting/lowering status */
   // Left side
-  // Check the motion status is lowering or lifting
-  if(mode == 1) {cableVelSignL = -1;}
-  else if(mode == 2) {cableVelSignL = 1;}
+  // Check the motion status is lowering(3) or lifting(5)
+  if(mode == 3) {cableVelSignL = -1;}
+  else if(mode == 5) {cableVelSignL = 1;}
   // Decide the friction compensation coeffeicent and offset
   // The friction coefficients and offset from identification experiments  
   if(cableVelSignL < 0) {
@@ -519,8 +554,8 @@ void frictionCompen() {
   to decieded the cable velocity based on lifting/lowering status */
   // Right side
   // Check the motion status is lowering or lifting
-  if(mode == 1) {cableVelSignR = -1;}
-  else if(mode == 2) {cableVelSignR = 1;} 
+  if(mode == 3) {cableVelSignR = -1;}
+  else if(mode == 5) {cableVelSignR = 1;} 
   // Decide the friction compensation coeffeicent and offset
   // The friction coefficients and offset from identification experiments 
   if(cableVelSignR < 0) {
@@ -570,14 +605,6 @@ void frictionCompenCL() {
   int8_t cableVelSignR;
   float fricComR;  // Here used as lumped friction coefficient to replace exp(-fricCoR*curveAngleR*cableVelSignR)
 
-  /* high-level strategy for open-loop Ta command generation */
-  // impedance strategy
-  desiredTorqueL = 0.2*TrunkFleAng; 
-  desiredTorqueR = 0.2*TrunkFleAng;   
-//  // gravity compensation strategy
-//  desiredTorqueL = 0.5*30*9.8*sin(TrunkFleAng*d2r);
-//  desiredTorqueR = 0.5*30*9.8*sin(TrunkFleAng*d2r);
-
   // Update last time's compensation before the compensation is updated so that last time's
   // value can keep for this loop until next updated loop. For convenience of seperate limit for deltaPID and deltaFricCom
   lastTorqueL = fricCompenTermL;
@@ -585,10 +612,10 @@ void frictionCompenCL() {
   
   // Left side
   // Check the motion status is lowering or lifting
-  if(mode == 1) {cableVelSignL = -1;}
-  else if(mode == 2) {cableVelSignL = 1;}  
+  if(mode == 3) {cableVelSignL = -1;}
+  else if(mode == 5) {cableVelSignL = 1;}  
   // Decide the friction compensation coeffeicent and offset
-  // The friction coefficients and offset from identification experiments  
+  // The friction coefficients and offset are from identification experiments  
   if(cableVelSignL < 0) {
     fricComL = 1.1616;
     fricOffsetL = 7.5;
@@ -601,8 +628,8 @@ void frictionCompenCL() {
 
   // Right side
   // Check the motion status is lowering or lifting
-  if(mode == 1) {cableVelSignR = -1;}
-  else if(mode == 2) {cableVelSignR = 1;} 
+  if(mode == 3) {cableVelSignR = -1;}
+  else if(mode == 5) {cableVelSignR = 1;} 
   // Decide the friction compensation coeffeicent and offset
   // The friction coefficients and offset from identification experiments 
   if(cableVelSignR < 0) {
@@ -615,12 +642,6 @@ void frictionCompenCL() {
   }
   fricCompenTermR = (desiredTorqueR/9-fricOffsetR*PulleyRadiusR)/fricComR - desiredTorqueR/9;
 
-  // Bounded command
-  if(desiredTorqueL < 0) {desiredTorqueL = 0;}
-  else if(desiredTorqueL > 25) {desiredTorqueL = 25;}
-  if(desiredTorqueR < 0) {desiredTorqueR = 0;}
-  else if(desiredTorqueR > 25) {desiredTorqueR = 25;}
-
   deltaFricComL = fricCompenTermL - lastTorqueL;
   deltaFricComR = fricCompenTermR - lastTorqueR;
 //  // Restrict the varying ratio (If seperatly limited from PID)
@@ -628,8 +649,6 @@ void frictionCompenCL() {
 //  else if(deltaFricComL<-0.04) {deltaFricComL = -0.04;}
 //  if(deltaFricComR>0.04) {deltaFricComR = 0.04;}
 //  else if(deltaFricComR<-0.04) {deltaFricComR = -0.04;}
-
-
 }
 
 

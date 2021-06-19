@@ -58,8 +58,9 @@ extern bool Control_update;    // control update flag
 #define LimitTotal_TaL 7      // Limitation of total control command of motor L
 #define LimitDelta_TaR 500000 // Limitation of delta control command of motor R
 #define LimitTotal_TaR 7      // Limitation of total control command of motor R
-#define LimitInput 15         // Limitation of input command, here for open-loop is Ta, for closed loop is Td
-#define ThreSupportVel 500     // deg/s, threshold for failure torque transmission
+#define LimitInput 25         // Limitation of input command, here for open-loop is Ta, for closed loop is Td
+// FOR OPEN-LOOP TESTING ONLY, COMPACTED TO HIGH-LEVEL CONTROL ALREADY
+#define ThreSupportVel 500    // deg/s, threshold for failure torque transmission. 
 /* Transmissio system parameters definition */
 // The output ability of the actuation unit with 19:1 gear ratio is better restricted to 0~8.9 Nm (0.0525*9*19)
 // The following parameter may be adjusted after calibrateds
@@ -80,20 +81,20 @@ extern bool Control_update;    // control update flag
 /* Sensor feedback calibration value definition */
 // Expected initial value range (CaliValue +- Tol) of sensor feedback for initial calibration
 // the initial values should be adjusted along with prototype design
-#define TdL_CaliValue 0
-#define TdL_Tol 0
-#define TdR_CaliValue 0
-#define TdR_Tol 0
-#define HipAngL_CaliValue 0
-#define HipAngL_Tol 0
-#define HipAngR_CaliValue 0
-#define HipAngR_Tol 0
+#define TdL_CaliValue 83
+#define TdL_Tol 2
+#define TdR_CaliValue 61
+#define TdR_Tol 2
+#define HipAngL_CaliValue 173.5
+#define HipAngL_Tol 5
+#define HipAngR_CaliValue 219
+#define HipAngR_Tol 5
 #define FcL_CaliValue 0
-#define FcL_Tol 0
+#define FcL_Tol 2
 #define FcR_CaliValue 0
-#define FcR_Tol 0
-#define Theta0_L 10             // deg, Iniital angle between left suppport beam and human back
-#define Theta0_R 10             // deg, Iniital angle between right suppport beam and human back
+#define FcR_Tol 2
+#define Theta0_L 0             // deg, Iniital angle between left suppport beam and human back
+#define Theta0_R 0             // deg, Iniital angle between right suppport beam and human back
 
 /* Intermediate auxiliary parameters reagrding torque and hip angle feedback for low-level control */
 extern float HipAngL;                    // deg, Left hip joint angle
@@ -167,6 +168,21 @@ void Control_Init(void);
 int8_t LLPreproSensorInit(void);
 
 /**
+ * Manage low-level control system status including:
+ *   Low-level controller status
+ *   Motor control pin status
+ *   Sensor initial value (Global coordinate for UID)
+ * For certain specific mode feedback including:
+ *   Stop state
+ *   Exit state
+ * motion type: 0-Stop state;      1-Exit state; 
+ *              2-Standing;        3-Walking;
+ *              4-Lowering;        5-Grasping;
+ *              6-Lifting;         7-Holding;
+ */
+void lowLevelStateMgr(void);
+
+/**
  * Set the yaw angle of human trunk to zero
  * @param unsigned char - Yaw init mode: 1-force to set, other number-logic set
  * @param IMUAlo - IMU operation algorithm
@@ -207,6 +223,13 @@ float sinofangleBetweenCableHB_R(void);
 void sensorFeedbackPro(void);
 
 /**
+ * Torque feedback and phase index processing for multi operation status control 
+ */
+void multiFeedbackPro(void);
+
+/**
+ * ATTENTION: THIS FUNCTION IS SET FOR OPEN-LOOP CONTROL TEST ONLY, THE FRICTION COMPENSATION
+ * LOGIC IS COMPACTED IN HIGH-LEVEL CONTROLLER ALREADY FOR PROTOTYPE CONTROL
  * Modify the desired torque command according to the friction compensation law 
  * for Bowden cable transmission friction feedforward compensation
  */

@@ -14,7 +14,7 @@ end
 
 % Make sure low-level controller recieved the s
 Transtate1 = fscanf(McuSerial);
-while ~strcmp(Transtate,ExoP.ReadyFlag) || ~strcmp(Transtate,ExoP.NotReadyFlag)
+while ~strcmp(Transtate1,ExoP.ReadyFlag) && ~strcmp(Transtate1,ExoP.NotReadyFlag)
 %     flushinput(McuSerial);
     Transtate1 = fscanf(McuSerial);
     fprintf(McuSerial,TransState);    % keep send the stopped commnad

@@ -69,6 +69,9 @@ P.angleY = [];      % yaw angle of trunk bending motion
 % Can be obtained directly from IMU, can also be calculated on PC or on MCU
 P.adotPV = [];      % angular velocity of trunk motion in pitch direction from MCU
 
+%% For low-level controller configuration
+P.fricEnable = 0;   % Friction compensation enable flag: 0-disable, 1-enable
+
 %% For communication protocol
 % Delay feedback refers to the feedback which is not following a recieving
 % process from PC to MCU, indicating the info package recieved by PC is not
