@@ -167,6 +167,7 @@ void TrunkYawAngPro(void);
 
 /**
  * Calculate standard deviation for HipAngMean within certain cycles
+ * Here the population standard deviation is calculated
  * @param int - cycles: 1~FilterCycles
  * @return double - calculated standard deviation
  */
@@ -174,6 +175,7 @@ double HipAngStdCal(int cycles);
 
 /**
  * Calculate standard deviation for HipAngDiff within certain cycles
+ * Here the population standard deviation is calculated
  * @param int - cycles: 1~FilterCycles
  * @return double - calculated standard deviation
  */

@@ -27,6 +27,9 @@ global TempApp;
 % assignin('base','MotionMode',ExoP.MotionMode);
 
 %% Saving P for experimental configuration parameters
+% Delete the initial motion state to keep the correpsonding relationship
+% with other datas
+ExoP.MotionMode = ExoP.MotionMode(1:end-1,:);
 assignin('base','ExoP',ExoP);
 outPutStatus(TempApp,'Data Saved.');
 % fileName = input('File name:\n','s');

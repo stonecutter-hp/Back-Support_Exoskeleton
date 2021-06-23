@@ -10,7 +10,7 @@
 #include "Control.h"
 #include "IMU.h"
 
-/*********************************** Serial communication definition ************************************/
+/*********************************** Serial communication definition **********************************/
 #define USART_REC_LEN 200                     // define the maximum number of received bytes
 #define USART_TX_LEN 200                      // define the maximum number of sending bytes
 #define RevievCharNum 15                      // correct recieveing char number exclude terminator
@@ -25,13 +25,26 @@ extern char SwitchFlag;                       // mark if new command have reciev
 extern char USART_TX_BUF[USART_TX_LEN];       // sending buffer
 extern int USART_TX_STA;                      // sending number flag
 extern bool SendItemFlag[9];                   // for convinient of adjust feedback item adjust
-/*********************************** Communication receiving data definition ************************************/
+/*********************************** Communication receiving data definition **************************/
 extern float desiredTorqueL;    // desired motor torque of left motor
 extern float desiredTorqueR;    // desired motor torque of right motor
 extern uint8_t mode;            // detected motion mode
 extern uint8_t PreMode;         // last time's motion mode
 extern uint8_t side;            // another auxiliary indicator for asymmetric and low-level compensation term from high-level control
+/********************************************** Motion state definition *******************************/
+#define StopState 0
+#define ExitState 1
+#define Standing 2
+#define Walking 3
+#define Lowering 4
+#define Grasping 5
+#define Lifting 6
+#define Holding 7
 
+#define NoneAsy 0
+#define LeftAsy 1
+#define RightAsy 2
+#define FricCompFlag 3
 
 /**
  * @ PC to MCU Protocol: TLxxxxTRxxxxMxx\r\n (0x0D,0x0A)
@@ -44,9 +57,9 @@ extern uint8_t side;            // another auxiliary indicator for asymmetric an
  *                                      6-Lifting;         7-Holding;
  *  Second number indicates asymmetric side & low-level control compensation model:
  *                                      0-none; 1-left; 2-right; 
- *                                      3(0+3)-none + fricCom;
- *                                      4(1+3)-left + fricCom;
- *                                      5(2+3)-right + fricCom
+ *                                      3 (0+3)-none + fricCom;
+ *                                      4 (1+3)-left + fricCom;
+ *                                      5 (2+3)-right + fricCom
  * Notice: With successful receiving process, USART_RX_STA indicates
  *         total reveived char number exclude '\r\n'; and they are stored
  *         in USART_RX_BUF[0~USART_RX_STA-1], i.e., TLxxxxTRxxxxMxx 

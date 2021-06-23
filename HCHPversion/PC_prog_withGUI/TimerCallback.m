@@ -15,6 +15,7 @@ ExoP.TimeAll = [ExoP.TimeAll; toc];
 %*********************** Control ***********************
 if Control_Update == 1
     Control();
+    highLevelCommandDis();
 end
 %************************ Send *************************
 if Send_Update == 1
@@ -30,20 +31,27 @@ end
 % % % % % % while McuSerial.BytesToOutput ~= 0  
 % % % % % % end
 
-%% If the running time overlarger than preset running time, then stop program
-% % Potential stop condition for practical application: Make sure the main
-% % program only stop when info package feedback turn to resume to a safe
-% % operation point  
-% if (ExoP.TimeAll(end) > ExoP.MaxRunTime && (ExoP.MotionMode(end,1) == 1 || ExoP.MotionMode(end,1) == 0))
+%% Timer loop stop condition
+% Stop condition for practical application (Before complete high-level UID
+% strategy): 
+% Running time has exceed the expected running time, meanwhile the current
+% motion state is Exit or Standing 
+if (ExoP.TimeAll(end) > ExoP.MaxRunTime ... 
+    && (ExoP.MotionMode(end,2) == ExoP.Exit ... 
+    || ExoP.MotionMode(end,2) == ExoP.Standing))
+    stop(Ttimer);
+end
+
+% % Stop condition for practical application (After complete high-level UID
+% % strategy): 
+% % The bending cycle has exceed the expected bending cycles, meanwhile the
+% % current motion state is Exit or Standing 
+% if (ExoP.BendCycle > ExoP.MaxBendCycles ... 
+%     && (ExoP.MotionMode(end,2) == ExoP.Exit ... 
+%     || ExoP.MotionMode(end,2) == ExoP.Standing))
 %     stop(Ttimer);
 % end
 
-% Program stop condition for testing
-% McuSerial = ExoP.config{1,1};
-% flushinput(McuSerial);
-if (ExoP.TimeAll(end) > ExoP.MaxRunTime)
-    stop(Ttimer);
-end
 
 
 end

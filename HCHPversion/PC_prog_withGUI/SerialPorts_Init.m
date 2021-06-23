@@ -58,7 +58,7 @@ tic
 while ~strcmp(Transtate,ExoP.ReadyFlag)
 %     flushinput(McuSerial);
     Transtate = fscanf(McuSerial);
-    if(toc > 10)
+    if(toc > 30)
         ExoP.stopFlag = 3;
         fclose(McuSerial);
         delete(McuSerial);
@@ -68,10 +68,12 @@ while ~strcmp(Transtate,ExoP.ReadyFlag)
     end
 end
 
+% Notice that the initial command send to low-level controller during
+% handshake process indicates that mode = 1 and side = 0
 TransState = 'TL0000TR0000M10';
-
 fprintf(McuSerial,TransState);    % send the data
 flushoutput(McuSerial);           % flush the output buffer
 outPutStatus(TempApp,'Sucessful Handshake.');
+TempApp.txtMode.Value = ['Last State: Exit',10,'Curr State: Exit',10,'Cycels: 0'];
 pause(5/1000);
 end

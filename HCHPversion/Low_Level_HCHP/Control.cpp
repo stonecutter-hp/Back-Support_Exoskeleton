@@ -84,9 +84,9 @@ void Control_Init(void) {
   /* Initialize mode and side from high-level UID strategy */
   // Motion detection mode, default is 0 (stop state) to send Ready signal for 
   // for handshake with high-level controller
-  mode = 0;   
+  mode = StopState;   
   PreMode = mode;
-  side = 0;   // Asymmetric side, default is 0 (no asymmetric)
+  side = NoneAsy;   // Asymmetric side, default is 0 (no asymmetric)
 
   /* Initialize intermediate value of sensor feedback */
   HipAngL = 0;
@@ -250,7 +250,7 @@ int8_t LLPreproSensorInit() {
  */
 void lowLevelStateMgr() {
   /* State Manage for Stop state */
-  if(mode == 0) {
+  if(mode == StopState) {
     // Initial low-level controller
     Control_Init(); 
     // Initial motor control pin mode
@@ -259,7 +259,7 @@ void lowLevelStateMgr() {
     LLPreproSensorInit();
   }
   /* State Manage for Exit state */
-  else if(mode == 1) {
+  else if(mode == ExitState) {
     // Initial low-level controller
     Control_Init(); 
     // Initial motor control pin mode
@@ -535,9 +535,9 @@ void frictionCompen() {
   /* Since the varying of FleVel is shaking to cause unstable compensation, better compensation is  
   to decieded the cable velocity based on lifting/lowering status */
   // Left side
-  // Check the motion status is lowering(3) or lifting(5)
-  if(mode == 3) {cableVelSignL = -1;}
-  else if(mode == 5) {cableVelSignL = 1;}
+  // Check the motion status is lowering or lifting
+  if(mode == Lowering) {cableVelSignL = -1;}
+  else if(mode == Lifting) {cableVelSignL = 1;}
   // Decide the friction compensation coeffeicent and offset
   // The friction coefficients and offset from identification experiments  
   if(cableVelSignL < 0) {
@@ -554,8 +554,8 @@ void frictionCompen() {
   to decieded the cable velocity based on lifting/lowering status */
   // Right side
   // Check the motion status is lowering or lifting
-  if(mode == 3) {cableVelSignR = -1;}
-  else if(mode == 5) {cableVelSignR = 1;} 
+  if(mode == Lowering) {cableVelSignR = -1;}
+  else if(mode == Lifting) {cableVelSignR = 1;} 
   // Decide the friction compensation coeffeicent and offset
   // The friction coefficients and offset from identification experiments 
   if(cableVelSignR < 0) {
@@ -612,8 +612,8 @@ void frictionCompenCL() {
   
   // Left side
   // Check the motion status is lowering or lifting
-  if(mode == 3) {cableVelSignL = -1;}
-  else if(mode == 5) {cableVelSignL = 1;}  
+  if(mode == Lowering) {cableVelSignL = -1;}
+  else if(mode == Lifting) {cableVelSignL = 1;}  
   // Decide the friction compensation coeffeicent and offset
   // The friction coefficients and offset are from identification experiments  
   if(cableVelSignL < 0) {
@@ -628,8 +628,8 @@ void frictionCompenCL() {
 
   // Right side
   // Check the motion status is lowering or lifting
-  if(mode == 3) {cableVelSignR = -1;}
-  else if(mode == 5) {cableVelSignR = 1;} 
+  if(mode == Lowering) {cableVelSignR = -1;}
+  else if(mode == Lifting) {cableVelSignR = 1;} 
   // Decide the friction compensation coeffeicent and offset
   // The friction coefficients and offset from identification experiments 
   if(cableVelSignR < 0) {

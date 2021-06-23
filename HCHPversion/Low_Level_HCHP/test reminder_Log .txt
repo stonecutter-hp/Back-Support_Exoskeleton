@@ -64,4 +64,4 @@ Low-level control handshake logic √
 Update the recieveing logic with more strict data chekcing by using Control_update = 0; Send_update = 0; return; in each item depostion and move the updating data in ExoP in the end √
 
 20210619
-Test the list box for GUI
+Test the list box for GUI √

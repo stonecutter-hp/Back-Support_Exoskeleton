@@ -1,8 +1,9 @@
 function Send_Data()
-% Since program running to here, the necessary information of last time
-% have stroed in P
+% Since program running to here, the necessary information of latest time
+% have stored in P
 % PC to MCU Protocol: TLxxxxTRxxxxMxx\r\n (0x0D,0x0A)
 global ExoP;
+global TempApp;
 % Here we mainly want to send mode and desired torque to MCU
 McuSerial = ExoP.config{1,1};
 MotionMode = ExoP.MotionMode(end,:); 
@@ -27,10 +28,10 @@ else
     TransState = [TransState,num2str(DesiredTorque(2)*100)];
 end
 
-% TransState = [TransState,'M',num2str(MotionMode(1)),num2str(MotionMode(2))];
-
-% For test only
-TransState = 'TL0000TR0000M10';
+TransState = [TransState,'M',num2str(MotionMode(2)),num2str(MotionMode(3))];
+TempApp.txtCommand.Value = TransState;
+% % FOR TEST ONLY
+% TransState = 'TL0000TR0000M10';
 %% Send data to serial port
 flushoutput(McuSerial);      % flush the output buffer
 fprintf(McuSerial,TransState);    % send the data

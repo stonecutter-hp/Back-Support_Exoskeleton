@@ -1,4 +1,6 @@
 function [Control_Update,Send_Update] = Receive_McuData()
+% This program is to receive and process the info package from low-level
+% controller
 global ExoP;
 global TempApp;
 %% Read data from MCU
@@ -10,8 +12,7 @@ while numel(TransState) ~= ExoP.ReceiveDataNum
 %    flushinput(McuSerial);
     TransState = fscanf(McuSerial);
 end
-% TransState
-TempApp.txtInfo.Value = TransState;
+
 %% Decompose the data from MCU from characters to numbers
 % Here the specific form for recieved data is designed as: 
 % MxTLxxxxLLxxxxALxxxxxTRxxxxLRxxxxARxxxxxPxxxxxYxxxxxVxxxxx\r\n
@@ -53,12 +54,12 @@ if(TransState(position-2) == 'M')
 else
     % False recieve cycle
     Control_Update = 0;
-    Send_Update = 0;        
+    Send_Update = 0; 
+    return;
 end
 
 % if 
 if(Control_Update)
-    ExoP.TransTime = [ExoP.TransTime; toc];
     % TLxxxx
     if(ExoP.RecItem(1) == 1)
         if(TransState(position) == 'T' && TransState(position+1) == 'L')
@@ -181,7 +182,7 @@ if(Control_Update)
             return;              
         end
     end
-
+    ExoP.TransTime = [ExoP.TransTime; toc];
     ExoP.torqueTL = [ExoP.torqueTL; TransTorqueTL];
     ExoP.forceLL = [ExoP.forceLL; TransForceLL];
     ExoP.angleAL = [ExoP.angleAL; TransAngleAL];
@@ -191,6 +192,27 @@ if(Control_Update)
     ExoP.angleP = [ExoP.angleP; TransAngleP];
     ExoP.angleY = [ExoP.angleY; TransAngleY];
     ExoP.adotPV = [ExoP.adotPV; TransVeloV];
+    % Other info from calculaion
+    if size(ExoP.adotPV,1) == 1 % Fisrt cycle
+        Trans_tdotTL = 0;
+        Trans_tdotTR = 0;
+        Trans_adotAL = ExoP.adotPV; 
+        Trans_adotAR = ExoP.adotPV;
+    else
+        % Calculation
+        delta_t = ExoP.TransTime(end)-ExoP.TransTime(end-1);
+        Trans_tdotTL = (ExoP.torqueTL(end)-ExoP.torqueTL(end-1))/delta_t;
+        Trans_tdotTR = (ExoP.torqueTR(end)-ExoP.torqueTR(end-1))/delta_t;
+        Trans_adotAL = (ExoP.angleAL(end)-ExoP.angleAL(end-1))/delta_t;
+        Trans_adotAR = (ExoP.angleAR(end)-ExoP.angleAR(end-1))/delta_t;
+    end
+    ExoP.tdotTL = [ExoP.tdotTL;Trans_tdotTL];
+    ExoP.tdotTR = [ExoP.tdotTR;Trans_tdotTR];
+    ExoP.adotAL = [ExoP.adotAL;Trans_adotAL];
+    ExoP.adotAR = [ExoP.adotAR;Trans_adotAR];
+    
+    % TransState
+    TempApp.txtInfo.Value = TransState;
 end
 %%%%%%%%%%%%%%% Here can add more data decompostition processing %%%%%%%%%%%%%
 

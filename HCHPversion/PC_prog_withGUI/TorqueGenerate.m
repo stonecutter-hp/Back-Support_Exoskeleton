@@ -1,4 +1,4 @@
-function DesiredTorque = TorqueGenerate(mode,ConInf)
+function DesiredTorque = TorqueGenerate(mode)
 global ExoP;
 % calculate desired torque or impedence according to designed algorithm
 % Refer to Presentation_20200828

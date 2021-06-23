@@ -277,6 +277,7 @@ void TrunkYawAngPro() {
 
 /**
  * Calculate standard deviation for HipAngMean within certain cycles
+ * Here the population standard deviation is calculated
  * @param int - cycles: 1~FilterCycles
  * @return double - calculated standard deviation
  */
@@ -311,6 +312,7 @@ double HipAngStdCal(int cycles) {
 
 /**
  * Calculate standard deviation for HipAngDiff within certain cycles
+ * Here the population standard deviation is calculated
  * @param int - cycles: 1~FilterCycles
  * @return double - calculated standard deviation
  */
@@ -448,7 +450,7 @@ void WalkingPhase() {
 void LoweringPhase() {
   float Auxpara;
   Auxpara = PeakvalueDetect(HipAngMeanPre,1);
-  if(Auxpara != 0 && HipAngStd < UID_Subject1.ThrHipAngStd_4) {
+  if(Auxpara != -100 && HipAngStd < UID_Subject1.ThrHipAngStd_4) {
     mode = Grasping;
     PreMode = Lowering;
     //Record max hip joint bending angle
@@ -472,7 +474,7 @@ void GraspingPhase() {
   else {
     mode = Grasping;
     Auxpara = PeakvalueDetect(HipAngMeanPre,1);
-    if(Auxpara != 0) {
+    if(Auxpara != -100) {
       //Keep updating max hip joint bending angle
       if(HipAngL > HipAngL_MaxValue) {HipAngL_MaxValue = HipAngL;}
       if(HipAngR > HipAngR_MaxValue) {HipAngR_MaxValue = HipAngR;}     
@@ -593,7 +595,7 @@ float PeakvalueDetect(float *Pevalue, uint8_t Peakmode) {
   }
 
   if(Findout) {return Pevalue[FilterCycles-2];}
-  else {return 0;}
+  else {return -100;}
 }
 
 /**

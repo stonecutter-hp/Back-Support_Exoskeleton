@@ -35,9 +35,9 @@ uint8_t side;            // another auxiliary indicator for asymmetric and low-l
  *                                      6-Lifting;         7-Holding;
  *  Second number indicates asymmetric side & low-level control compensation model:
  *                                      0-none; 1-left; 2-right; 
- *                                      3(0+3)-none + fricCom;
- *                                      4(1+3)-left + fricCom;
- *                                      5(2+3)-right + fricCom
+ *                                      3 (0+3)-none + fricCom;
+ *                                      4 (1+3)-left + fricCom;
+ *                                      5( 2+3)-right + fricCom
  * Notice: With successful receiving process, USART_RX_STA indicates
  *         total reveived char number exclude '\r\n'; and they are stored
  *         in USART_RX_BUF[0~USART_RX_STA-1], i.e., TLxxxxTRxxxxMxx 

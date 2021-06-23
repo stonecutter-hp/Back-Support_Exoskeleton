@@ -2,8 +2,9 @@ function P = Set_Parameters()
 % Notice to ensure the unit of angle is rad/deg first
 %% Main program setting information
 P.McuPort = 'COM3';     % serial port of MCU&PC communication
-P.MainFreq = 100;       % main program running frequency (Hz)
-P.MaxRunTime = 10;      % main program running time (s)
+P.MainFreq = 1;         % main program running frequency (Hz)
+P.MaxRunTime = 1;       % expected main program running time (s)
+P.MaxBendCycles = 1;    % expected bending cycles
 P.d2r = pi/180;         % deg to rad 
 %% Configuration information
 % P.config{1,1} for serial port configuration
@@ -14,44 +15,24 @@ P.config = cell(2,1);
 %                    4-serial communication error
 P.stopFlag = 0;
 
-%% For time information saving in TimerCallback
+%% For storage of time information saving in TimerCallback
 P.TransTime = [];   % time of every send running loop
 P.TimeAll = [];     % time point of every loop
 
-%% For high-level strategy of motion phase detection and desired torque generation information saving
-P.MotionMode = [];
-P.DesiredTorque = [];
-P.AlphaMean = [];
-% Store the flexion velocity calculated by Delta_angle/Delta_time
-P.AlphaDot = [];  
-P.BetaMean = [];
+%% For prototype operation configuration selection
+% UID strategy selection flag
+%   1-Basic UID strategy; 2-Developed UID strategy
+P.UIDStrategy = 1;  
+% RTG strategy selection flag:
+%   1-Impedance strategy; 2-Gravity compensation; 3-Velocity-based
+%   compensation strategy
+P.RTGStrategy = 1;  
+% Subject selection
+P.SubjectNum = 1;
+% Friction compensation enable flag: 0-disable, 1-enable
+P.fricEnable = 0;   
 
-%% For high-level referenced information configuration
-% for motion detection
-P.Range = 10;         % Can be the range of angle standard deviation 
-P.Alpha_Thre = 0;     % the threshold value of flexion angle
-P.AlphaDot_Thre = 0;  % the threshold value of flexion velocity
-P.Beta_Thre = 0;      % the threshold value of twisting angle   
-P.BetaDot_Thre = 0;   % the threshold value of twisting velocity 
-
-% for torque generation based on biomechanical model
-% consider under unit of rad and rad/s and for both side transmission systems
-% Detialed torque generation strategy can refer to P2C
-P.GravityKg = 0.3;    % Gravity compensation level coefficient
-P.DynamicKd = 20;     % Adjustable dynamic compensation level coeffiecint, here fixed
-P.DynamicK = 10;      % Adjustable auxiliary coefficient for dynamic compensation, here fixed 
-P.DynamicVmax = 100;  % Adjusted assistive timing coefficient, here fixed
-
-% for torque generation based on impedance regulation
-% consider under unit of rad and rad/s and for both side transmission systems
-P.ImpedanceKp = 0.5/P.d2r;  % Nm/deg/d2r -> Nm/rad   rendered stiffness
-P.ImpedanceKv = 0/P.d2r;    % Nm*s/deg/d2r -> Nm*s/rad rendered damping
-P.VirAlpha0 = 0*P.d2r;      % deg*d2r -> rad Virtual alpha0
-% P.VirAlpha0 = P.Alpha_Thre*P.d2r;
-P.VirAlphadot0 = 0*P.d2r;   % deg/s*d2r ->rad/s Virtual alpha0 dot
-% P.VirAlphadot0 = P.AlphaDot_Thre*P.d2r;
-
-%% For sensor information recieving from MCU
+%% For storage of sensor information recieving from MCU
 % RecItem marker which should be the same as MCU config with 1 for item
 % info ON and 0 for item info OFF
 % The order of item corresponds to each marker follows communication
@@ -60,17 +41,21 @@ P.VirAlphadot0 = 0*P.d2r;   % deg/s*d2r ->rad/s Virtual alpha0 dot
 P.RecItem = [1, 1, 1, 1, 1, 1, 1, 1, 1];
 P.torqueTL = [];    % torque feedback of left torsion spring
 P.forceLL = [];     % left cable force feedback
-P.angleAL = [];     % angle of left thigh
+P.angleAL = [];     % angle of left hip
 P.torqueTR = [];    % torque feedback of right torsion spring
 P.forceLR = [];     % right cable force feedback
-P.angleAR = [];     % angle of right thigh
+P.angleAR = [];     % angle of right hip
 P.angleP = [];      % pitch angle of turnk bending motion
 P.angleY = [];      % yaw angle of trunk bending motion
 % Can be obtained directly from IMU, can also be calculated on PC or on MCU
 P.adotPV = [];      % angular velocity of trunk motion in pitch direction from MCU
+% Calculated from sensor feedback
+P.tdotTL = [];      % time deriviation of left assistive torque
+P.tdotTR = [];      % time deriviation of right assistive torque
+P.adotAL = [];      % velocity of left hip
+P.adotAR = [];      % velocity of right hip
 
-%% For low-level controller configuration
-P.fricEnable = 0;   % Friction compensation enable flag: 0-disable, 1-enable
+
 
 %% For communication protocol
 % Delay feedback refers to the feedback which is not following a recieving
@@ -106,18 +91,75 @@ P.DelayMark = [];        % store the delay mark Mx from MCU
 P.ReadyFlag = ['Ready.',13,10];
 P.NotReadyFlag = ['NotReady',13,10];
 
-%% For biomechanical model parameter setting
-% refer to the P1C draft
-P.TrunkM = 41;           % unit: kg
-P.ArmM = 15;             % unit: kg
-P.TrunkHalfL = 0.295;    % unit: m
-P.ShoulderHalfL = 0.155; % unit: m
-P.ArmL = 0.24;           % unit: m
-P.Df = 0.05;             % moment arm for flexion spinal force
-P.Dt = 0.05;             % moment arm for twisting spinal force
+%% For biomechanical model parameter setting of subject
+% Data set refers to the P1C draft
+P.Subject = [];
 P.g = 9.81;              % gravity acceleration
-P.con = 1.02;            % co-constration index
- 
+
+%% For storage of general processed info for UID and RTG strategy
+P.Range = 10;            % The range of angle standard deviation 
+P.ConThres = 5;          % The number of continous requirment satisfied items at once
+% Definition of different motion state:
+% mode(1) - state transition indicator:
+%                        0-No transition take place
+%                        1-State transition has taken place
+% mode(2) - motion state:0-Stop state;      1-Exit state; 
+%                        2-Standing;        3-Walking;
+%                        4-Lowering;        5-Grasping;
+%                        6-Lifting;         7-Holding;
+% mode(3) - asymmetric direction:
+%                        0-none; 1-left; 2-right; 
+%                        3 (0+3)-none + fricCom;
+%                        4 (1+3)-left + fricCom;
+%                        5 (2+3)-right + fricCom
+%-------------- State Transition Flag ---------------
+P.NoTrans = 0;
+P.StateTrans = 1;
+% Assume a bending cycle is complete if Lifting -> Standing is detected
+% It is reset to 0 if Exit condition is detected
+P.BendCycle = 0;   
+%------------------- Motion Type --------------------
+P.Stop = 0;
+P.Exit = 1;
+P.Standing = 2;
+P.Walking = 3;
+P.Lowering = 4;
+P.Grasping = 5;
+P.Lifting = 6;
+P.Holding = 7;
+P.MotionModeDis = ['Stop','Exit','Standing','Walking','Lowering','Grasping','Lifting','Holding'];
+%--- Asymmetric Direction & Friction Compen Flag ----
+P.None = 0;
+P.LeftAsy = 1;
+P.RightAsy = 2;
+P.fricCompen = 3;
+% Here there is a initial state assigned as mode = Exit and side = None
+P.MotionMode = [P.NoTrans, P.Exit, P.None+P.fricEnable*P.fricCompen];
+% From raw sensor feedback without any processing like abs()
+P.HipMeanAngle = [];     % (left hip angle + right hip angle)/2
+P.HipDiffAngle = [];     % left hip angle - right hip angle
+P.HipStdAngle = [];      % (population) std of HipMeanAngle
+P.HipStdDiffAngle = [];  % (population) std of HipDiffAngle
+% The trunk bending angle at the moment of lowering, for RTG strategy
+P.TrunkAngleLeftT0 = 0;   
+P.TrunkAngleRightT0 = 0;
+P.TrunkAngleT0 = (P.TrunkAngleLeftT0 + P.TrunkAngleRightT0)/2;
+% The trunk bending angle at the moment of grasping, for RTG strategy
+P.TrunkAngleLeftPeak = 0;
+P.TrunkAngleRightPeak = 0;
+P.TrunkAnglePeak = (P.TrunkAngleLeftPeak + P.TrunkAngleRightPeak)/2;
+
+P.DesiredTorque = []; 
+
+%% Specific controller parameters for UID strategy 
+P.UID = [];
+
+%% Specific controller parameters for RTG strategy
+P.RTG = [];              
+% Lower and upper limitation of the reference torque
+P.RTGLowerBound = 0;
+P.RTGUpperBound = 30;
+
 
 %% For fiber passive structure model
 % P.par1 = 1;       % just for example, maybe for the torque pattern equation parameter
