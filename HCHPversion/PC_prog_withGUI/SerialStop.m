@@ -1,6 +1,5 @@
 function SerialStop(SerialPort,~)
 global ExoP;
-global TempApp;
 fclose(SerialPort);
 delete(SerialPort);
 % disp('Serial port shut down!')
@@ -12,8 +11,7 @@ if(~isempty(ExoP.config{2,1}) && isvalid(ExoP.config{2,1}))
 else
     %% Saving data
     ExoP.stopFlag = 3;
-    DataSaving();
-    outPutStatus(TempApp,'Data Saved.');
     stopStateDis();
+    DataSaving();
 end
 end

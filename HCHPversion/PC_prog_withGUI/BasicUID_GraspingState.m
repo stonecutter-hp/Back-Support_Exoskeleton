@@ -1,6 +1,6 @@
 function mode = BasicUID_GraspingState(HipMeanAngle,HipDiffAngle,HipStdAngle,Alpha,AlphaDot,Beta,HipStdDiffAngle,ConThres)
-global ExoP;
 % Grasping state processing
+global ExoP;
 %% Keep updating the peak value of trunk flexion angle
 if size(ExoP.HipMeanAngle,1) >= 3
     if ExoP.UID.AngleInfoFlag ...

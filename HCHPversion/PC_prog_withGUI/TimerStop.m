@@ -10,6 +10,6 @@ if isvalid(ExoP.config{1,1})
     ProgStop();
 end
 %% Saving data
-DataSaving();
 stopStateDis();
+DataSaving();
 end

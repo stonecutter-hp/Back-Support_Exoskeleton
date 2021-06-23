@@ -62,7 +62,6 @@ while ~strcmp(Transtate,ExoP.ReadyFlag)
         ExoP.stopFlag = 3;
         fclose(McuSerial);
         delete(McuSerial);
-        DataSaving();
         stopStateDis();
         return
     end

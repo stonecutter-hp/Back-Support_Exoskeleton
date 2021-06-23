@@ -1,63 +1,127 @@
-<deployment-project plugin="plugin.apptool" plugin-version="1.0">
-  <configuration file="D:\OneDrive - The Chinese University of Hong Kong\CUHK\major material\project info\exo\human-robot augmentation\system\control\Back-Support Exoskeleton\HCHPversion\PC_prog_withGUI\HCHPEXOv1.prj" location="D:\OneDrive - The Chinese University of Hong Kong\CUHK\major material\project info\exo\human-robot augmentation\system\control\Back-Support Exoskeleton\HCHPversion\PC_prog_withGUI" name="HCHPEXOv1" target="target.mlapps" target-name="打包为 App">
+<deployment-project plugin="plugin.ezdeploy" plugin-version="1.0">
+  <configuration file="D:\OneDrive - The Chinese University of Hong Kong\CUHK\major material\project info\exo\human-robot augmentation\system\control\Back-Support Exoskeleton\HCHPversion\PC_prog_withGUI\HCHPEXOv1.prj" location="D:\OneDrive - The Chinese University of Hong Kong\CUHK\major material\project info\exo\human-robot augmentation\system\control\Back-Support Exoskeleton\HCHPversion\PC_prog_withGUI" name="HCHPEXOv1" target="target.ezdeploy.standalone" target-name="Application Compiler">
     <param.appname>HCHPEXOv1</param.appname>
+    <param.icon />
+    <param.icons />
+    <param.version>1.0</param.version>
     <param.authnamewatermark>Hongpeng Liao</param.authnamewatermark>
     <param.email />
     <param.company />
-    <param.icon />
-    <param.icons />
     <param.summary />
     <param.description />
-    <param.screenshot>C:\Users\Hongp\AppData\Local\Temp\tp1ad40b24_9fed_4d50_b026_f625af4d4a46.png</param.screenshot>
-    <param.version>1.0</param.version>
-    <param.products.name />
-    <param.products.id />
-    <param.products.version />
-    <param.platforms />
-    <param.output>${PROJECT_ROOT}</param.output>
-    <param.guid>2d33a7f5-2148-4cff-a3c4-fff3e5bc4970</param.guid>
+    <param.screenshot>${PROJECT_ROOT}\icon.png</param.screenshot>
+    <param.guid />
+    <param.installpath.string>\HCHPEXOv1\</param.installpath.string>
+    <param.installpath.combo>option.installpath.programfiles</param.installpath.combo>
+    <param.logo />
+    <param.install.notes />
+    <param.target.install.notes />
+    <param.intermediate>${PROJECT_ROOT}\HCHPEXOv1\for_testing</param.intermediate>
+    <param.files.only>${PROJECT_ROOT}\HCHPEXOv1\for_redistribution_files_only</param.files.only>
+    <param.output>${PROJECT_ROOT}\HCHPEXOv1\for_redistribution</param.output>
+    <param.logdir>${PROJECT_ROOT}\HCHPEXOv1</param.logdir>
+    <param.enable.clean.build>false</param.enable.clean.build>
+    <param.user.defined.mcr.options />
+    <param.target.type>subtarget.standalone</param.target.type>
+    <param.support.packages />
+    <param.web.mcr>true</param.web.mcr>
+    <param.package.mcr>false</param.package.mcr>
+    <param.no.mcr>false</param.no.mcr>
+    <param.web.mcr.name>MyAppInstaller_web</param.web.mcr.name>
+    <param.package.mcr.name>MyAppInstaller_mcr</param.package.mcr.name>
+    <param.no.mcr.name>MyAppInstaller_app</param.no.mcr.name>
+    <param.windows.command.prompt>true</param.windows.command.prompt>
+    <param.create.log>false</param.create.log>
+    <param.log.file />
+    <param.native.matlab>false</param.native.matlab>
+    <param.checkbox>false</param.checkbox>
+    <param.example />
+    <param.help.text>Syntax 
+	  -? 
+	 
+ Input Arguments 
+	 -?  print help on how to use the application 
+	 input arguments</param.help.text>
     <unset>
-      <param.email />
-      <param.company />
       <param.icon />
       <param.icons />
+      <param.version />
+      <param.email />
+      <param.company />
       <param.summary />
       <param.description />
-      <param.version />
-      <param.products.name />
-      <param.products.id />
-      <param.products.version />
-      <param.platforms />
+      <param.guid />
+      <param.installpath.string />
+      <param.installpath.combo />
+      <param.logo />
+      <param.install.notes />
+      <param.target.install.notes />
+      <param.intermediate />
+      <param.files.only />
       <param.output />
+      <param.logdir />
+      <param.enable.clean.build />
+      <param.user.defined.mcr.options />
+      <param.target.type />
+      <param.support.packages />
+      <param.web.mcr />
+      <param.package.mcr />
+      <param.no.mcr />
+      <param.web.mcr.name />
+      <param.package.mcr.name />
+      <param.no.mcr.name />
+      <param.windows.command.prompt />
+      <param.create.log />
+      <param.log.file />
+      <param.native.matlab />
+      <param.checkbox />
+      <param.example />
     </unset>
     <fileset.main>
       <file>${PROJECT_ROOT}\HCHPEXOv1.mlapp</file>
     </fileset.main>
+    <fileset.resources />
+    <fileset.package />
     <fileset.depfun>
+      <file>${PROJECT_ROOT}\background1.png</file>
+      <file>${PROJECT_ROOT}\BasicUID_ExitCondition.m</file>
       <file>${PROJECT_ROOT}\BasicUID_ExitState.m</file>
+      <file>${PROJECT_ROOT}\BasicUID_GraspingState.m</file>
+      <file>${PROJECT_ROOT}\BasicUID_LiftingState.m</file>
+      <file>${PROJECT_ROOT}\BasicUID_LoweringState.m</file>
       <file>${PROJECT_ROOT}\BasicUID_StandingState.m</file>
+      <file>${PROJECT_ROOT}\BasicUID_WalkingState.m</file>
       <file>${PROJECT_ROOT}\BasicUIDStrategy.m</file>
+      <file>${PROJECT_ROOT}\BasicUIDStrategy_Init.m</file>
       <file>${PROJECT_ROOT}\Control.m</file>
       <file>${PROJECT_ROOT}\DataSaving.m</file>
       <file>${PROJECT_ROOT}\EXOmain.m</file>
+      <file>${PROJECT_ROOT}\highLevelCommandDis.m</file>
+      <file>${PROJECT_ROOT}\HongPengData.m</file>
+      <file>${PROJECT_ROOT}\HugoData.m</file>
       <file>${PROJECT_ROOT}\ProgStart.m</file>
       <file>${PROJECT_ROOT}\ProgStop.m</file>
       <file>${PROJECT_ROOT}\Receive_McuData.m</file>
+      <file>${PROJECT_ROOT}\RTGCompensationStra.m</file>
+      <file>${PROJECT_ROOT}\RTGCompensationStra_Init.m</file>
       <file>${PROJECT_ROOT}\RTGImpedanceStra.m</file>
+      <file>${PROJECT_ROOT}\RTGImpedanceStra_Init.m</file>
+      <file>${PROJECT_ROOT}\RTGInit.m</file>
       <file>${PROJECT_ROOT}\Send_Data.m</file>
       <file>${PROJECT_ROOT}\SerialPorts_Init.m</file>
       <file>${PROJECT_ROOT}\SerialStop.m</file>
       <file>${PROJECT_ROOT}\Set_Parameters.m</file>
       <file>${PROJECT_ROOT}\stopStateDis.m</file>
+      <file>${PROJECT_ROOT}\SubjectInit.m</file>
       <file>${PROJECT_ROOT}\Timer_Init.m</file>
       <file>${PROJECT_ROOT}\TimerCallback.m</file>
       <file>${PROJECT_ROOT}\TimerStop.m</file>
-      <file>${PROJECT_ROOT}\TorqueGenerate.m</file>
+      <file>${PROJECT_ROOT}\UIDInit.m</file>
     </fileset.depfun>
-    <fileset.resources />
-    <fileset.package />
     <build-deliverables>
-      <file location="D:\OneDrive - The Chinese University of Hong Kong\CUHK\major material\project info\exo\human-robot augmentation\system\control\Back-Support Exoskeleton\HCHPversion" name="PC_prog_withGUI" optional="false">D:\OneDrive - The Chinese University of Hong Kong\CUHK\major material\project info\exo\human-robot augmentation\system\control\Back-Support Exoskeleton\HCHPversion\PC_prog_withGUI</file>
+      <file location="${PROJECT_ROOT}\HCHPEXOv1\for_testing" name="readme.txt" optional="true">D:\OneDrive - The Chinese University of Hong Kong\CUHK\major material\project info\exo\human-robot augmentation\system\control\Back-Support Exoskeleton\HCHPversion\PC_prog_withGUI\HCHPEXOv1\for_testing\readme.txt</file>
+      <file location="${PROJECT_ROOT}\HCHPEXOv1\for_testing" name="HCHPEXOv1.exe" optional="false">D:\OneDrive - The Chinese University of Hong Kong\CUHK\major material\project info\exo\human-robot augmentation\system\control\Back-Support Exoskeleton\HCHPversion\PC_prog_withGUI\HCHPEXOv1\for_testing\HCHPEXOv1.exe</file>
+      <file location="${PROJECT_ROOT}\HCHPEXOv1\for_testing" name="splash.png" optional="false">D:\OneDrive - The Chinese University of Hong Kong\CUHK\major material\project info\exo\human-robot augmentation\system\control\Back-Support Exoskeleton\HCHPversion\PC_prog_withGUI\HCHPEXOv1\for_testing\splash.png</file>
     </build-deliverables>
     <workflow />
     <matlab>

@@ -30,11 +30,17 @@ global TempApp;
 % Delete the initial motion state to keep the correpsonding relationship
 % with other datas
 ExoP.MotionMode = ExoP.MotionMode(1:end-1,:);
-assignin('base','ExoP',ExoP);
-outPutStatus(TempApp,'Data Saved.');
-% fileName = input('File name:\n','s');
-% fileName = datetime('now');
-% fileName = datestr(fileName,'yyyymmddTHHMMSS');
-% save(fileName);
+% assignin('base','ExoP',ExoP);
+fileName = datetime('now');
+fileName = datestr(fileName,'yyyymmddTHHMMSS');
+[file,path] = uiputfile('*.mat','Prototype Data Save',fileName);
+if isequal(file,0) || isequal(path,0)
+    outPutStatus(TempApp,'Cancel Saving Data');
+else
+    save([path,file],'ExoP');
+    outPutStatus(TempApp,'Data Saved.');
+end
+
+
 
 end
