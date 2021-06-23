@@ -133,6 +133,8 @@ extern float phaseIndexL;
 extern float phaseIndexR; 
 
 /* Parameters for friction compensation */
+// Consider the friction is not a friend only when Tr is increasing during lifting phase
+#define deltaTr_Thre 2   
 extern unsigned long starttime;
 extern unsigned long stoptime;
 extern unsigned long looptime;
@@ -142,7 +144,7 @@ extern float fricCoL;
 extern float fricOffsetL;
 extern float curveAngleL;
 extern float fricCompenTermL; // The friction compensation term
-extern float lastTOrqueR;
+extern float lastTorqueR;
 extern float deltaFricComR;
 extern float fricCoR;
 extern float fricOffsetR;

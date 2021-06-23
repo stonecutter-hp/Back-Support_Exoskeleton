@@ -80,6 +80,8 @@ void Control_Init(void) {
   PWM_commandR = 0;
   desiredTorqueL = 0;
   desiredTorqueR = 0;
+  PredesiredTorqueL = 0;
+  PredesiredTorqueR = 0;
 
   /* Initialize mode and side from high-level UID strategy */
   // Motion detection mode, default is 0 (stop state) to send Ready signal for 
@@ -477,9 +479,13 @@ void frictionCompen() {
 
   /* high-level strategy for open-loop Ta command generation */
   // impedance strategy
+  PredesiredTorqueL = desiredTorqueL;
+  PredesiredTorqueR = desiredTorqueR;
   desiredTorqueL = 0.15*TrunkFleAng; 
   desiredTorqueR = 0.15*TrunkFleAng;   
 //  // gravity compensation strategy
+//  PredesiredTorqueL = desiredTorqueL;
+//  PredesiredTorqueR = desiredTorqueR;
 //  desiredTorqueL = 0.5*30*9.8*sin(TrunkFleAng*d2r);
 //  desiredTorqueR = 0.5*30*9.8*sin(TrunkFleAng*d2r);
   
@@ -535,9 +541,12 @@ void frictionCompen() {
   /* Since the varying of FleVel is shaking to cause unstable compensation, better compensation is  
   to decieded the cable velocity based on lifting/lowering status */
   // Left side
-  // Check the motion status is lowering or lifting
-  if(mode == Lowering) {cableVelSignL = -1;}
-  else if(mode == Lifting) {cableVelSignL = 1;}
+  // Consider the friction is not a friend only 
+  // (when Tr is increasing) during lifting phase
+  if(mode == Lifting) 
+    {cableVelSignL = 1;}
+  else
+    {cableVelSignL = -1;}
   // Decide the friction compensation coeffeicent and offset
   // The friction coefficients and offset from identification experiments  
   if(cableVelSignL < 0) {
@@ -553,9 +562,12 @@ void frictionCompen() {
   /* Seems the varying of FleVel is shaking to cause unstable compensation and better compensation is  
   to decieded the cable velocity based on lifting/lowering status */
   // Right side
-  // Check the motion status is lowering or lifting
-  if(mode == Lowering) {cableVelSignR = -1;}
-  else if(mode == Lifting) {cableVelSignR = 1;} 
+  // Consider the friction is not a friend only 
+  // (when Tr is increasing) during lifting phase
+  if(mode == Lifting) 
+    {cableVelSignR = -1;}
+  else 
+    {cableVelSignR = 1;} 
   // Decide the friction compensation coeffeicent and offset
   // The friction coefficients and offset from identification experiments 
   if(cableVelSignR < 0) {
@@ -601,19 +613,26 @@ void frictionCompen() {
 void frictionCompenCL() { 
   int8_t cableVelSignL;
   float fricComL;  // Here used as lumped friction coefficient to replace exp(-fricCoL*curveAngleL*cableVelSignL) 
-  
+  float deltaTr_L;
+
   int8_t cableVelSignR;
   float fricComR;  // Here used as lumped friction coefficient to replace exp(-fricCoR*curveAngleR*cableVelSignR)
+  float deltaTr_R;
 
   // Update last time's compensation before the compensation is updated so that last time's
   // value can keep for this loop until next updated loop. For convenience of seperate limit for deltaPID and deltaFricCom
   lastTorqueL = fricCompenTermL;
   lastTorqueR = fricCompenTermR;
   
-  // Left side
-  // Check the motion status is lowering or lifting
-  if(mode == Lowering) {cableVelSignL = -1;}
-  else if(mode == Lifting) {cableVelSignL = 1;}  
+  /* Left side */
+  // Consider the friction is not a friend only 
+  // (when Tr is increasing) during lifting phase
+  deltaTr_L = desiredTorqueL - PredesiredTorqueL;
+  // if(mode == Lifting)
+  if(mode == Lifting && deltaTr_L > deltaTr_Thre) 
+    {cableVelSignL = 1;}
+  else 
+    {cableVelSignL = -1;}  
   // Decide the friction compensation coeffeicent and offset
   // The friction coefficients and offset are from identification experiments  
   if(cableVelSignL < 0) {
@@ -626,10 +645,15 @@ void frictionCompenCL() {
   }
   fricCompenTermL = (desiredTorqueL/9-fricOffsetL*PulleyRadiusL)/fricComL - desiredTorqueL/9;
 
-  // Right side
-  // Check the motion status is lowering or lifting
-  if(mode == Lowering) {cableVelSignR = -1;}
-  else if(mode == Lifting) {cableVelSignR = 1;} 
+  /* Right side */
+  // Consider the friction is not a friend only 
+  // (when Tr is increasing) during lifting phase
+  deltaTr_R = desiredTorqueR - PredesiredTorqueR;
+  // if(mode == Lifting)
+  if(mode == Lifting && deltaTr_R > deltaTr_Thre) 
+    {cableVelSignR = 1;}
+  else
+    {cableVelSignR = -1;}  
   // Decide the friction compensation coeffeicent and offset
   // The friction coefficients and offset from identification experiments 
   if(cableVelSignR < 0) {

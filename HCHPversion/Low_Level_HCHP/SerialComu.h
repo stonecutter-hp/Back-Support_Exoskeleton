@@ -26,8 +26,10 @@ extern char USART_TX_BUF[USART_TX_LEN];       // sending buffer
 extern int USART_TX_STA;                      // sending number flag
 extern bool SendItemFlag[9];                   // for convinient of adjust feedback item adjust
 /*********************************** Communication receiving data definition **************************/
-extern float desiredTorqueL;    // desired motor torque of left motor
-extern float desiredTorqueR;    // desired motor torque of right motor
+extern float desiredTorqueL;    // desired assistive torque of left torque transmission system
+extern float desiredTorqueR;    // desired assistive torque of right torque transmission system
+extern float PredesiredTorqueL; // previous desired assistive torque of left torque transmission system
+extern float PredesiredTorqueR; // previous desired assistive torque of right torque transmission system
 extern uint8_t mode;            // detected motion mode
 extern uint8_t PreMode;         // last time's motion mode
 extern uint8_t side;            // another auxiliary indicator for asymmetric and low-level compensation term from high-level control
