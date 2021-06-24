@@ -7,6 +7,8 @@ function testMain()
 % (Corresponds to to the stop) 
 
 global testP;
+global testTempApp;
+testTempApp.txtTestWearStatus.Value = num2str(testP.VCStatus);
 MainFreq = testP.MainFreq;          % Set program frequency
 testTimerInit(MainFreq);
 

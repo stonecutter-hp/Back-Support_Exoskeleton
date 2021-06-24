@@ -9,7 +9,12 @@ P.MaxRunTime = 1;
 % Corresponds to the sensor info from low-level control and human motion
 % mode from UID strategy
 P.runIndicator = 0;
+% Corresponds to the wear status
+P.Status = 0; 
 P.data = [];
+% Running time
+P.TransTime = [];
+
 %% Configuration information
 % P.config{1,1} for serial port configuration
 % P.config{2,1} for timer configuration
@@ -26,6 +31,9 @@ P.negEable = 0;  % 0-disable, 1-enable
 % Algorithm selection flag, corresponds to the UID/RTG strategy selection
 % flag 
 P.alogMode = 1; % 1-alg 1; 2-alg 2; 3-alg 3; 4-alg 4
+% For the test of visual cue function
+P.VCClickFlag = 0; % Flag to indicate if the visual-cue button is cliked or not
+P.VCStatus = 0; % To decide what should show on the screen
 
 
 end

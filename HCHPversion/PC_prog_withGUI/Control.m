@@ -10,6 +10,8 @@ switch ExoP.UIDStrategy
         % Can be replaced for future developed UID strategy by 
         % mode = DevelopedUIDStrategy();
         mode = [ExoP.NoTrans, ExoP.Exit, ExoP.None+ExoP.fricEnable*ExoP.fricCompen];      % ONLY FOR INDICATION
+    case 0  % Test mode
+        mode = [ExoP.NoTrans, ExoP.Exit, ExoP.None+ExoP.fricEnable*ExoP.fricCompen];      % ONLY FOR INDICATION
     otherwise
         mode = [ExoP.NoTrans, ExoP.Exit, ExoP.None+ExoP.fricEnable*ExoP.fricCompen];      % ONLY FOR INDICATION       
 end
@@ -25,6 +27,8 @@ switch ExoP.RTGStrategy
     case 3  % Velocity-based RTG Strategy
         % Can be replaced for future developed UID strategy by 
         % DesiredTorque = RTGVelBasedStra();
+        DesiredTorque = [0, 0];  % ONLY FOR INDICATION
+    case 0  % Test mode
         DesiredTorque = [0, 0];  % ONLY FOR INDICATION
     otherwise
         DesiredTorque = [0, 0];  % ONLY FOR INDICATION

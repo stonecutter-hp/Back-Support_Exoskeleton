@@ -2,6 +2,7 @@ function testDataSaving()
 global testP;
 global testTempApp;
 %% Saving P for experimental configuration parameters
+testP.Status = testP.Status(1:end-1);
 assignin('base','testP',testP);
 % fileName = input('File name:\n','s');
 fileName = datetime('now');

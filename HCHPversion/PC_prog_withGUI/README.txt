@@ -1,4 +1,5 @@
 20210623
+Before Install the RBSE 1.0, the CH340 serial port driver should be installed first.
 Manual of the GUI for RBSE 1.0
   -- Set up experiments configuration: 
         Serial port

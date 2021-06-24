@@ -15,7 +15,12 @@ ExoP.TimeAll = [ExoP.TimeAll; toc];
 %*********************** Control ***********************
 if Control_Update == 1
     Control();
-    highLevelCommandDis();
+    % If UID and RTG are all set for testing mode
+    if ExoP.UIDStrategy == 0 && ExoP.UIDStrategy == 0 
+        TempApp.txtMode.Value = 'TESTING';  % FOR INDICATION ONLY
+    else
+        highLevelCommandDis();
+    end
 end
 %************************ Send *************************
 if Send_Update == 1

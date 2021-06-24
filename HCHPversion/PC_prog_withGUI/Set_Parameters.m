@@ -21,11 +21,11 @@ P.TimeAll = [];     % time point of every loop
 
 %% For prototype operation configuration selection
 % UID strategy selection flag
-%   1-Basic UID strategy; 2-Developed UID strategy
+%   0-Test Mode; 1-Basic UID strategy; 2-Developed UID strategy; 
 P.UIDStrategy = 1;  
 % RTG strategy selection flag:
-%   1-Impedance strategy; 2-Gravity compensation; 3-Velocity-based
-%   compensation strategy
+%   0-Test Mode; 1-Impedance strategy; 2-Gravity compensation;
+%   3-Velocity-based compensation strategy
 P.RTGStrategy = 1;  
 % Subject selection
 P.SubjectNum = 1;
