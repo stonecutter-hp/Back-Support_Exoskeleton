@@ -14,7 +14,8 @@ MotionType mode;               // this time's motion mode flag
 MotionType PreMode;            // last time's motion mode flag
 AsymSide side;                 // Asymmetric side flag
 BendTech tech;                 // bending tech flag  
-bool YawAngleUpdate = true;   // Yaw angle reset complete flag
+bool YawAngleUpdate = true;    // Yaw angle reset complete flag
+bool RecordStateReset = true;  // States recorded at T0 and the peak moment reset flag
 
 /* Controller parameters and thresholds for UID strategy */
 UIDCont UID_Subject1;          // UID strategy parameters for specific subjects
@@ -382,6 +383,23 @@ void HL_UserIntentDetect(uint8_t UIDMode) {
     }
   }
   ExitPhase();
+  // Reset the recorded state at To and peak moment
+  if((mode == Standing && PreMode = Lifting)||mode == ExitState) {
+    if(RecordStateReset) {
+      HipAngL_T0InitValue = 0;
+      HipAngR_T0InitValue = 0;
+      TrunkFleAng_T0InitValue = 0;
+      TrunkYaw_T0InitValue = 0;
+      ThighAngL_T0InitValue = 0;
+      ThighAngR_T0InitValue = 0;
+      HipAngL_MaxValue = 0;
+      HipAngR_MaxValue = 0;
+      RecordStateReset = false;
+    }
+  }
+  else {
+    RecordStateReset = false;
+  }
   
 }
 

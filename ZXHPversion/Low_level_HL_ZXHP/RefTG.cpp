@@ -44,12 +44,21 @@ void HL_ReferTorqueGenerate(uint8_t RTGMode) {
       digitalWrite(MotorEnableL,HIGH);
       digitalWrite(MotorEnableR,HIGH);
     }
-    else if(mode == Walking || mode == ExitState) {
+    else if(mode == Walking) {
       desiredTorqueL = 0;
       desiredTorqueR = 0;
       // disable motor control
       digitalWrite(MotorEnableL,LOW);
       digitalWrite(MotorEnableR,LOW);      
+    }
+    else if(mode == ExitState) {
+      desiredTorqueL = 0;
+      desiredTorqueR = 0;
+      // Reset controller
+      Control_Init();
+      // disable motor control
+      digitalWrite(MotorEnableL,LOW);
+      digitalWrite(MotorEnableR,LOW);       
     }
     else {
       // Stoop: Gravity compensation

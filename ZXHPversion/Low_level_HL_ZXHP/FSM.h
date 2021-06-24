@@ -44,6 +44,7 @@ extern MotionType PreMode;      // last time's motion mode flag
 extern AsymSide side;           // Asymmetric side flag
 extern BendTech tech;           // bending tech flag    
 extern bool YawAngleUpdate;     // Yaw angle reset flag
+extern bool RecordStateReset;   // States recorded at T0 and the peak moment reset flag
       
 /* 
  * Controller parameter and threshold for User Intention Detection strategy, 
