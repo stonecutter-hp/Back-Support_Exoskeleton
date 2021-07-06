@@ -9,8 +9,8 @@ switch mode(1,2)
         % Generate desired torque according to the Impedance strategy
 %         DesiredTorque = [0.5, 0.5]*(ExoP.RTG.Kp*(ExoP.angleP-ExoP.RTG.Alpha0)...
 %                                   + ExoP.RTG.Kv*(ExoP.adotPV-ExoP.RTG.Alphadot0));
-        DesiredTorque = [0.5, 0.5]*(ExoP.RTG.Kp*(ExoP.angleP-ExoP.TrunkAngleT0-ExoP.RTG.Alpha0)...
-                                    + ExoP.RTG.Kv*(ExoP.adotPV-ExoP.RTG.Alphadot0));                              
+        DesiredTorque = [0.5, 0.5]*(ExoP.RTG.Kp*(ExoP.angleP(end)-ExoP.TrunkAngleT0-ExoP.RTG.Alpha0)...
+                                    + ExoP.RTG.Kv*(ExoP.adotPV(end)-ExoP.RTG.Alphadot0));                              
     otherwise
         DesiredTorque = zeros(1,2);
 end

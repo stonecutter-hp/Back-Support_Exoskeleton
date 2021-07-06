@@ -1,4 +1,4 @@
-function mode = BasicUID_ExitState(HipMeanAngle,HipDiffAngle,HipStdAngle,Alpha,AlphaDot,Beta,HipStdDiffAngle,ConThres)
+function mode = BasicUID_ExitState(HipMeanAngle,HipDiffAngle,HipStdAngle,HipStdAngleSign,Alpha,AlphaDot,Beta,HipStdDiffAngle,ConThres)
 % Exit state processing
 global ExoP;
 

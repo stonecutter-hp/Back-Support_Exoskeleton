@@ -16,7 +16,7 @@ ExoP.TimeAll = [ExoP.TimeAll; toc];
 if Control_Update == 1
     Control();
     % If UID and RTG are all set for testing mode
-    if ExoP.UIDStrategy == 0 && ExoP.UIDStrategy == 0 
+    if (ExoP.UIDStrategy == 0 && ExoP.UIDStrategy == 0)
         TempApp.txtMode.Value = 'TESTING';  % FOR INDICATION ONLY
     else
         highLevelCommandDis();
@@ -44,6 +44,10 @@ end
 if (ExoP.TimeAll(end) > ExoP.MaxRunTime ... 
     && (ExoP.MotionMode(end,2) == ExoP.Exit ... 
     || ExoP.MotionMode(end,2) == ExoP.Standing))
+    stop(Ttimer);
+elseif ExoP.stopButton == 1 % Stop button pushed
+    ExoP.stopButton = 0;
+    ExoP.stopFlag = 1;
     stop(Ttimer);
 end
 

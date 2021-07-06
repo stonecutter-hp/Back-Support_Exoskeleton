@@ -29,7 +29,7 @@ global TempApp;
 %% Saving P for experimental configuration parameters
 % Delete the initial motion state to keep the correpsonding relationship
 % with other datas
-ExoP.MotionMode = ExoP.MotionMode(1:end-1,:);
+ExoP.MotionMode = ExoP.MotionMode(2:end,:);
 % assignin('base','ExoP',ExoP);
 fileName = datetime('now');
 fileName = datestr(fileName,'yyyymmddTHHMMSS');

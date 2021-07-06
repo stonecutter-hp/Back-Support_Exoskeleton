@@ -21,8 +21,8 @@ while ~strcmp(Transtate1,ExoP.ReadyFlag) && ~strcmp(Transtate1,ExoP.NotReadyFlag
     fprintf(McuSerial,TransState);    % keep send the stopped commnad
 end
 TempApp.txtMode.Value = ['Last State: ',ExoP.MotionModeDis(ExoP.MotionMode(end,2)),...
-                          10,'Curr State: Stop',...
-                          10,'Cycels: ',num2str(ExoP.BendCycle)];
+                         'Curr State: Stop',...
+                         'Cycels: ',num2str(ExoP.BendCycle)];
 %% Stop the serial port 
 % stopasync(McuPort);
 fclose(McuSerial);

@@ -1,11 +1,16 @@
-function P = Set_Parameters()
+function P = Set_Parameters(MainFreq,MaxRunTime)
+% This function is to initialize all the parameters of high-level
+% controller
+% INPUT: 
+%      MainFreq: Expected high-level controller running frequency
+%      MaxRunTime: Expected high-level controller running Time
 % Notice to ensure the unit of angle is rad/deg first
 %% Main program setting information
-P.McuPort = 'COM3';     % serial port of MCU&PC communication
-P.MainFreq = 1;         % main program running frequency (Hz)
-P.MaxRunTime = 1;       % expected main program running time (s)
-P.MaxBendCycles = 1;    % expected bending cycles
-P.d2r = pi/180;         % deg to rad 
+P.McuPort = 'COM3';              % serial port of MCU&PC communication
+P.MainFreq = MainFreq;           % main program running frequency (Hz)
+P.MaxRunTime = MaxRunTime;       % expected main program running time (s)
+P.MaxBendCycles = 1;             % expected bending cycles
+P.d2r = pi/180;                  % deg to rad 
 %% Configuration information
 % P.config{1,1} for serial port configuration
 % P.config{2,1} for timer configuration
@@ -14,6 +19,8 @@ P.config = cell(2,1);
 %                    2-cannot open serial port; 3-handshake error; 
 %                    4-serial communication error
 P.stopFlag = 0;
+% Stop button pushed flag: 0: No click, 1:clicked
+P.stopButton = 0; 
 
 %% For storage of time information saving in TimerCallback
 P.TransTime = [];   % time of every send running loop
@@ -119,14 +126,14 @@ P.StateTrans = 1;
 % It is reset to 0 if Exit condition is detected
 P.BendCycle = 0;   
 %------------------- Motion Type --------------------
-P.Stop = 0;
-P.Exit = 1;
-P.Standing = 2;
-P.Walking = 3;
-P.Lowering = 4;
-P.Grasping = 5;
-P.Lifting = 6;
-P.Holding = 7;
+P.Stop = 1;
+P.Exit = 2;
+P.Standing = 3;
+P.Walking = 4;
+P.Lowering = 5;
+P.Grasping = 6;
+P.Lifting = 7;
+P.Holding = 8;
 P.MotionModeDis = ['Stop','Exit','Standing','Walking','Lowering','Grasping','Lifting','Holding'];
 %--- Asymmetric Direction & Friction Compen Flag ----
 P.None = 0;
@@ -139,7 +146,7 @@ P.MotionMode = [P.NoTrans, P.Exit, P.None+P.fricEnable*P.fricCompen];
 P.HipMeanAngle = [];     % (left hip angle + right hip angle)/2
 P.HipDiffAngle = [];     % left hip angle - right hip angle
 P.HipStdAngle = [];      % (population) std of HipMeanAngle
-P.HipStdDiffAngle = [];  % (population) std of HipDiffAngle
+P.HipStdDiffAngle = [];  % (population) std of HipDiffAngle  
 % The trunk bending angle at the moment of lowering, for RTG strategy
 P.TrunkAngleLeftT0 = 0;   
 P.TrunkAngleRightT0 = 0;
@@ -166,6 +173,5 @@ P.RTGUpperBound = 30;
 
 %% For global definition of handles for GUI
 % P.appHandles = [];
-
 
 end

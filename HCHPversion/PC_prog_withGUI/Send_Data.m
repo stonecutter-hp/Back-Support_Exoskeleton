@@ -12,7 +12,9 @@ DesiredTorque = roundn(ExoP.DesiredTorque(end,:),-2);  % Keep it to two decimal 
 %% Combining the sending data
 % Here the specific form for sending data is designed as: "TLxxxxTRxxxx"
 TransState = 'TL';
-if DesiredTorque(1) < 1
+if DesiredTorque(1) == 0
+    TransState = [TransState,'0000'];
+elseif DesiredTorque(1) >0 && DesiredTorque(1) < 1
     TransState = [TransState,'00',num2str(DesiredTorque(1)*100)];
 elseif DesiredTorque(1) >=1 && DesiredTorque(1) < 10
     TransState = [TransState,'0',num2str(DesiredTorque(1)*100)];
@@ -20,7 +22,9 @@ else
     TransState = [TransState,num2str(DesiredTorque(1)*100)];
 end
 TransState = [TransState,'TR'];   
-if DesiredTorque(2) < 1
+if DesiredTorque(2) == 0
+    TransState = [TransState,'0000'];
+elseif DesiredTorque(2) >0 && DesiredTorque(2) < 1
     TransState = [TransState,'00',num2str(DesiredTorque(2)*100)];
 elseif DesiredTorque(2) >=1 && DesiredTorque(2) < 10
     TransState = [TransState,'0',num2str(DesiredTorque(2)*100)];
@@ -28,7 +32,7 @@ else
     TransState = [TransState,num2str(DesiredTorque(2)*100)];
 end
 
-TransState = [TransState,'M',num2str(MotionMode(2)),num2str(MotionMode(3))];
+TransState = [TransState,'M',num2str(MotionMode(2)-1),num2str(MotionMode(3))];
 TempApp.txtCommand.Value = TransState;
 % % FOR TEST ONLY
 % TransState = 'TL0000TR0000M10';

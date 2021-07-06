@@ -8,8 +8,8 @@ global TempApp;
 
 if ExoP.MotionMode(end,1) == ExoP.StateTrans
    TempApp.txtMode.Value = ['Last State: ',ExoP.MotionModeDis(ExoP.MotionMode(end-1,2)),...
-                             10,'Curr State: ',ExoP.MotionModeDis(ExoP.MotionMode(end,2)),...
-                             10,'Cycles: ',num2str(ExoP.BendCycle)];
+                             'Curr State: ',ExoP.MotionModeDis(ExoP.MotionMode(end,2)),...
+                             'Cycles: ',num2str(ExoP.BendCycle)];
 end
 
 end

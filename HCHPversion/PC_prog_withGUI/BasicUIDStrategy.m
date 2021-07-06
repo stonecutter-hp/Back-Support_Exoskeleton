@@ -29,6 +29,9 @@ HipStdDiffAngle = std(ExoP.HipStdDiffAngle(max(1,end-Range+1):end),1);
 ExoP.HipStdAngle = [ExoP.HipStdAngle;HipStdAngle];
 ExoP.HipStdDiffAngle = [ExoP.HipStdDiffAngle;HipStdDiffAngle];
 
+% The sign of the Standard deviation of HipMeanAngle
+HipStdAngleSign = sign(ExoP.HipMeanAngle(end) - ExoP.HipMeanAngle(max(1,end-Range+1)));
+
 % Trunk flexion angle
 Alpha = ExoP.angleP(end);
 
@@ -46,43 +49,45 @@ Premode = ExoP.MotionMode(end,:);
 % of low-level controller.
 switch Premode(1,2)
     case ExoP.Exit
-        mode(1,1:2) = BasicUID_ExitState(HipMeanAngle,HipDiffAngle,HipStdAngle,...
+        mode(1,1:2) = BasicUID_ExitState(HipMeanAngle,HipDiffAngle,HipStdAngle,HipStdAngleSign,...
                                          Alpha,AlphaDot,Beta,HipStdDiffAngle,ConThres);
     case ExoP.Standing
-        mode(1,1:2) = BasicUID_StandingState(HipMeanAngle,HipDiffAngle,HipStdAngle,...
+        mode(1,1:2) = BasicUID_StandingState(HipMeanAngle,HipDiffAngle,HipStdAngle,HipStdAngleSign,...
                                              Alpha,AlphaDot,Beta,HipStdDiffAngle,ConThres);
     case ExoP.Walking
-        mode(1,1:2) = BasicUID_WalkingState(HipMeanAngle,HipDiffAngle,HipStdAngle,...
+        mode(1,1:2) = BasicUID_WalkingState(HipMeanAngle,HipDiffAngle,HipStdAngle,HipStdAngleSign,...
                                             Alpha,AlphaDot,Beta,HipStdDiffAngle,ConThres);
     case ExoP.Lowering
-        mode(1,1:2) = BasicUID_LoweringState(HipMeanAngle,HipDiffAngle,HipStdAngle,...
+        mode(1,1:2) = BasicUID_LoweringState(HipMeanAngle,HipDiffAngle,HipStdAngle,HipStdAngleSign,...
                                              Alpha,AlphaDot,Beta,HipStdDiffAngle,ConThres); 
     case ExoP.Grasping
-        mode(1,1:2) = BasicUID_GraspingState(HipMeanAngle,HipDiffAngle,HipStdAngle,...
+        mode(1,1:2) = BasicUID_GraspingState(HipMeanAngle,HipDiffAngle,HipStdAngle,HipStdAngleSign,...
                                              Alpha,AlphaDot,Beta,HipStdDiffAngle,ConThres);    
     case ExoP.Lifting
-        mode(1,1:2) = BasicUID_LiftingState(HipMeanAngle,HipDiffAngle,HipStdAngle,...
-                                            Alpha,AlphaDot,Beta,HipStdDiffAngle,ConThres);            
+        mode(1,1:2) = BasicUID_LiftingState(HipMeanAngle,HipDiffAngle,HipStdAngle,HipStdAngleSign,...
+                                            Alpha,AlphaDot,Beta,HipStdDiffAngle,ConThres);         
+    otherwise
+        mode(1,1:2) = [ExoP.NoTrans, ExoP.Exit];
 end
 % Exit condition detect for every loop
-mode(1,1:2) = BasicUID_ExitCondition(HipMeanAngle,HipDiffAngle,HipStdAngle,...
+mode(1,1:2) = BasicUID_ExitCondition(HipMeanAngle,HipDiffAngle,HipStdAngle,HipStdAngleSign,...
                                      Alpha,AlphaDot,Beta,HipStdDiffAngle,ConThres,mode);
 
 %% Conduction basic UID strategy: Asymmetric side classification and friction compensation selection
 % Initial classification of left/right asymmetric. Notice that it also
 % indicates if the friction compensation is enabled or not
 if sign(Beta) == 0 
-    mode(1,3) = 0 + ExoP.fricEnable*ExoP.fricCompen;     % no aysmmetric
+    mode(1,3) = ExoP.None + ExoP.fricEnable*ExoP.fricCompen;        % no aysmmetric
 elseif sign(Beta) > 0
-    mode(1,3) = 1 + ExoP.fricEnable*ExoP.fricCompen;     % left
+    mode(1,3) = ExoP.LeftAsy + ExoP.fricEnable*ExoP.fricCompen;     % left
 else
-    mode(1,3) = 2 + ExoP.fricEnable*ExoP.fricCompen;     % right
+    mode(1,3) = ExoP.RightAsy + ExoP.fricEnable*ExoP.fricCompen;    % right
 end
 
 %% Processing for certain state transition
 if mode(1,3) == ExoP.StateTrans && (mode(1,2) == ExoP.Exit || mode(1,2) == ExoP.Standing)
     if ExoP.UID.AngleInfoFlag
-        % Rest Recorded T0 value and peack value
+        % Reset Recorded T0 value and peack value
         ExoP.TrunkAngleLeftT0 = 0;
         ExoP.TrunkAngleRightT0 = 0;
         ExoP.TrunkAngleT0 = (ExoP.TrunkAngleLeftT0 + ExoP.TrunkAngleRightT0)/2;
@@ -90,7 +95,7 @@ if mode(1,3) == ExoP.StateTrans && (mode(1,2) == ExoP.Exit || mode(1,2) == ExoP.
         ExoP.TrunkAngleRightPeak = 0;
         ExoP.TrunkAnglePeak = (ExoP.TrunkAngleLeftPeak + ExoP.TrunkAngleRightPeak)/2;
     else
-        % Rest Recorded T0 value and peack value
+        % Reset Recorded T0 value and peack value
         ExoP.TrunkAngleT0 = 0;
         ExoP.TrunkAngleLeftT0 = ExoP.TrunkAngleT0/2;
         ExoP.TrunkAngleRightT0 = ExoP.TrunkAngleT0/2;

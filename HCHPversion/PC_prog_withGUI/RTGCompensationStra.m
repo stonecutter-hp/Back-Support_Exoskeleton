@@ -8,7 +8,7 @@ switch mode(1,2)
     case {ExoP.Lowering, ExoP.Grasping, ExoP.Lifting}
         % Generate desired torque according to the Impedance strategy:
         % Kg*M*g*sin(alpha)
-        DesiredTorque = [0.5, 0.5]*(ExoP.RTG.GravityKg*ExoP.Subject.TrunkM*ExoP.g)*sin((ExoP.angleP-ExoP.TrunkAngleT0)*ExoP.d2r);
+        DesiredTorque = [0.5, 0.5]*(ExoP.RTG.GravityKg*ExoP.Subject.TrunkM*ExoP.g)*sin((ExoP.angleP(end)-ExoP.TrunkAngleT0)*ExoP.d2r);
     otherwise
         DesiredTorque = zeros(1,2);
 end
