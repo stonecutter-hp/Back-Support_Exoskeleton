@@ -54,7 +54,8 @@ void setup() {
   Serial.begin(460800);   // initialize serial set baurd rate
 
   /*************************** Control parameter Initialization ************************/
-  Control_Init();  // initialize the control parameters
+  Control_Init();         // initialize the control parameters
+  ControlAux_Init();      // initialize control auxiliary parameters
   
   /*********** Assign general IO for motor control and LED state indication ************/
   GeneralIO_Init();

@@ -149,14 +149,14 @@ void ExponentialMovingFilter(int channel, float alpha) {
  * Get the ADC value of all channels once
  */
 void getADC(void) {
-  for(int i=0;i<ENABLED_CH;i++) {
+  for(int i=0;i<ENABLED_CH_Work;i++) {
     while(digitalRead(ADC_MISO) == HIGH) {
       } //wait for data
     /* get ADC conversion result */
     AD7173.get_data(ADC_data[i], true);
   }
   // reorder the rank 0~F
-  for(int i=0;i<ENABLED_CH;i++) {
+  for(int i=0;i<ENABLED_CH_Work;i++) {
     char tempValue[6];  // store the ADC data
     char tempState[2];  // store the ADC status
     for(int j=0;j<3;j++) {

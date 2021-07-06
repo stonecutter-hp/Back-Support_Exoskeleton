@@ -56,7 +56,7 @@ extern double IMU_value_Prev[3][3];                     // store last time angle
 #define TrunkFleAng_CaliValue 10
 #define TrunkFleAng_Tol 10
 #define TrunkFleYaw_CaliValue 0
-#define TrunkFleYaw_Tol 100
+#define TrunkFleYaw_Tol 1000
 #define ForcedInit 1
 #define LogicInit  0
 

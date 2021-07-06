@@ -82,7 +82,7 @@ extern bool Control_update;    // control update flag
 // Expected initial value range (CaliValue +- Tol) of sensor feedback for initial calibration
 // the initial values should be adjusted along with prototype design
 #define TdL_CaliValue 83
-#define TdL_Tol 2
+#define TdL_Tol 2  // 2000 for no motor involved testing
 #define TdR_CaliValue 61
 #define TdR_Tol 2
 #define HipAngL_CaliValue 173.5
@@ -90,9 +90,9 @@ extern bool Control_update;    // control update flag
 #define HipAngR_CaliValue 219
 #define HipAngR_Tol 5
 #define FcL_CaliValue 0
-#define FcL_Tol 2
+#define FcL_Tol 2  // 2000 for no motor involved testing
 #define FcR_CaliValue 0
-#define FcR_Tol 2
+#define FcR_Tol 2  // 2000 for no motor involved testing
 #define Theta0_L 0             // deg, Iniital angle between left suppport beam and human back
 #define Theta0_R 0             // deg, Iniital angle between right suppport beam and human back
 
@@ -154,13 +154,22 @@ extern float fricCompenTermR; // The friction compensation term
 /**
  * Control parameter initialization for Low-level controller
  * Initial parameters including: 
- * Reference torque command and Intermediate quantities related to PWM command.
- * Intermediate value of Interative force and hip angle feedback; 
- * PID struct parameters (PID controller parameters);  
+ * Reference torque command and Intermediate quantities related to PWM command;
+ * PID struct parameters (PID controller parameters).  
  * Here use increment PID algorithm: 
  * Delta.U = Kp*( (ek-ek_1) + (Tcontrol/Ti)*ek + (Td/Tcontrol)*(ek+ek_2-2*ek_1) )
  */
 void Control_Init(void);
+
+/**
+ * Control auxiliary parameter initialization
+ * Initial parameters including: 
+ * Intermediate value of Interative force and hip angle feedback; 
+ * Mode indicators
+ * Phase indicators
+ * Friction compensation related parameters
+ */
+void ControlAux_Init(void);
 
 /**
  * Pre-processing for sensor feedback to make sure 

@@ -17,6 +17,7 @@ const double attRatio[16] = {1,  1,  1,  1,  22.5,   2,  2,  2,  2,  2,   1,   1
 #define ADC_SS PA4           //SPI1_NSS-CS 
 #define ADC_MISO PA6         //SPI1_MISO-DOUT/RDY
 #define ENABLED_CH 16        //sum of ADC Channels
+#define ENABLED_CH_Work 8    //Practical working channels
 #define MotorCurrL 6         //ADC channel assigned for left motor current feedback
 #define MotorCurrR 8         //ADC channel assigned for right motor current feedback
 #define MotorVeloL 5         //ADC channel assigned for left motor velocity feedback

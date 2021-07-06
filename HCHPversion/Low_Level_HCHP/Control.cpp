@@ -68,13 +68,12 @@ float fricCompenTermR; // The friction compensation term
 /**
  * Control parameter initialization for Low-level controller
  * Initial parameters including: 
- * Reference torque command and Intermediate quantities related to PWM command.
- * Intermediate value of Interative force and hip angle feedback; 
- * PID struct parameters (PID controller parameters);  
+ * Reference torque command and Intermediate quantities related to PWM command;
+ * PID struct parameters (PID controller parameters).  
  * Here use increment PID algorithm: 
  * Delta.U = Kp*( (ek-ek_1) + (Tcontrol/Ti)*ek + (Td/Tcontrol)*(ek+ek_2-2*ek_1) )
  */
-void Control_Init(void) {
+void Control_Init() {
   /* Initialize PWM command and reference torque command */
   PWM_commandL = 0;
   PWM_commandR = 0;
@@ -82,7 +81,47 @@ void Control_Init(void) {
   desiredTorqueR = 0;
   PredesiredTorqueL = 0;
   PredesiredTorqueR = 0;
+  
+  /* Initialize the control parameter of left motor */
+  pidL.set = desiredTorqueL;
+  pidL.currTa = 0;
+  pidL.currCurrent = pidL.currTa/MotorCurrentConstant;
+  pidL.pwm_cycle = PWMperiod_L;
+  pidL.currpwm = pidL.pwm_cycle*(pidL.currCurrent*0.8/MotorMaximumCurrent+0.1);     
+  pidL.Tcontrol = TIM3_OverflowValue;  // corresopnding to timer3, unit:us while prescale coefficient = 72
+  pidL.Kp = KP_L;                      // should be adjusted
+  pidL.Td = pidL.Tcontrol*KD_L/KP_L;   // should be adjusted, unit:us
+  pidL.Ti = pidL.Tcontrol*KP_L/KI_L;   // should be adjusted, unit:us
+  
+  pidL.Err = 0;
+  pidL.Err_p = 0;
+  pidL.Err_pp = 0;
 
+  /* initialize the control parameter of right motor */
+  pidR.set = desiredTorqueR;
+  pidR.currTa = 0;
+  pidR.currCurrent = pidR.currTa/MotorCurrentConstant;
+  pidR.pwm_cycle = PWMperiod_R;
+  pidR.currpwm = pidR.pwm_cycle*(pidR.currCurrent*0.8/MotorMaximumCurrent+0.1);     
+  pidR.Tcontrol = TIM3_OverflowValue;  // corresopnding to timer3, unit:us while prescale coefficient = 72
+  pidR.Kp = KP_R;                      // should be adjusted
+  pidR.Td = pidR.Tcontrol*KD_R/KP_R;   // should be adjusted, unit:us
+  pidR.Ti = pidR.Tcontrol*KP_R/KI_R;   // should be adjusted, unit:us
+    
+  pidR.Err = 0;
+  pidR.Err_p = 0;
+  pidR.Err_pp = 0;
+}
+
+/**
+ * Control auxiliary parameter initialization
+ * Initial parameters including: 
+ * Intermediate value of Interative force and hip angle feedback; 
+ * Mode indicators
+ * Phase indicators
+ * Friction compensation related parameters
+ */
+void ControlAux_Init() {
   /* Initialize mode and side from high-level UID strategy */
   // Motion detection mode, default is 0 (stop state) to send Ready signal for 
   // for handshake with high-level controller
@@ -138,36 +177,6 @@ void Control_Init(void) {
   curveAngleR = 0;     // curveAngleR = M_PI/2;
   fricCompenTermR = 0; // The friction compensation term
   deltaFricComR = fricCompenTermR - lastTorqueR;
-  
-  /* Initialize the control parameter of left motor */
-  pidL.set = desiredTorqueL;
-  pidL.currTa = 0;
-  pidL.currCurrent = pidL.currTa/MotorCurrentConstant;
-  pidL.pwm_cycle = PWMperiod_L;
-  pidL.currpwm = pidL.pwm_cycle*(pidL.currCurrent*0.8/MotorMaximumCurrent+0.1);     
-  pidL.Tcontrol = TIM3_OverflowValue;  // corresopnding to timer3, unit:us while prescale coefficient = 72
-  pidL.Kp = KP_L;                      // should be adjusted
-  pidL.Td = pidL.Tcontrol*KD_L/KP_L;   // should be adjusted, unit:us
-  pidL.Ti = pidL.Tcontrol*KP_L/KI_L;   // should be adjusted, unit:us
-  
-  pidL.Err = 0;
-  pidL.Err_p = 0;
-  pidL.Err_pp = 0;
-
-  /* initialize the control parameter of right motor */
-  pidR.set = desiredTorqueR;
-  pidR.currTa = 0;
-  pidR.currCurrent = pidR.currTa/MotorCurrentConstant;
-  pidR.pwm_cycle = PWMperiod_R;
-  pidR.currpwm = pidR.pwm_cycle*(pidR.currCurrent*0.8/MotorMaximumCurrent+0.1);     
-  pidR.Tcontrol = TIM3_OverflowValue;  // corresopnding to timer3, unit:us while prescale coefficient = 72
-  pidR.Kp = KP_R;                      // should be adjusted
-  pidR.Td = pidR.Tcontrol*KD_R/KP_R;   // should be adjusted, unit:us
-  pidR.Ti = pidR.Tcontrol*KP_R/KI_R;   // should be adjusted, unit:us
-    
-  pidR.Err = 0;
-  pidR.Err_p = 0;
-  pidR.Err_pp = 0;
 }
 
 /**
@@ -253,8 +262,9 @@ int8_t LLPreproSensorInit() {
 void lowLevelStateMgr() {
   /* State Manage for Stop state */
   if(mode == StopState) {
-    // Initial low-level controller
-    Control_Init(); 
+    // Initial low-level controller and auxiliary parameters
+    Control_Init();
+    ControlAux_Init(); 
     // Initial motor control pin mode
     GeneralIO_Init();
     // Ensure the sensor initial state until successful handshake
