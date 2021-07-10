@@ -19,7 +19,7 @@ if P.Angle_ThreAux(1) <= P.Alpha_Thre(1)
 end
 P.Angle_ThreAux(2) = P.Alpha_Thre(1);
 if P.Angle_ThreAux(3) >= P.Alpha_Thre(1)
-    P.Angle_ThreAux(3) = max(P.Alpha_Thre(1)-5,5);
+    P.Angle_ThreAux(3) = max(P.Alpha_Thre(1)-5,3);
 end
 
 % Ratio tolerance related to hip angle for transition between standing and lowering&lifting
