@@ -6,7 +6,7 @@ function P = Set_Parameters(MainFreq,MaxRunTime)
 %      MaxRunTime: Expected high-level controller running Time
 % Notice to ensure the unit of angle is rad/deg first
 %% Main program setting information
-P.McuPort = 'COM3';              % serial port of MCU&PC communication
+P.McuPort = "COM3";              % serial port of MCU&PC communication
 P.MainFreq = MainFreq;           % main program running frequency (Hz)
 P.MaxRunTime = MaxRunTime;       % expected main program running time (s)
 P.MaxBendCycles = 1;             % expected bending cycles
@@ -21,6 +21,8 @@ P.config = cell(2,1);
 P.stopFlag = 0;
 % Stop button pushed flag: 0: No click, 1:clicked
 P.stopButton = 0; 
+% Serial port status detection flag: every xx cycles detect once
+P.serialCycle = 0;
 
 %% For storage of time information saving in TimerCallback
 P.TransTime = [];   % time of every send running loop
@@ -95,8 +97,8 @@ P.DelayMark = [];        % store the delay mark Mx from MCU
 
 % Ready feedback from low-level for handshake, should keep identical to
 % low-level setting
-P.ReadyFlag = ['Ready.',13,10];
-P.NotReadyFlag = ['NotReady',13,10];
+P.ReadyFlag = 'Ready.';
+P.NotReadyFlag = 'NotReady';
 
 %% For biomechanical model parameter setting of subject
 % Data set refers to the P1C draft
@@ -148,10 +150,12 @@ P.HipDiffAngle = [];     % left hip angle - right hip angle
 P.HipStdAngle = [];      % (population) std of HipMeanAngle
 P.HipStdDiffAngle = [];  % (population) std of HipDiffAngle  
 % The trunk bending angle at the moment of lowering, for RTG strategy
+P.T0Value = [];
 P.TrunkAngleLeftT0 = 0;   
 P.TrunkAngleRightT0 = 0;
 P.TrunkAngleT0 = (P.TrunkAngleLeftT0 + P.TrunkAngleRightT0)/2;
 % The trunk bending angle at the moment of grasping, for RTG strategy
+P.PeakValue = [];
 P.TrunkAngleLeftPeak = 0;
 P.TrunkAngleRightPeak = 0;
 P.TrunkAnglePeak = (P.TrunkAngleLeftPeak + P.TrunkAngleRightPeak)/2;

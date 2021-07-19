@@ -1,8 +1,9 @@
 function SerialStop(SerialPort,~)
 global ExoP;
-fclose(SerialPort);
+ExoP.stopFlag = 3;
 delete(SerialPort);
-% disp('Serial port shut down!')
+clear SerialPort;
+disp('Serial port error shut down!')
 
 % check if timer is started
 if(~isempty(ExoP.config{2,1}) && isvalid(ExoP.config{2,1}))
@@ -14,4 +15,5 @@ else
     stopStateDis();
     DataSaving();
 end
+
 end

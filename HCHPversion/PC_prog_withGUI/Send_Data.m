@@ -34,14 +34,10 @@ end
 
 TransState = [TransState,'M',num2str(MotionMode(2)-1),num2str(MotionMode(3))];
 TempApp.txtCommand.Value = TransState;
+TransState = string(TransState);
 % % FOR TEST ONLY
-% TransState = 'TL0000TR0000M10';
+% TransState = "TL0000TR0000M10";
 %% Send data to serial port
-flushoutput(McuSerial);      % flush the output buffer
-fprintf(McuSerial,TransState);    % send the data
-flushinput(McuSerial);       % flush the input buffer for next receiving cycle
-% wait until data are all sent
-% while McuSerial.BytesToOutput ~= 0  
-% end
+writeline(McuSerial,TransState);    % send the data
 
 end

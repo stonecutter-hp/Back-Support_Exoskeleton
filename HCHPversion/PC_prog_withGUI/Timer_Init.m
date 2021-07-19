@@ -16,6 +16,7 @@ Timer1 = timer('BusyMode','drop','ExecutionMode','fixedRate',...
 % Timer1.TimerFcn = {@TimerCallback,P};  % set the callback of the timer
 Timer1.StartFcn = @ProgStart;
 Timer1.StopFcn = @TimerStop;
+Timer1.ErrorFcn = @TimerError;
 ExoP.config{2,1} = Timer1;  % store the configuration of timer1
 outPutStatus(TempApp,'High-level Control Running.');
 pause(5/1000);

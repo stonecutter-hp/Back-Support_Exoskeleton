@@ -8,6 +8,22 @@ global TempApp;
 %% Store each callback time, first "tic" is started in Timer_Init
 ExoP.TimeAll = [ExoP.TimeAll; toc];
 
+%% Try to avoid stringClient problem
+% if ExoP.serialCycle < 10
+%     ExoP.serialCycle = ExoP.serialCycle+1;
+% else
+%     if ~isempty(find(seriallist("available") == ExoP.McuPort, 1))
+%         McuSerial = serialport(McuPort,460800);
+%         configureTerminator(McuSerial,"CR/LF");
+%         setDTR(McuSerial,true);
+%         setRTS(McuSerial,false);
+%         McuSerial.ErrorOccurredFcn = @SerialStop;
+%         % store the serial port configuration
+%         ExoP.config{1,1} = McuSerial;    
+%         ExoP.serialCycle = 0;
+%     end
+% end
+
 %% Receive --> Control --> Send
 %*********************** Receive ***********************
 [Control_Update,Send_Update] = Receive_McuData();
@@ -27,27 +43,27 @@ if Send_Update == 1
     Send_Data();
 end
 
-% % % % % % %% For test only
-% % % % % % McuSerial = P.config{1,1};
-% % % % % % TransState = 'TL0000TR0000M00';
-% % % % % % flushoutput(McuSerial);      % flush the output buffer
-% % % % % % fprintf(McuSerial,TransState);    % send the data
-% % % % % % % wait until data are all sent
-% % % % % % while McuSerial.BytesToOutput ~= 0  
-% % % % % % end
+%% For test only
+% McuSerial = ExoP.config{1,1};
+% TransState = "TL0000TR0000M10";
+% writeline(McuSerial,TransState);    % send the data
+% flush(McuSerial,"input");      % flush the input buffer
+
+% % Seems the stop button works well with serialport so no need for extra
+% ExoP.stopButton detect
+% if (ExoP.TimeAll(end) > ExoP.MaxRunTime)
+%     stop(Ttimer);
+% end
 
 %% Timer loop stop condition
 % Stop condition for practical application (Before complete high-level UID
 % strategy): 
 % Running time has exceed the expected running time, meanwhile the current
 % motion state is Exit or Standing 
+
 if (ExoP.TimeAll(end) > ExoP.MaxRunTime ... 
     && (ExoP.MotionMode(end,2) == ExoP.Exit ... 
     || ExoP.MotionMode(end,2) == ExoP.Standing))
-    stop(Ttimer);
-elseif ExoP.stopButton == 1 % Stop button pushed
-    ExoP.stopButton = 0;
-    ExoP.stopFlag = 1;
     stop(Ttimer);
 end
 
@@ -61,9 +77,4 @@ end
 %     stop(Ttimer);
 % end
 
-
-
 end
-
-
-

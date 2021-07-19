@@ -86,6 +86,9 @@ end
 
 %% Processing for certain state transition
 if mode(1,3) == ExoP.StateTrans && (mode(1,2) == ExoP.Exit || mode(1,2) == ExoP.Standing)
+    % Record the T0 value and peak value
+    ExoP.T0Value = [ExoP.T0Value; [ExoP.TrunkAngleT0,ExoP.TrunkAngleLeftT0,ExoP.TrunkAngleRightT0]];
+    ExoP.PeakValue = [ExoP.PeakValue; [ExoP.TrunkAnglePeak,ExoP.TrunkAngleLeftPeak,ExoP.TrunkAngleRightPeak]];
     if ExoP.UID.AngleInfoFlag
         % Reset Recorded T0 value and peack value
         ExoP.TrunkAngleLeftT0 = 0;
