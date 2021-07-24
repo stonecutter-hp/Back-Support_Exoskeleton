@@ -45,23 +45,32 @@ extern PID pidR;  // control parameter of right motor
 // the desired torque from PC is defined in communication receiving parameter part
 extern int16_t PWM_commandL;   // range: 0.1*PWMperiod_L~0.9*PWMperiod_L
 extern int16_t PWM_commandR;   // range: 0.1*PWMperiod_R~0.9*PWMperiod_R
+extern int8_t PWMSignL;        // to mark the rotation direction of the left motor
+extern int8_t PWMSignR;        // to mark the rotation direction of the right motor
 extern bool Control_update;    // control update flag
-// Previously workable Kp/Ki/Kd for test bench with large torsion spring:
-// 0.58/0/0.28  0.68/0/0.3
-#define KP_L 0.5              // Kp for PID control of motor L
-#define KI_L 0.2              // Ki for PID control of motor L
-#define KD_L 0.28             // Kd for PID control of motor L
-#define KP_R 1                // Kp for PID control of motor R
-#define KI_R 0.002            // Ki for PID control of motor R
-#define KD_R 0.00267          // Kd for PID control of motor R
-#define LimitDelta_TaL 500000 // Limitation of delta control command of motor L
+/* Previously workable Kp/Ki/Kd for test bench with large torsion spring:
+ * 0.58/0/0.28  0.68/0/0.3
+ * Previously workable Kp/Ki/Kd for prototype with impedance strategy:
+ * 0.75/0.000001/0.0028
+ */
+#define KP_L 0.75             // Kp for PID control of motor L
+#define KI_L 0.000001         // Ki for PID control of motor L
+#define KD_L 0.0028           // Kd for PID control of motor L
+#define KP_R 0.75             // Kp for PID control of motor R
+#define KI_R 0.000001         // Ki for PID control of motor R
+#define KD_R 0.0028           // Kd for PID control of motor R
+#define LimitDelta_TaL 0.2    // Limitation of delta control command of motor L
 #define LimitTotal_TaL 7      // Limitation of total control command of motor L
-#define LimitDelta_TaR 500000 // Limitation of delta control command of motor R
+#define LimitReverse_TaL -2   // Limitation of the cable loosening direction control command of motor L
+#define LimitDelta_TaR 0.2    // Limitation of delta control command of motor R
 #define LimitTotal_TaR 7      // Limitation of total control command of motor R
+#define LimitReverse_TaR -2   // Limitation of the cable loosening direction control command of motor R
+#define PWMUpperBound 0.75    // Upper bound of the PWM cycle duty
+#define PWMLowerBound 0.12    // Lower bound of the PWM cycle duty
 #define LimitInput 25         // Limitation of input command, here for open-loop is Ta, for closed loop is Td
 // FOR OPEN-LOOP TESTING ONLY, COMPACTED TO HIGH-LEVEL CONTROL ALREADY
 #define ThreSupportVel 500    // deg/s, threshold for failure torque transmission. 
-/* Transmissio system parameters definition */
+/* Transmission system parameters definition */
 // The output ability of the actuation unit with 19:1 gear ratio is better restricted to 0~8.9 Nm (0.0525*9*19)
 // The following parameter may be adjusted after calibrateds
 #define MotorCurrentConstant 0.0437      // Nm/A, Motor current constant 
@@ -119,6 +128,17 @@ extern float Feedback_TdL;
 // Nm, Compact Td feedback of right side actuation system for closed-loop 
 // control from torsion spring torque feedback and cable force feedback
 extern float Feedback_TdR;  
+
+/* Last time's sensor feedback and tolerance delta feedback to avoid outliers */
+extern float Last_HipAngL;               // deg, Last time left hip joint angle
+extern float Last_HipAngR;               // deg, Last time right hip joint angle
+extern float Last_Estimated_TdL;         // Nm, Last time Td feedback of left side from torsion spring
+extern float Last_Estimated_TdR;         // Nm, Last time Td feedback of right side from torsion spring
+extern float Last_Estimated_FcL;         // N,  Last time cable force feedback of left side from load cell
+extern float Last_Estimated_FcR;         // N,  Last time cable force feedback of right side from load cell
+#define Delta_HipAng 10000               // deg, Maximum allowable hip angle change within a cycle
+#define Delta_Estimated_Td 5000          // Nm, Maximum allowable torque feedback change from spring within a cycle
+#define Delta_Estimated_Fc 20            // N, Maximum allowable force feedback change within a cycle
 
 /* Parameters for phase index determination */
 // Nm, Critical torque value for left actuation system

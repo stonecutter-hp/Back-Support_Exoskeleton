@@ -24,7 +24,7 @@ extern bool SendPC_update;                    // data sending to PC enable flag
 extern char SwitchFlag;                       // mark if new command have recieved before sending data to PC
 extern char USART_TX_BUF[USART_TX_LEN];       // sending buffer
 extern int USART_TX_STA;                      // sending number flag
-extern bool SendItemFlag[9];                   // for convinient of adjust feedback item adjust
+extern bool SendItemFlag[11];                 // for convinient of adjust feedback item adjust
 /*********************************** Communication receiving data definition **************************/
 extern float desiredTorqueL;    // desired assistive torque of left torque transmission system
 extern float desiredTorqueR;    // desired assistive torque of right torque transmission system
@@ -77,7 +77,7 @@ void receiveDatafromPC(void);
 void receivedDataPro(void);
 
 /**
- * @ MCU to PC protocol: MxTLxxxxLLxxxxALxxxxxTRxxxxLRxxxxARxxxxxPxxxxxYxxxxxVxxxxx\r\n
+ * @ MCU to PC protocol: MxTLxxxxLLxxxxALxxxxxTRxxxxLRxxxxARxxxxxPxxxxxYxxxxxVxxxxxCLxxxxCRxxxx\r\n
  * TL/Rxxxx: (Nm) Torque feedback for left/right transmission system 
  * LL/Rxxxx: (N) Load cell feedback for cable force of left/right transmission system
  * AL/Rxxxxx: (deg) Potentiometer feedback for hip angle feedback
@@ -87,8 +87,10 @@ void receivedDataPro(void);
  *               first number indicate sign: 0 for -, 1 for + 
  * Vxxxxx: (deg/s) Pitch angular velocity for trunk
  *                 first number indicate sign: 0 for -, 1 for +
+ * CL/Rxxxx: PWM Cycle Duty
+ *           first number indicate sign: 0 for -(loosening cable), 1 for +(tighting cable)
  * Mx: Marking flag to show if the MCU data is real-time with successful receiving last command from PC
- * Notice: The last two is end character for PC receiveing '\r\n'
+ * Notice: The last two are terminator for PC receiveing '\r\n'
  */
 void sendDatatoPC(void);
 

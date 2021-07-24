@@ -13,8 +13,8 @@ bool SendPC_update = true;            // data sending to PC enable flag
 char SwitchFlag = '0';                // mark if new command have recieved before sending data to PC
 char USART_TX_BUF[USART_TX_LEN];      // sending buffer
 int USART_TX_STA = 0;                 // sending number flag
-// TLxxxxLLxxxxALxxxxxTRxxxxLRxxxxARxxxxxPxxxxxYxxxxxVxxxxx\r\n
-bool SendItemFlag[9] = {true, true, true, true, true, true, true, true, true};
+// MxTLxxxxLLxxxxALxxxxxTRxxxxLRxxxxARxxxxxPxxxxxYxxxxxVxxxxxCLxxxxCRxxxx\r\n
+bool SendItemFlag[11] = {true, true, true, true, true, true, true, true, true, true, true};
 
 /*********************************** Communication receiving data definition ************************************/
 float desiredTorqueL;    // desired motor torque of left motor
@@ -144,7 +144,7 @@ void receivedDataPro(void) {
 }
 
 /**
- * @ MCU to PC protocol: MxTLxxxxLLxxxxALxxxxxTRxxxxLRxxxxARxxxxxPxxxxxYxxxxxVxxxxx\r\n
+ * @ MCU to PC protocol: MxTLxxxxLLxxxxALxxxxxTRxxxxLRxxxxARxxxxxPxxxxxYxxxxxVxxxxxCLxxxxCRxxxx\r\n
  * TL/Rxxxx: (Nm) Torque feedback for left/right transmission system 
  * LL/Rxxxx: (N) Load cell feedback for cable force of left/right transmission system
  * AL/Rxxxxx: (deg) Potentiometer feedback for hip angle feedback
@@ -154,8 +154,10 @@ void receivedDataPro(void) {
  *               first number indicate sign: 0 for -, 1 for + 
  * Vxxxxx: (deg/s) Pitch angular velocity for trunk
  *                 first number indicate sign: 0 for -, 1 for +
+ * CL/Rxxxx: PWM Cycle Duty
+ *           first number indicate sign: 0 for -(loosening cable), 1 for +(tighting cable)
  * Mx: Marking flag to show if the MCU data is real-time with successful receiving last command from PC
- * Notice: The last two is end character for PC receiveing '\r\n'
+ * Notice: The last two are terminator for PC receiveing '\r\n'
  */
 void sendDatatoPC(void) {
   int dec;
@@ -307,12 +309,31 @@ void sendDatatoPC(void) {
   	  	USART_TX_BUF[position++] = inter+48;
   	  }         	  
   	}
-    // Serial.print(USART_TX_BUF);
-    // Serial.flush();
-    // Serial.print('\r');
-    // Serial.flush();
-    // Serial.print('\n');
-    // Serial.flush();	
+    // CLxxxx
+    if(SendItemFlag[9] == true) {
+      USART_TX_BUF[position++] = 'C';
+      USART_TX_BUF[position++] = 'L';
+      // ±xxx
+      USART_TX_BUF[position++] = PWMSignL+48;
+      dec = PWM_commandL;
+      for(int t=0; t<3; t++) {
+        inter = (dec/Calcu_Pow(10,2-t))%10;
+        USART_TX_BUF[position++] = inter+48;
+      }
+    }
+    // CRxxxx
+    if(SendItemFlag[10] == true) {
+      USART_TX_BUF[position++] = 'C';
+      USART_TX_BUF[position++] = 'R';     
+      // ±xxx
+      USART_TX_BUF[position++] = PWMSignR+48;
+      dec = PWM_commandR;
+      for(int t=0; t<3; t++) {
+        inter = (dec/Calcu_Pow(10,2-t))%10;
+        USART_TX_BUF[position++] = inter+48;
+      }
+    }
+
     Serial.println(USART_TX_BUF); // Speed up frequency
   }
 }

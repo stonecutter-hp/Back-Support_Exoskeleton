@@ -67,6 +67,12 @@ extern float TrunkFleAng;             // deg, Trunk flexion angle
 extern float TrunkFleAng_InitValue;   // deg, Auxiliary parameter for trunk pitch angle
 extern float TrunkFleVel;             // deg/s, Trunk flexion angular velocity
 
+/* Last time's IMU feedback and tolerance delta feedback to avoid outliers */
+extern float Last_TrunkFleAng;        // deg, Last time trunk flexion angle
+extern float Last_TrunkYawAng;        // deg, Last time trunk yaw angle
+#define Delta_TrunkFleAng 20000       // deg, Maximum allowable trunk flexion angle change within a cycle
+#define Delta_TrunkYawAng 80000       // deg, Maximum allowable trunk yaw angle change from spring within a cycle
+
 /**
  * IMU angle feedback return to zero
  */

@@ -10,6 +10,8 @@ PID pidR;  // control parameter of right motor
 // the desired torque from PC is defined in communication receiving parameter part
 int16_t PWM_commandL;   // range: 0.1*PWMperiod_L~0.9*PWMperiod_L
 int16_t PWM_commandR;   // range: 0.1*PWMperiod_R~0.9*PWMperiod_R
+int8_t PWMSignL;        // to mark the rotation direction of the left motor
+int8_t PWMSignR;        // to mark the rotation direction of the right motor
 bool Control_update = true;  // control update flag
 
 /* Intermediate auxiliary parameters directly from sensor processing for controller feedback */
@@ -35,6 +37,14 @@ float Feedback_TdL;
 // Nm, Compact Td feedback of right side actuation system for closed-loop 
 // control from torsion spring torque feedback and cable force feedback
 float Feedback_TdR;  
+
+/* Last time's sensor feedback and tolerance delta feedback to avoid outliers */
+float Last_HipAngL;               // deg, Last time left hip joint angle
+float Last_HipAngR;               // deg, Last time right hip joint angle
+float Last_Estimated_TdL;         // Nm, Last time Td feedback of left side from torsion spring
+float Last_Estimated_TdR;         // Nm, Last time Td feedback of right side from torsion spring
+float Last_Estimated_FcL;         // N,  Last time cable force feedback of left side from load cell
+float Last_Estimated_FcR;         // N,  Last time cable force feedback of right side from load cell
 
 /* Parameters for phase index determination */
 // Nm, Critical torque value for left actuation system
@@ -77,6 +87,8 @@ void Control_Init() {
   /* Initialize PWM command and reference torque command */
   PWM_commandL = 0;
   PWM_commandR = 0;
+  PWMSignL = PosSign;
+  PWMSignR = PosSign;
   desiredTorqueL = 0;
   desiredTorqueR = 0;
   PredesiredTorqueL = 0;
@@ -144,11 +156,25 @@ void ControlAux_Init() {
   Estimated_FcR = 0;
   FcR_InitValue = 0;
 
+  TrunkYawAng = 0;             // deg, Trunk yaw angle
+  TrunkYaw_InitValue = 0;      // deg, Auxiliary parameter for trunk yaw angle
+  TrunkFleAng = 0;             // deg, Trunk flexion angle
+  TrunkFleAng_InitValue = 0;   // deg, Auxiliary parameter for trunk pitch angle
+  TrunkFleVel = 0;             // deg/s, Trunk flexion angular velocity
+
   CableTorqueL = 0;
   CableTorqueR = 0;
   Feedback_TdL = 0;
   Feedback_TdR = 0;
-  
+
+  Last_HipAngL = HipAngL_InitValue;         
+  Last_HipAngR = HipAngR_InitValue;          
+  Last_Estimated_TdL = TdL_InitValue;      
+  Last_Estimated_TdR = TdR_InitValue;    
+  Last_Estimated_FcL = FcL_InitValue;     
+  Last_Estimated_FcR = FcR_InitValue;  
+  Last_TrunkFleAng = TrunkFleAng_InitValue;     // deg, Last time trunk flexion angle
+  Last_TrunkYawAng = TrunkYaw_InitValue;        // deg, Last time trunk yaw angle
   /* Parameters for phase index determination */
   // Nm, Critical torque value for left actuation system
   Critical_TdL = TorsionStiffnessL*MechConsAngleL;               
@@ -424,6 +450,26 @@ void sensorFeedbackPro(void) {
   TrunkFleAng = angleActualC[rollChan] - TrunkFleAng_InitValue;
   TrunkFleVel = velActualC[rollChan];
 
+  /* Prevent outlier */
+  if(HipAngL > Last_HipAngL+Delta_HipAng || HipAngL < Last_HipAngL-Delta_HipAng)
+  {HipAngL = Last_HipAngL+Value_sign(HipAngL-Last_HipAngL)*Delta_HipAng;}
+  if(HipAngR > Last_HipAngR+Delta_HipAng || HipAngR < Last_HipAngR-Delta_HipAng)
+  {HipAngR = Last_HipAngR+Value_sign(HipAngR-Last_HipAngR)*Delta_HipAng;}
+  if(Estimated_TdL > Last_Estimated_TdL+Delta_Estimated_Td || Estimated_TdL < Last_Estimated_TdL-Delta_Estimated_Td)
+  {Estimated_TdL = Last_Estimated_TdL+Value_sign(Estimated_TdL-Last_Estimated_TdL)*Delta_Estimated_Td;}
+  if(Estimated_TdR > Last_Estimated_TdR+Delta_Estimated_Td || Estimated_TdR < Last_Estimated_TdR-Delta_Estimated_Td)
+  {Estimated_TdR = Last_Estimated_TdR+Value_sign(Estimated_TdR-Last_Estimated_TdR)*Delta_Estimated_Td;}
+  if(Estimated_FcL > Last_Estimated_FcL+Delta_Estimated_Fc || Estimated_FcL < Last_Estimated_FcL-Delta_Estimated_Fc)
+  {Estimated_FcL = Last_Estimated_FcL+Value_sign(Estimated_FcL-Last_Estimated_FcL)*Delta_Estimated_Fc;}
+  if(Estimated_FcR > Last_Estimated_FcR+Delta_Estimated_Fc || Estimated_FcR < Last_Estimated_FcR-Delta_Estimated_Fc)
+  {Estimated_FcR = Last_Estimated_FcR+Value_sign(Estimated_FcR-Last_Estimated_FcR)*Delta_Estimated_Fc;}
+  
+  Last_HipAngL = HipAngL;
+  Last_HipAngR = HipAngR;
+  Last_Estimated_TdL = Estimated_TdL;
+  Last_Estimated_TdR = Estimated_TdR;
+  Last_Estimated_FcL = Estimated_FcL;
+  Last_Estimated_FcR = Estimated_FcR;
 
   /* Update torque feedback for low-level feedback control */
   Feedback_TdL = Estimated_TdL;
@@ -739,17 +785,20 @@ void Control(uint8_t ContMode) {
     pidL.currCurrent = Value_sign(pidL.currTa)*pidL.currTa/GearRatio/MotorCurrentConstant;
     pidL.currpwm = pidL.pwm_cycle*(pidL.currCurrent*0.8/MotorMaximumCurrent+0.1);
     // set limitation of PWM duty cycle
-    if(pidL.currpwm > 0.9*pidL.pwm_cycle) {
-      pidL.currpwm = 0.9*pidL.pwm_cycle;
+    if(pidL.currpwm > PWMUpperBound*pidL.pwm_cycle) {
+      pidL.currpwm = PWMUpperBound*pidL.pwm_cycle;
     }
-    else if(pidL.currpwm < 0.1*pidL.pwm_cycle) {
-      pidL.currpwm = 0.1*pidL.pwm_cycle;
+    else if(pidL.currpwm < PWMLowerBound*pidL.pwm_cycle) {
+      pidL.currpwm = PWMLowerBound*pidL.pwm_cycle;
     }
     // determine motor rotation direction
     if(pidL.currTa >= 0) {
+      PWMSignL = PosSign;
       digitalWrite(MotorRotationL,HIGH);
     }
     else if(pidL.currTa < 0) {
+      PWMSignL = NegSign;
+      if(pidL.currTa < LimitReverse_TaL) {pidL.currTa = LimitReverse_TaL;}
       digitalWrite(MotorRotationL,LOW);
     }
     PWM_commandL = pidL.currpwm;
@@ -790,17 +839,20 @@ void Control(uint8_t ContMode) {
     pidR.currCurrent = Value_sign(pidR.currTa)*pidR.currTa/GearRatio/MotorCurrentConstant;
     pidR.currpwm = pidR.pwm_cycle*(pidR.currCurrent*0.8/MotorMaximumCurrent+0.1);
     // set limitation of PWM duty cycle
-    if(pidR.currpwm > 0.9*pidR.pwm_cycle) {
-      pidR.currpwm = 0.9*pidR.pwm_cycle;
+    if(pidR.currpwm > PWMUpperBound*pidR.pwm_cycle) {
+      pidR.currpwm = PWMUpperBound*pidR.pwm_cycle;
     }
-    else if(pidR.currpwm < 0.1*pidR.pwm_cycle) {
-      pidR.currpwm = 0.1*pidR.pwm_cycle;
+    else if(pidR.currpwm < PWMLowerBound*pidR.pwm_cycle) {
+      pidR.currpwm = PWMLowerBound*pidR.pwm_cycle;
     }
     // determine motor rotation direction
     if(pidR.currTa >= 0) {
+      PWMSignR = PosSign;
       digitalWrite(MotorRotationR,LOW);
     }
     else if(pidR.currTa < 0) {
+      PWMSignR = NegSign;
+      if(pidR.currTa < LimitReverse_TaR) {pidR.currTa = LimitReverse_TaR;}
       digitalWrite(MotorRotationR,HIGH);
     }
     PWM_commandR = pidR.currpwm;
@@ -815,20 +867,25 @@ void Control(uint8_t ContMode) {
     desiredCurrentR = desiredTorqueR/GearRatio/MotorCurrentConstant/9;
     PWM_commandL = PWMperiod_L*(desiredCurrentL*0.8/MotorMaximumCurrent+0.1);
     PWM_commandR = PWMperiod_R*(desiredCurrentR*0.8/MotorMaximumCurrent+0.1);
-    if(PWM_commandL >= 0.9*PWMperiod_L) {
-      PWM_commandL = 0.9*PWMperiod_L;
+    if(PWM_commandL >= PWMUpperBound*PWMperiod_L) {
+      PWM_commandL = PWMUpperBound*PWMperiod_L;
     }
-    else if(PWM_commandL <= 0.1*PWMperiod_L) {
-      PWM_commandL = 0.1*PWMperiod_L;
+    else if(PWM_commandL <= PWMLowerBound*PWMperiod_L) {
+      PWM_commandL = PWMLowerBound*PWMperiod_L;
     }
-    if(PWM_commandR >= 0.9*PWMperiod_R) {
-      PWM_commandR = 0.9*PWMperiod_R;
+    if(PWM_commandR >= PWMUpperBound*PWMperiod_R) {
+      PWM_commandR = PWMUpperBound*PWMperiod_R;
     }
-    else if(PWM_commandR <= 0.1*PWMperiod_R) {
-      PWM_commandR = 0.1*PWMperiod_R;
+    else if(PWM_commandR <= PWMLowerBound*PWMperiod_R) {
+      PWM_commandR = PWMLowerBound*PWMperiod_R;
     }
   }
-  // set the pwm duty cycle  
+  /* Set the PWM duty cycle */
+  // In stop and exit mode the PWM command is forced to set as PWMLowerBound*PWMperiod
+  if(mode == StopState || mode == ExitState) {
+    PWM_commandL = PWMLowerBound*PWMperiod_L;
+    PWM_commandR = PWMLowerBound*PWMperiod_R;
+  }
   MotorPWMoutput(PWM_commandL,PWM_commandR);        
 }
 
