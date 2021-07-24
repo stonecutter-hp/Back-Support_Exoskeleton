@@ -46,8 +46,8 @@ P.fricEnable = 0;
 % info ON and 0 for item info OFF
 % The order of item corresponds to each marker follows communication
 % protocol of MCU2PC:
-% MxTLxxxxLLxxxxALxxxxxTRxxxxLRxxxxARxxxxxPxxxxxYxxxxxVxxxxx\r\n 
-P.RecItem = [1, 1, 1, 1, 1, 1, 1, 1, 1];
+% MxTLxxxxLLxxxxALxxxxxTRxxxxLRxxxxARxxxxxPxxxxxYxxxxxVxxxxxCLxxxxCRxxxx\r\n 
+P.RecItem = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1];
 P.torqueTL = [];    % torque feedback of left torsion spring
 P.forceLL = [];     % left cable force feedback
 P.angleAL = [];     % angle of left hip
@@ -56,6 +56,8 @@ P.forceLR = [];     % right cable force feedback
 P.angleAR = [];     % angle of right hip
 P.angleP = [];      % pitch angle of turnk bending motion
 P.angleY = [];      % yaw angle of trunk bending motion
+P.PWM_L = [];       % left motor PWM command
+P.PWM_R = [];       % right motor PWM command
 % Can be obtained directly from IMU, can also be calculated on PC or on MCU
 P.adotPV = [];      % angular velocity of trunk motion in pitch direction from MCU
 % Calculated from sensor feedback
@@ -78,7 +80,7 @@ P.adotAR = [];      % velocity of right hip
 
 % Total number of char received from MCU, this number should be coincided
 % with the MCU2PC communication protocol (include terminator \r\n)
-P.ReceiveDataNum = 60;   
+P.ReceiveDataNum = 72;   
 % Total number of char send to MCU, this number should be coincided with
 % the PC2MCU communication protocol (exclude terminator \r\n) which is
 % TLxxxxTRxxxxMxx\r\n (0x0D,0x0A)

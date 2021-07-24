@@ -19,7 +19,7 @@ end
 
 %% Decompose the data from MCU from characters to numbers
 % Here the specific form for recieved data is designed as: 
-% MxTLxxxxLLxxxxALxxxxxTRxxxxLRxxxxARxxxxxPxxxxxYxxxxxVxxxxx\r\n
+% MxTLxxxxLLxxxxALxxxxxTRxxxxLRxxxxARxxxxxPxxxxxYxxxxxVxxxxxCLxxxxCRxxxx\r\n
 % Mx: Marking flag to show if the MCU data is real-time with successful 
 %     receiving last command from PC
 % TL/Rxxxx: (Nm) Torsion spring torque for left/right transmission system 
@@ -32,6 +32,9 @@ end
 %               first number indicate sign: 0 for -, 1 for +
 % Vxxxxx: (deg/s) Pitch angular velocity for trunk
 %                 first number indicate sign: 0 for -, 1 for +
+% CL/Rxxxx: PWM Cycle Duty
+%           first number indicate sign: 0 for -(loosening cable), 1 for +(tighting cable)
+
 position = 3;
 flag = true;
 % Also some security operation can be added if over P.MaxDelay loop no 
@@ -186,7 +189,38 @@ if(Control_Update && flag)
             Send_Update = 0;
             flag = false;              
         end
+        position = position+6;
     end
+    %CLxxxx
+    if(ExoP.RecItem(10) == 1 && flag)
+        if(TransState(position) == 'C' && TransState(position+1) == 'L')
+            TransPWML = (TransState(position+3)-48)*100+(TransState(position+4)-48)*10+...
+                        (TransState(position+5)-48)*1;
+            if(TransState(position+2) == '0')
+                TransPWML = -1*TransPWML;
+            end
+        else
+            Control_Update = 0;
+            Send_Update = 0;
+            flag = false;
+        end
+        position = position+6;
+    end
+    %CRxxxx
+    if(ExoP.RecItem(11) == 1 && flag)
+        if(TransState(position) == 'C' && TransState(position+1) == 'R')
+            TransPWMR = (TransState(position+3)-48)*100+(TransState(position+4)-48)*10+...
+                        (TransState(position+5)-48)*1;
+            if(TransState(position+2) == '0')
+                TransPWMR = -1*TransPWMR;
+            end
+        else
+            Control_Update = 0;
+            Send_Update = 0;
+            flag = false;
+        end
+    end
+
 end
 
 if flag
@@ -200,6 +234,8 @@ if flag
     ExoP.angleP = [ExoP.angleP; TransAngleP];
     ExoP.angleY = [ExoP.angleY; TransAngleY];
     ExoP.adotPV = [ExoP.adotPV; TransVeloV];
+    ExoP.PWM_L = [ExoP.PWM_L; TransPWML];
+    ExoP.PWM_R = [ExoP.PWM_R; TransPWMR];
     % JUST NEEDED FOR SOME STRATEGY: Other info from calculaion
     if size(ExoP.adotPV,1) == 1 % Fisrt cycle
         Trans_tdotTL = 0;
