@@ -66,6 +66,7 @@ if flag
     tic
     while ~strcmp(Transtate,ExoP.ReadyFlag)
         Transtate = char(readline(McuSerial));
+        TempApp.txtInfo.Value = Transtate;
         if(toc > 30)
             ExoP.stopFlag = 3;
             delete(McuSerial);
