@@ -20,6 +20,6 @@ void GeneralIO_Init(void) {
   digitalWrite(MotorRotationL,HIGH);  // ensure the correct rotation direction (Cable Pulling Direction)
   digitalWrite(MotorEnableL,LOW);    // initially disable motor 
   // Initial pin status assignment for right motor
-  digitalWrite(MotorRotationL,LOW);  // ensure the correct rotation direction (Cable Pulling Direction)
-  digitalWrite(MotorEnableL,LOW);    // initially disable motor 
+  digitalWrite(MotorRotationR,LOW);  // ensure the correct rotation direction (Cable Pulling Direction)
+  digitalWrite(MotorEnableR,LOW);    // initially disable motor 
 }

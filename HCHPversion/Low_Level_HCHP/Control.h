@@ -99,9 +99,9 @@ extern bool Control_update;    // control update flag
 #define HipAngR_CaliValue 219
 #define HipAngR_Tol 5
 #define FcL_CaliValue 0
-#define FcL_Tol 2  // 2000 for no motor involved testing
+#define FcL_Tol 10  // 2000 for no motor involved testing
 #define FcR_CaliValue 0
-#define FcR_Tol 2  // 2000 for no motor involved testing
+#define FcR_Tol 10  // 2000 for no motor involved testing
 #define Theta0_L 0             // deg, Iniital angle between left suppport beam and human back
 #define Theta0_R 0             // deg, Iniital angle between right suppport beam and human back
 
@@ -190,6 +190,14 @@ void Control_Init(void);
  * Friction compensation related parameters
  */
 void ControlAux_Init(void);
+
+/**
+ * VERY FIRST INITIALIZATION VERSION
+ * Pre-processing for sensor feedback to make sure 
+ * the initial status of sensor is good for calibration
+ * @return int8_t - Sensor ready flag: 0-Not Ready; 1-Ready
+ */
+int8_t VF_LLPreproSensorInit(void);
 
 /**
  * Pre-processing for sensor feedback to make sure 

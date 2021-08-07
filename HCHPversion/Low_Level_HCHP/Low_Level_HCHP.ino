@@ -77,7 +77,7 @@ void setup() {
   PWMmode_Init();
   
   /***************************** Sensor initial value calibration **********************/
-  while(LLPreproSensorInit() == 0) ;
+  while(VF_LLPreproSensorInit() == 0) ;
   
   // resume all the timers
   Timer1.resume();     // Motor L PWM

@@ -206,6 +206,81 @@ void ControlAux_Init() {
 }
 
 /**
+ * VERY FIRST INITIALIZATION VERSION
+ * Pre-processing for sensor feedback to make sure 
+ * the initial status of sensor is good for calibration
+ * @return int8_t - Sensor ready flag: 0-Not Ready; 1-Ready
+ */
+int8_t VF_LLPreproSensorInit() {
+  int8_t SensorReady;
+  int8_t SensorReady_TdL;
+  int8_t SensorReady_TdR;
+  int8_t SensorReady_HipAngL;
+  int8_t SensorReady_HipAngR;
+  int8_t SensorReady_FcL;
+  int8_t SensorReady_FcR;  
+  int8_t SensorReady_FlxAng;
+
+  SensorReady = 0;
+  // Collect info from ADC including: Hip angle, Cable force, Torsion spring torque and Motor status 
+  getADCaverage(1);
+  delay(1);
+  // Initialize present yaw angle as 0 reference. Notice inside the function info will be collected
+  // from IMUC simultaneously including: TrunkAng, TrunkVel
+  yawAngleR20(ForcedInit,OperaitonAloIMUC);
+  delay(1);
+  // Initialize the inital value for each sensor feedback
+  // Notice to check the Initial value is ADC raw data or Processed data
+  TdL_InitValue = Aver_ADC_value[PotentioLP1]/PotentioLP1_Sensitivity*TorsionStiffnessL;
+  TdR_InitValue = Aver_ADC_value[PotentioRP3]/PotentioLP3_Sensitivity*TorsionStiffnessR;
+  HipAngL_InitValue = Aver_ADC_value[PotentioLP2]/PotentioLP2_Sensitivity;
+  HipAngR_InitValue = Aver_ADC_value[PotentioRP4]/PotentioLP4_Sensitivity;
+  FcL_InitValue = (Aver_ADC_value[LoadCellL]-1.25)/LoadCellL_Sensitivity;
+  FcR_InitValue = (Aver_ADC_value[LoadCellR]-1.25)/LoadCellR_Sensitivity;
+  TrunkFleAng_InitValue = angleActualC[rollChan];
+  // Here place program to check if these initial value of each sensor is near the expected position. 
+  // If not, recalibration the initial value of the sensor feedback 
+  if(TdL_InitValue > TdL_CaliValue + TdL_Tol || TdL_InitValue < TdL_CaliValue - TdL_Tol)
+  {SensorReady_TdL = 0; 
+   Serial.print("TL ");}  
+  else {SensorReady_TdL = 1;}
+  if(TdR_InitValue > TdR_CaliValue + TdR_Tol || TdR_InitValue < TdR_CaliValue - TdR_Tol)
+  {SensorReady_TdR = 0;
+   Serial.print("TR ");}
+  else {SensorReady_TdR = 1;}
+  if(HipAngL_InitValue > HipAngL_CaliValue + HipAngL_Tol || HipAngL_InitValue < HipAngL_CaliValue - HipAngL_Tol)
+  {SensorReady_HipAngL = 0;
+   Serial.print("AL ");}
+  else {SensorReady_HipAngL = 1;}
+  if(HipAngR_InitValue > HipAngR_CaliValue + HipAngR_Tol || HipAngR_InitValue < HipAngR_CaliValue - HipAngR_Tol)
+  {SensorReady_HipAngR = 0;
+   Serial.print("AR ");}
+  else {SensorReady_HipAngR = 1;}
+  if(FcL_InitValue > FcL_CaliValue + FcL_Tol || FcL_InitValue < FcL_CaliValue - FcL_Tol)
+  {SensorReady_FcL = 0;
+   Serial.print("LL ");}  
+  else {SensorReady_FcL = 1;}
+  if(FcR_InitValue > FcR_CaliValue + FcR_Tol || FcR_InitValue < FcR_CaliValue - FcR_Tol)
+  {SensorReady_FcR = 0;
+   Serial.print("LR ");}  
+  else {SensorReady_FcR = 1;}    
+  if(TrunkFleAng_InitValue > TrunkFleAng_CaliValue + TrunkFleAng_Tol || TrunkFleAng_InitValue < TrunkFleAng_CaliValue - TrunkFleAng_Tol)
+  {SensorReady_FlxAng = 0;
+   Serial.print("P ");}  
+  else {SensorReady_FlxAng = 1;} 
+
+  SensorReady = SensorReady_TdL*SensorReady_TdR*SensorReady_HipAngL*SensorReady_HipAngR;
+  SensorReady = SensorReady*SensorReady_FcL*SensorReady_FcR*SensorReady_FlxAng;
+  if(SensorReady == 0) {
+    Serial.println("NotReady.");  
+  } 
+  else {
+    Serial.println("Ready.");
+  }
+  return SensorReady;
+}
+
+/**
  * Pre-processing for sensor feedback to make sure 
  * the initial status of sensor is good for calibration
  * @return int8_t - Sensor ready flag: 0-Not Ready; 1-Ready
@@ -234,8 +309,8 @@ int8_t LLPreproSensorInit() {
   TdR_InitValue = Aver_ADC_value[PotentioRP3]/PotentioLP3_Sensitivity*TorsionStiffnessR;
   HipAngL_InitValue = Aver_ADC_value[PotentioLP2]/PotentioLP2_Sensitivity;
   HipAngR_InitValue = Aver_ADC_value[PotentioRP4]/PotentioLP4_Sensitivity;
-  FcL_InitValue = (Aver_ADC_value[LoadCellL]-1.25)/LoadCellL_Sensitivity + LoadCellL_Offset;
-  FcR_InitValue = (Aver_ADC_value[LoadCellR]-1.25)/LoadCellR_Sensitivity + LoadCellR_Offset;
+  FcL_InitValue = (Aver_ADC_value[LoadCellL]-1.25)/LoadCellL_Sensitivity;
+  FcR_InitValue = (Aver_ADC_value[LoadCellR]-1.25)/LoadCellR_Sensitivity;
   TrunkFleAng_InitValue = angleActualC[rollChan];
   // Here place program to check if these initial value of each sensor is near the expected position. 
   // If not, recalibration the initial value of the sensor feedback 
@@ -435,9 +510,9 @@ void sensorFeedbackPro(void) {
   if(Estimated_TdR < 0)  {Estimated_TdR = 0;}
   
   /* Cable force feedback info processing */
-  Estimated_FcL = (Aver_ADC_value[LoadCellL]-1.25)/LoadCellL_Sensitivity + LoadCellL_Offset - FcL_InitValue; 
+  Estimated_FcL = (Aver_ADC_value[LoadCellL]-1.25)/LoadCellL_Sensitivity - FcL_InitValue; 
   if(Estimated_FcL < 0)  {Estimated_FcL = 0;}
-  Estimated_FcR = (Aver_ADC_value[LoadCellR]-1.25)/LoadCellR_Sensitivity + LoadCellR_Offset - FcR_InitValue; 
+  Estimated_FcR = (Aver_ADC_value[LoadCellR]-1.25)/LoadCellR_Sensitivity - FcR_InitValue; 
   if(Estimated_FcR < 0)  {Estimated_FcR = 0;}
 
   /* Hip angle info processing */
