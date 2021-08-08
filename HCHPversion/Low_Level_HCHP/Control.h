@@ -136,8 +136,8 @@ extern float Last_Estimated_TdL;         // Nm, Last time Td feedback of left si
 extern float Last_Estimated_TdR;         // Nm, Last time Td feedback of right side from torsion spring
 extern float Last_Estimated_FcL;         // N,  Last time cable force feedback of left side from load cell
 extern float Last_Estimated_FcR;         // N,  Last time cable force feedback of right side from load cell
-#define Delta_HipAng 10000               // deg, Maximum allowable hip angle change within a cycle
-#define Delta_Estimated_Td 5000          // Nm, Maximum allowable torque feedback change from spring within a cycle
+#define Delta_HipAng 20                  // deg, Maximum allowable hip angle change within a cycle
+#define Delta_Estimated_Td 20            // Nm, Maximum allowable torque feedback change from spring within a cycle
 #define Delta_Estimated_Fc 20            // N, Maximum allowable force feedback change within a cycle
 
 /* Parameters for phase index determination */

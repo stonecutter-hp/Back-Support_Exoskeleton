@@ -525,19 +525,33 @@ void sensorFeedbackPro(void) {
   TrunkFleAng = angleActualC[rollChan] - TrunkFleAng_InitValue;
   TrunkFleVel = velActualC[rollChan];
 
+  // /* Prevent outlier */
+  // if(HipAngL > Last_HipAngL+Delta_HipAng || HipAngL < Last_HipAngL-Delta_HipAng)
+  // {HipAngL = Last_HipAngL+Value_sign(HipAngL-Last_HipAngL)*Delta_HipAng;}
+  // if(HipAngR > Last_HipAngR+Delta_HipAng || HipAngR < Last_HipAngR-Delta_HipAng)
+  // {HipAngR = Last_HipAngR+Value_sign(HipAngR-Last_HipAngR)*Delta_HipAng;}
+  // if(Estimated_TdL > Last_Estimated_TdL+Delta_Estimated_Td || Estimated_TdL < Last_Estimated_TdL-Delta_Estimated_Td)
+  // {Estimated_TdL = Last_Estimated_TdL+Value_sign(Estimated_TdL-Last_Estimated_TdL)*Delta_Estimated_Td;}
+  // if(Estimated_TdR > Last_Estimated_TdR+Delta_Estimated_Td || Estimated_TdR < Last_Estimated_TdR-Delta_Estimated_Td)
+  // {Estimated_TdR = Last_Estimated_TdR+Value_sign(Estimated_TdR-Last_Estimated_TdR)*Delta_Estimated_Td;}
+  // if(Estimated_FcL > Last_Estimated_FcL+Delta_Estimated_Fc || Estimated_FcL < Last_Estimated_FcL-Delta_Estimated_Fc)
+  // {Estimated_FcL = Last_Estimated_FcL+Value_sign(Estimated_FcL-Last_Estimated_FcL)*Delta_Estimated_Fc;}
+  // if(Estimated_FcR > Last_Estimated_FcR+Delta_Estimated_Fc || Estimated_FcR < Last_Estimated_FcR-Delta_Estimated_Fc)
+  // {Estimated_FcR = Last_Estimated_FcR+Value_sign(Estimated_FcR-Last_Estimated_FcR)*Delta_Estimated_Fc;}
+  
   /* Prevent outlier */
   if(HipAngL > Last_HipAngL+Delta_HipAng || HipAngL < Last_HipAngL-Delta_HipAng)
-  {HipAngL = Last_HipAngL+Value_sign(HipAngL-Last_HipAngL)*Delta_HipAng;}
+  {HipAngL = Last_HipAngL;}
   if(HipAngR > Last_HipAngR+Delta_HipAng || HipAngR < Last_HipAngR-Delta_HipAng)
-  {HipAngR = Last_HipAngR+Value_sign(HipAngR-Last_HipAngR)*Delta_HipAng;}
+  {HipAngR = Last_HipAngR;}
   if(Estimated_TdL > Last_Estimated_TdL+Delta_Estimated_Td || Estimated_TdL < Last_Estimated_TdL-Delta_Estimated_Td)
-  {Estimated_TdL = Last_Estimated_TdL+Value_sign(Estimated_TdL-Last_Estimated_TdL)*Delta_Estimated_Td;}
+  {Estimated_TdL = Last_Estimated_TdL;}
   if(Estimated_TdR > Last_Estimated_TdR+Delta_Estimated_Td || Estimated_TdR < Last_Estimated_TdR-Delta_Estimated_Td)
-  {Estimated_TdR = Last_Estimated_TdR+Value_sign(Estimated_TdR-Last_Estimated_TdR)*Delta_Estimated_Td;}
+  {Estimated_TdR = Last_Estimated_TdR;}
   if(Estimated_FcL > Last_Estimated_FcL+Delta_Estimated_Fc || Estimated_FcL < Last_Estimated_FcL-Delta_Estimated_Fc)
-  {Estimated_FcL = Last_Estimated_FcL+Value_sign(Estimated_FcL-Last_Estimated_FcL)*Delta_Estimated_Fc;}
+  {Estimated_FcL = Last_Estimated_FcL;}
   if(Estimated_FcR > Last_Estimated_FcR+Delta_Estimated_Fc || Estimated_FcR < Last_Estimated_FcR-Delta_Estimated_Fc)
-  {Estimated_FcR = Last_Estimated_FcR+Value_sign(Estimated_FcR-Last_Estimated_FcR)*Delta_Estimated_Fc;}
+  {Estimated_FcR = Last_Estimated_FcR;}
   
   Last_HipAngL = HipAngL;
   Last_HipAngR = HipAngR;
