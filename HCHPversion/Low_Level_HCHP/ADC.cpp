@@ -69,8 +69,8 @@ void ADC_Init(void) {
   /* FILTER0 - FILTER7 */
   /* SPS_1, SPS_2, SPS_5, SPS_10, SPS_16, SPS_20, SPS_49, SPS_59, SPS_100, SPS_200 */
   /* SPS_381, SPS_503, SPS_1007, SPS_2597, SPS_5208, SPS_10417, SPS_15625, SPS_31250 */
-  // AD7173.set_filter_config(FILTER0, SPS_2597);
-  AD7173.set_filter_config(FILTER1, SPS_5208);
+  AD7173.set_filter_config(FILTER0, SPS_2597);
+  // AD7173.set_filter_config(FILTER1, SPS_5208);
   
   /* set the ADC data and clock mode */
   /* CONTINUOUS_CONVERSION_MODE, SINGLE_CONVERSION_MODE */
