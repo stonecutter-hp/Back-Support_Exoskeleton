@@ -20,7 +20,7 @@ McuSerial = ExoP.config{1,1};
 TransState = "TL0000TR0000M00";
 writeline(McuSerial,TransState);    % send the stopped commnad
 
-% Make sure low-level controller recieved the s
+% Make sure low-level controller recieved the stop command
 Transtate1 = char(readline(McuSerial));
 while ~strcmp(Transtate1,ExoP.ReadyFlag) && ~strcmp(Transtate1,ExoP.NotReadyFlag)
     Transtate1 = char(readline(McuSerial));

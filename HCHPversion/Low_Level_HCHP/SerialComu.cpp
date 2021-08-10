@@ -165,177 +165,177 @@ void sendDatatoPC(void) {
   int8_t SignMark;
   unsigned char inter;
   position = 0;
-  if(SendPC_update == true) {
-    // Check if the command is recieved
-    if(receiveCompleted) {
-      if(SwitchFlag == '0') {
-        SwitchFlag = '1';
-      }
-      else {
-        SwitchFlag = '0';
-      }
-    }
-    // Mx
-    USART_TX_BUF[position++] = 'M';
-    USART_TX_BUF[position++] = SwitchFlag;
-  	// TLxxxx
-  	if(SendItemFlag[0] == true) {
-  	  USART_TX_BUF[position++] = 'T';
-  	  USART_TX_BUF[position++] = 'L';
-      // xx.xx
-  	  dec = Feedback_TdL*Calcu_Pow(10,2);
-  	  for(int t=0; t<4; t++) {
-  	  	inter = (dec/Calcu_Pow(10,3-t))%10;
-  	  	USART_TX_BUF[position++] = inter+48;
-  	  }
-  	}
-  	// LLxxxx
-  	if(SendItemFlag[1] == true) {
-      USART_TX_BUF[position++] = 'L';
-      USART_TX_BUF[position++] = 'L';
-      // xxx.x
-      dec = Estimated_FcL*Calcu_Pow(10,1);
-  	  for(int t=0; t<4; t++) {
-  	  	inter = (dec/Calcu_Pow(10,3-t))%10;
-  	  	USART_TX_BUF[position++] = inter+48;
-  	  }      
-  	}
-  	// ALxxxxx
-  	if(SendItemFlag[2] == true) {
-      USART_TX_BUF[position++] = 'A';
-      USART_TX_BUF[position++] = 'L';
-      SignMark = Value_sign(HipAngL);
-      if(SignMark == PosSign) {
-      	USART_TX_BUF[position++] = PosSign+48;
-      }
-      else {
-        USART_TX_BUF[position++] = NegSign+48;
-      }
-      // ±xxx.x
-      dec = SignMark*HipAngL*Calcu_Pow(10,1);
-  	  for(int t=0; t<4; t++) {
-  	  	inter = (dec/Calcu_Pow(10,3-t))%10;
-  	  	USART_TX_BUF[position++] = inter+48;
-  	  }      
-  	}
-  	// TRxxxx
-  	if(SendItemFlag[3] == true) {
-  	  USART_TX_BUF[position++] = 'T';
-  	  USART_TX_BUF[position++] = 'R';
-      // xx.xx
-  	  dec = Feedback_TdR*Calcu_Pow(10,2);
-  	  for(int t=0; t<4; t++) {
-  	  	inter = (dec/Calcu_Pow(10,3-t))%10;
-  	  	USART_TX_BUF[position++] = inter+48;
-  	  }
-  	}
-  	// LRxxxx
-  	if(SendItemFlag[4] == true) {
-      USART_TX_BUF[position++] = 'L';
-      USART_TX_BUF[position++] = 'R';
-      // xxx.x
-      dec = Estimated_FcR*Calcu_Pow(10,1);
-  	  for(int t=0; t<4; t++) {
-  	  	inter = (dec/Calcu_Pow(10,3-t))%10;
-  	  	USART_TX_BUF[position++] = inter+48;
-  	  }      
-  	}
-  	// ARxxxxx
-  	if(SendItemFlag[5] == true) {
-      USART_TX_BUF[position++] = 'A';
-      USART_TX_BUF[position++] = 'R';
-      SignMark = Value_sign(HipAngR);
-      if(SignMark == PosSign) {
-      	USART_TX_BUF[position++] = PosSign+48;
-      }
-      else {
-        USART_TX_BUF[position++] = NegSign+48;
-      }
-      // ±xxx.x
-      dec = SignMark*HipAngR*Calcu_Pow(10,1);
-  	  for(int t=0; t<4; t++) {
-  	  	inter = (dec/Calcu_Pow(10,3-t))%10;
-  	  	USART_TX_BUF[position++] = inter+48;
-  	  }      
-  	}
-  	// Pxxxxx, Notice the X-axis (practical pitch angle) is assigned as roll channel in the program
-  	if(SendItemFlag[6] == true) {
-      USART_TX_BUF[position++] = 'P';
-      SignMark = Value_sign(TrunkFleAng);
-      if(SignMark == PosSign) {
-      	USART_TX_BUF[position++] = PosSign+48;
-      }
-      else {
-        USART_TX_BUF[position++] = NegSign+48;
-      }
-      // ±xxx.x
-      dec = SignMark*TrunkFleAng*Calcu_Pow(10,1);
-  	  for(int t=0; t<4; t++) {
-  	  	inter = (dec/Calcu_Pow(10,3-t))%10;
-  	  	USART_TX_BUF[position++] = inter+48;
-  	  }      
-  	}
-  	// Yxxxxx
-  	if(SendItemFlag[7] == true) {
-      USART_TX_BUF[position++] = 'Y';
-      SignMark = Value_sign(TrunkYawAng);
-      if(SignMark == PosSign) {
-      	USART_TX_BUF[position++] = PosSign+48;
-      }
-      else {
-        USART_TX_BUF[position++] = NegSign+48;
-      }
-      // ±xxx.x
-      dec = SignMark*TrunkYawAng*Calcu_Pow(10,1);
-  	  for(int t=0; t<4; t++) {
-  	  	inter = (dec/Calcu_Pow(10,3-t))%10;
-  	  	USART_TX_BUF[position++] = inter+48;
-  	  }      
-  	}
-  	// Vxxxxx
-  	if(SendItemFlag[8] == true) {
-  	  USART_TX_BUF[position++] = 'V';
-  	  SignMark = Value_sign(TrunkFleVel);
-      if(SignMark == PosSign) {
-      	USART_TX_BUF[position++] = PosSign+48;
-      }
-      else {
-        USART_TX_BUF[position++] = NegSign+48;
-      }
-      // ±xxx.x
-      dec = SignMark*TrunkFleVel*Calcu_Pow(10,1);
-  	  for(int t=0; t<4; t++) {
-  	  	inter = (dec/Calcu_Pow(10,3-t))%10;
-  	  	USART_TX_BUF[position++] = inter+48;
-  	  }         	  
-  	}
-    // CLxxxx
-    if(SendItemFlag[9] == true) {
-      USART_TX_BUF[position++] = 'C';
-      USART_TX_BUF[position++] = 'L';
-      // ±xxx
-      USART_TX_BUF[position++] = PWMSignL+48;
-      dec = PWM_commandL;
-      for(int t=0; t<3; t++) {
-        inter = (dec/Calcu_Pow(10,2-t))%10;
-        USART_TX_BUF[position++] = inter+48;
-      }
-    }
-    // CRxxxx
-    if(SendItemFlag[10] == true) {
-      USART_TX_BUF[position++] = 'C';
-      USART_TX_BUF[position++] = 'R';     
-      // ±xxx
-      USART_TX_BUF[position++] = PWMSignR+48;
-      dec = PWM_commandR;
-      for(int t=0; t<3; t++) {
-        inter = (dec/Calcu_Pow(10,2-t))%10;
-        USART_TX_BUF[position++] = inter+48;
-      }
-    }
 
-    Serial.println(USART_TX_BUF); // Speed up frequency
+  // Check if the command is recieved
+  if(receiveCompleted) {
+    if(SwitchFlag == '0') {
+      SwitchFlag = '1';
+    }
+    else {
+      SwitchFlag = '0';
+    }
   }
+  // Mx
+  USART_TX_BUF[position++] = 'M';
+  USART_TX_BUF[position++] = SwitchFlag;
+	// TLxxxx
+	if(SendItemFlag[0] == true) {
+	  USART_TX_BUF[position++] = 'T';
+	  USART_TX_BUF[position++] = 'L';
+    // xx.xx
+	  dec = Feedback_TdL*Calcu_Pow(10,2);
+	  for(int t=0; t<4; t++) {
+	  	inter = (dec/Calcu_Pow(10,3-t))%10;
+	  	USART_TX_BUF[position++] = inter+48;
+	  }
+	}
+	// LLxxxx
+	if(SendItemFlag[1] == true) {
+    USART_TX_BUF[position++] = 'L';
+    USART_TX_BUF[position++] = 'L';
+    // xxx.x
+    dec = Estimated_FcL*Calcu_Pow(10,1);
+	  for(int t=0; t<4; t++) {
+	  	inter = (dec/Calcu_Pow(10,3-t))%10;
+	  	USART_TX_BUF[position++] = inter+48;
+	  }      
+	}
+	// ALxxxxx
+	if(SendItemFlag[2] == true) {
+    USART_TX_BUF[position++] = 'A';
+    USART_TX_BUF[position++] = 'L';
+    SignMark = Value_sign(HipAngL);
+    if(SignMark == PosSign) {
+    	USART_TX_BUF[position++] = PosSign+48;
+    }
+    else {
+      USART_TX_BUF[position++] = NegSign+48;
+    }
+    // ±xxx.x
+    dec = SignMark*HipAngL*Calcu_Pow(10,1);
+	  for(int t=0; t<4; t++) {
+	  	inter = (dec/Calcu_Pow(10,3-t))%10;
+	  	USART_TX_BUF[position++] = inter+48;
+	  }      
+	}
+	// TRxxxx
+	if(SendItemFlag[3] == true) {
+	  USART_TX_BUF[position++] = 'T';
+	  USART_TX_BUF[position++] = 'R';
+    // xx.xx
+	  dec = Feedback_TdR*Calcu_Pow(10,2);
+	  for(int t=0; t<4; t++) {
+	  	inter = (dec/Calcu_Pow(10,3-t))%10;
+	  	USART_TX_BUF[position++] = inter+48;
+	  }
+	}
+	// LRxxxx
+	if(SendItemFlag[4] == true) {
+    USART_TX_BUF[position++] = 'L';
+    USART_TX_BUF[position++] = 'R';
+    // xxx.x
+    dec = Estimated_FcR*Calcu_Pow(10,1);
+	  for(int t=0; t<4; t++) {
+	  	inter = (dec/Calcu_Pow(10,3-t))%10;
+	  	USART_TX_BUF[position++] = inter+48;
+	  }      
+	}
+	// ARxxxxx
+	if(SendItemFlag[5] == true) {
+    USART_TX_BUF[position++] = 'A';
+    USART_TX_BUF[position++] = 'R';
+    SignMark = Value_sign(HipAngR);
+    if(SignMark == PosSign) {
+    	USART_TX_BUF[position++] = PosSign+48;
+    }
+    else {
+      USART_TX_BUF[position++] = NegSign+48;
+    }
+    // ±xxx.x
+    dec = SignMark*HipAngR*Calcu_Pow(10,1);
+	  for(int t=0; t<4; t++) {
+	  	inter = (dec/Calcu_Pow(10,3-t))%10;
+	  	USART_TX_BUF[position++] = inter+48;
+	  }      
+	}
+	// Pxxxxx, Notice the X-axis (practical pitch angle) is assigned as roll channel in the program
+	if(SendItemFlag[6] == true) {
+    USART_TX_BUF[position++] = 'P';
+    SignMark = Value_sign(TrunkFleAng);
+    if(SignMark == PosSign) {
+    	USART_TX_BUF[position++] = PosSign+48;
+    }
+    else {
+      USART_TX_BUF[position++] = NegSign+48;
+    }
+    // ±xxx.x
+    dec = SignMark*TrunkFleAng*Calcu_Pow(10,1);
+	  for(int t=0; t<4; t++) {
+	  	inter = (dec/Calcu_Pow(10,3-t))%10;
+	  	USART_TX_BUF[position++] = inter+48;
+	  }      
+	}
+	// Yxxxxx
+	if(SendItemFlag[7] == true) {
+    USART_TX_BUF[position++] = 'Y';
+    SignMark = Value_sign(TrunkYawAng);
+    if(SignMark == PosSign) {
+    	USART_TX_BUF[position++] = PosSign+48;
+    }
+    else {
+      USART_TX_BUF[position++] = NegSign+48;
+    }
+    // ±xxx.x
+    dec = SignMark*TrunkYawAng*Calcu_Pow(10,1);
+	  for(int t=0; t<4; t++) {
+	  	inter = (dec/Calcu_Pow(10,3-t))%10;
+	  	USART_TX_BUF[position++] = inter+48;
+	  }      
+	}
+	// Vxxxxx
+	if(SendItemFlag[8] == true) {
+	  USART_TX_BUF[position++] = 'V';
+	  SignMark = Value_sign(TrunkFleVel);
+    if(SignMark == PosSign) {
+    	USART_TX_BUF[position++] = PosSign+48;
+    }
+    else {
+      USART_TX_BUF[position++] = NegSign+48;
+    }
+    // ±xxx.x
+    dec = SignMark*TrunkFleVel*Calcu_Pow(10,1);
+	  for(int t=0; t<4; t++) {
+	  	inter = (dec/Calcu_Pow(10,3-t))%10;
+	  	USART_TX_BUF[position++] = inter+48;
+	  }         	  
+	}
+  // CLxxxx
+  if(SendItemFlag[9] == true) {
+    USART_TX_BUF[position++] = 'C';
+    USART_TX_BUF[position++] = 'L';
+    // ±xxx
+    USART_TX_BUF[position++] = PWMSignL+48;
+    dec = PWM_commandL;
+    for(int t=0; t<3; t++) {
+      inter = (dec/Calcu_Pow(10,2-t))%10;
+      USART_TX_BUF[position++] = inter+48;
+    }
+  }
+  // CRxxxx
+  if(SendItemFlag[10] == true) {
+    USART_TX_BUF[position++] = 'C';
+    USART_TX_BUF[position++] = 'R';     
+    // ±xxx
+    USART_TX_BUF[position++] = PWMSignR+48;
+    dec = PWM_commandR;
+    for(int t=0; t<3; t++) {
+      inter = (dec/Calcu_Pow(10,2-t))%10;
+      USART_TX_BUF[position++] = inter+48;
+    }
+  }
+
+  Serial.println(USART_TX_BUF); // Speed up frequency
+
 }
 
 /**
