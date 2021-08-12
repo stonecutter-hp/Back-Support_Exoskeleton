@@ -17,6 +17,8 @@ elseif(ExoP.stopFlag == 3)
     outPutStatus(TempApp,'Error Stopped: Fail Handshake!');
 elseif(ExoP.stopFlag == 4)
     outPutStatus(TempApp,'Error Stopped: Fail Communication!');
+elseif(ExoP.stopFlag == 5)
+    outPutStatus(TempApp,'Error Stopped: Timer Callback Error!');
 end
 set(TempApp.btnRun,'value',0);
 

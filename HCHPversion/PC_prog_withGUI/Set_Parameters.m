@@ -17,7 +17,7 @@ P.d2r = pi/180;                  % deg to rad
 P.config = cell(2,1);     
 % Program stop Flag: 0-normal auto stop; 1-normal manually stop
 %                    2-cannot open serial port; 3-handshake error; 
-%                    4-serial communication error
+%                    4-serial communication error; 5-Timer callback error
 P.stopFlag = 0;
 % Stop button pushed flag: 0: No click, 1:clicked
 P.stopButton = 0; 
