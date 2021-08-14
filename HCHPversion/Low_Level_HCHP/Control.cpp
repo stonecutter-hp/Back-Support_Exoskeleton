@@ -123,6 +123,23 @@ void Control_Init() {
   pidR.Err = 0;
   pidR.Err_p = 0;
   pidR.Err_pp = 0;
+
+  /* Parameters for friction compensation */
+  starttime = 1;
+  stoptime = 2;
+  looptime = stoptime - starttime;
+  lastTorqueL = 0;
+  fricCoL = 0;
+  fricOffsetL = 0;
+  curveAngleL = 0;     // curveAngleL = M_PI/2;
+  fricCompenTermL = 0; // The friction compensation term
+  deltaFricComL = fricCompenTermL - lastTorqueL;
+  lastTorqueR = 0;
+  fricCoR = 0;
+  fricOffsetR = 0;
+  curveAngleR = 0;     // curveAngleR = M_PI/2;
+  fricCompenTermR = 0; // The friction compensation term
+  deltaFricComR = fricCompenTermR - lastTorqueR;
 }
 
 /**
@@ -187,22 +204,6 @@ void ControlAux_Init() {
   // 0~1, 0 for DD and 1 for SEA, operation index of the right actuation system
   phaseIndexR = 1;  // initial as SEA status
 
-  /* Parameters for friction compensation */
-  starttime = 1;
-  stoptime = 2;
-  looptime = stoptime - starttime;
-  lastTorqueL = 0;
-  fricCoL = 0;
-  fricOffsetL = 0;
-  curveAngleL = 0;     // curveAngleL = M_PI/2;
-  fricCompenTermL = 0; // The friction compensation term
-  deltaFricComL = fricCompenTermL - lastTorqueL;
-  lastTorqueR = 0;
-  fricCoR = 0;
-  fricOffsetR = 0;
-  curveAngleR = 0;     // curveAngleR = M_PI/2;
-  fricCompenTermR = 0; // The friction compensation term
-  deltaFricComR = fricCompenTermR - lastTorqueR;
 }
 
 /**
@@ -904,7 +905,7 @@ void Control(uint8_t ContMode) {
     PoutR = pidR.Kp*dk1R;
     // I
     IoutR = (pidR.Kp*pidR.Tcontrol)/pidR.Ti;
-    IoutR = IoutR*pidR.Err;
+    IoutR = IoutR*pidR.Err*0;
     // D
     dk2R = pidR.Err+pidR.Err_pp-2*pidR.Err_p;
     DoutR = (pidR.Kp*pidR.Td)/pidR.Tcontrol;
