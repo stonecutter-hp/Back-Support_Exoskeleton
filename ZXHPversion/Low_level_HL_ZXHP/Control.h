@@ -46,6 +46,8 @@ extern PID pidR;  // control parameter of right motor
 // the desired torque from PC is defined in communication receiving parameter part
 extern int16_t PWM_commandL;   // range: 0.1*PWMperiod_L~0.9*PWMperiod_L
 extern int16_t PWM_commandR;   // range: 0.1*PWMperiod_R~0.9*PWMperiod_R
+extern int8_t PWMSignL;        // to mark the rotation direction of the left motor
+extern int8_t PWMSignR;        // to mark the rotation direction of the right motor
 extern bool Control_update;    // control update flag
  
 // Previously workable Kp/Ki/Kd for test bench with large torsion spring:
@@ -60,6 +62,8 @@ extern bool Control_update;    // control update flag
 #define LimitTotal_TaL 7      // Limitation of total control command of motor L
 #define LimitDelta_TaR 500000 // Limitation of delta control command of motor R
 #define LimitTotal_TaR 7      // Limitation of total control command of motor R
+#define PWMUpperBound 0.75    // Upper bound of the PWM cycle duty
+#define PWMLowerBound 0.12    // Lower bound of the PWM cycle duty
 #define LimitInput 15         // Limitation of input command, here for open-loop is Ta, for closed loop is Td
 
 /**************************************** Transmission system parameters definition ********************************/
@@ -72,15 +76,24 @@ extern bool Control_update;    // control update flag
 /******************** Low-level controller related sensor feedback calibration value definition ********************/
 // Expected initial value range (CaliValue +- Tol) of sensor feedback for initial calibration
 // the initial values should be adjusted along with prototype design
+#define TorqueSensorL_CaliValue 0
+#define TorqueSensorL_Tol 0
+#define TorqueSensorR_CaliValue 0
+#define TorqueSensorR_Tol 0
 #define ForceSensorL_CaliValue 0
 #define ForceSensorL_Tol 0
 #define ForceSensorR_CaliValue 0
 #define ForceSensorR_Tol 0
 
+
 /*************************************** Intermediate auxiliary parameters for control ****************************/ 
 // Parameters for low-level control
 extern float Estimated_TdMotorCurrentL;   // Td feedback from left motor current feedback
 extern float Estimated_TdMotorCurrentR;   // Td feedback from right motor current feedback
+extern float Estimated_TdTorqueL;         // Td feedback from left torque sensor
+extern float TorqueL_InitValue;           // Auxiliary parameter for left torque sensor
+extern float Estimated_TdTorqueR;         // Td feedback from right torque sensor
+extern float TorqueR_InitValue;           // Auxiliary parameter for right torque sensor
 extern float Estimated_TdForceSensorL;    // Td feedback from left force sensor
 extern float ForceSensorL_InitValue;      // Auxiliary parameter for left force sensor
 extern float Estimated_TdForceSensorR;    // Td feedback from right force sensor
@@ -97,10 +110,25 @@ extern float Estimated_TdR;               // Estimated compact Td feedback of ri
 void Control_Init(void);
 
 /**
+ * Control auxiliary parameter initialization
+ * Initial parameters including: 
+ * Interative force feedback
+ */
+void ControlAux_Init(void);
+
+/**
  * Pre-processing for sensor feedback related to low-level controller 
  * to make sure the initial status of sensor is good for calibration
+ * @return int8_t - Sensor ready flag: 0-Not Ready; 1-Ready
  */
-void LLPreproSensorInit(void);
+int8_t LLPreproSensorInit(void);
+
+/**
+ * Pre-processing for sensor feedback related to both low-level controller 
+ * and high-level control to make sure the initial status of sensor is good for calibration
+ * @return int8_t - Sensor ready flag: 0-Not Ready; 1-Ready
+ */
+int8_t PreproSensorInit(void);
 
 /**
  * Processing sensor feedback for Low-level closed-loop control

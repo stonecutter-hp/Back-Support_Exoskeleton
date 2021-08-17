@@ -17,24 +17,26 @@ const int attRatio[16] = {1,  1,  1,  1,  22.5,   2,  2,  2,  2,  2,   1,   1,  
 #define ADC_SS PA4           //SPI1_NSS-CS 
 #define ADC_MISO PA6         //SPI1_MISO-DOUT/RDY
 #define ENABLED_CH 16        //sum of ADC Channels
+#define ENABLED_CH_Work 10   //Practical working channels
 #define MotorCurrL 6         //ADC channel assigned for left motor current feedback
 #define MotorCurrR 8         //ADC channel assigned for right motor current feedback
 #define MotorVeloL 5         //ADC channel assigned for left motor velocity feedback
 #define MotorVeloR 7         //ADC channel assigned for right motor velocity feedback
 #define PotentioLP1 10       //ADC channel assigned for left potentiometer 1(P1)
 #define PotentioRP2 11       //ADC channel assigned for right potentiometer 1(P2)
-#define ForceSensorL 12      //ADC channel assigned for left force sensor
-#define ForceSensorR 13      //ADC channel assigned for right force sensor
-#define LoadCellL 0          //ADC channel assigned for left load cell
-#define LoadCellR 1          //ADC channel assigned for right load cell
+#define TorqueSensorL 12     //ADC channel assigned for left torque sensor
+#define TorqueSensorR 13     //ADC channel assigned for right torque sensor
+#define ForceSensorL 14      //ADC channel assigned for left force sensor
+#define ForceSensorR 15      //ADC channel assigned for right force sensor
 #define FilterCycles 20      //FilterCycles for moving/exponetial average filter
 
 // Parameters for ADC raw data processing for sensors
-#define ForceSensorL_Sensitivity 1       // v/N, for left force sensor calibration
-#define ForceSensorR_Sensitivity 1       // v/N, for right force sensor calibration
-#define LoadCellL_Sensitivity 0.00166    //for load cell calibration
 #define PotentioLP1_Sensitivity 0.0083   //0.0083 = 2.5/300 (v/deg); for left potentiometer calibration 
 #define PotentioRP2_Sensitivity 0.0083   //0.0083 = 2.5/300 (v/deg); for right potentiometer calibration 
+#define TorqueSensorL_Sensitivity 1      // v/Nm, for left torque sensor calibration 
+#define TorqueSensorR_Sensitivity 1      // v/Nm, for right torque sensor calibration 
+#define ForceSensorL_Sensitivity 1       // v/N, for left force sensor calibration
+#define ForceSensorR_Sensitivity 1       // v/N, for right force sensor calibration
 
 /* ADC conversion data and STATUS register */
 extern byte ADC_data[ENABLED_CH][4];             // store raw data from ADC

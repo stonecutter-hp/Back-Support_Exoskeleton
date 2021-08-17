@@ -16,12 +16,12 @@ extern float HLUpdateFre;       // high-level control frequency
 
 /* Motion type define */
 typedef enum {
-  Standing = 1,
-  Walking = 2,
-  Lowering = 3,
-  Grasping = 4,
-  Lifting = 5,
-  ExitState = 6
+  ExitState = 1,
+  Standing = 2,
+  Walking = 3,
+  Lowering = 4,
+  Grasping = 5,
+  Lifting = 6
 } MotionType;
 
 /* Asymmetric bending side type define */
@@ -37,7 +37,6 @@ typedef enum {
   Squat = 1,
   SemiSquat = 2
 } BendTech;
-
 /* High-level control status flag */ 
 extern MotionType mode;         // this time's motion mode flag
 extern MotionType PreMode;      // last time's motion mode flag
@@ -99,10 +98,12 @@ extern UIDCont UID_Subject1;    // UID strategy parameters for specific subjects
 /* Intermediate auxiliary parameters for UID strategy */
 // Parameters Directly feedback from sensor
 extern float HipAngL;                     // Left hip joint angle
+extern float HipVelL_Motor;               // Left hip joint velocity from motor velocity feedback
 extern float HipAngL_InitValue;           // Auxiliary parameter for left hip joint angle
 extern float HipAngL_T0InitValue;         // Auxiliary parameter of T0 left hip joint angle
 extern float HipAngL_MaxValue;            // Auxiliary parameter of Max left hip joint bending angle
 extern float HipAngR;                     // Right hip joint angle
+extern float HipVelR_Motor;               // Right hip joint velocity from motor velocity feedback
 extern float HipAngR_InitValue;           // Auxiliary parameter for right hip joint angle
 extern float HipAngR_T0InitValue;         // Auxiliary parameter of T0 right hip joint angle
 extern float HipAngR_MaxValue;            // Auxiliary parameter of Max right hip joint bending angle
@@ -117,6 +118,8 @@ extern float TrunkFleVel;                 // Trunk flexion angular velocity
 extern float HipAngMean;                  // (Left hip angle + right hip angle)/2
 extern float HipAngDiff;                  // (Left hip angle - right hip angle)
 extern float HipAngStd;                   // Std(HipAngMean) within certain time range
+extern float HipAngVelL;                  // Velocity of HipAngL
+extern float HipAngVelR;                  // Velocity of HipAngR
 extern float HipAngVel;                   // Velocity of HipAngMean
 extern float ThighAngL;                   // Left thigh angle
 extern float ThighAngL_T0InitValue;       // Auxiliary parameter of T0 left thigh angle for RTG
@@ -125,7 +128,13 @@ extern float ThighAngR_T0InitValue;       // Auxiliary parameter of T0 right thi
 extern float ThighAngMean;                // (Left thigh angle + right thigh angle)/2
 extern float ThighAngStd;                 // Std(ThighAngMean) within certain time range
 extern float HipAngDiffStd;               // Std(HipAngDiff) within certain time range
+// Time parameters for velocity calculation
+extern unsigned long starttime;          
+extern unsigned long stoptime;
+extern unsigned long looptime;
 // A window store the historical HipAngMean value of certain cycle for standard deviation calculation
+extern float HipAngPreL[FilterCycles];
+extern float HipAngPreR[FilterCycles];
 extern float HipAngMeanPre[FilterCycles];
 extern float HipAngMeanBar;               // Auxiliary parameter X_bar for standard deviation calculation
 // A window store the historical HipAngDiff value of certain cycle for standard deviation calculation
@@ -146,8 +155,9 @@ void UID_Init(void);
 /**
  * Pre-processing for sensor feedback related to high-level controller 
  * to make sure the initial status of sensor is good for calibration
+ * @return int8_t - Sensor ready flag: 0-Not Ready; 1-Ready
  */
-void HLPreproSensorInit(void);
+int8_t HLPreproSensorInit(void);
 
 /**
  * Set the yaw angle of human trunk to zero

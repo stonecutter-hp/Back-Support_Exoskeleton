@@ -40,22 +40,22 @@ void ADC_Init(void) {
   /* true/false to enable/disable channel */
   /* SETUP0 - SETUP7 */
   /* AIN0 - AIN16 */
-  AD7173.set_channel_config(CH0, true, SETUP0, AIN0, REF_NEG);    //LoadCellL
+  AD7173.set_channel_config(CH0, false, SETUP0, AIN0, REF_NEG);   
   AD7173.set_channel_config(CH1, false, SETUP0, AIN1, REF_NEG);   
   AD7173.set_channel_config(CH2, false, SETUP0, AIN2, REF_NEG);
   AD7173.set_channel_config(CH3, false, SETUP0, AIN3, REF_NEG);
   AD7173.set_channel_config(CH4, false, SETUP0, AIN4, REF_NEG);
-  AD7173.set_channel_config(CH5, false, SETUP0, AIN5, REF_NEG);   //MotorVeloL
-  AD7173.set_channel_config(CH6, false, SETUP0, AIN6, REF_NEG);   //MotorCurrL
-  AD7173.set_channel_config(CH7, false, SETUP0, AIN7, REF_NEG);
-  AD7173.set_channel_config(CH8, false, SETUP0, AIN8, REF_NEG);
-  AD7173.set_channel_config(CH9, false, SETUP0, AIN9, REF_NEG);
+  AD7173.set_channel_config(CH5, true, SETUP0, AIN5, REF_NEG);    //MotorVeloL
+  AD7173.set_channel_config(CH6, true, SETUP0, AIN6, REF_NEG);    //MotorCurrL
+  AD7173.set_channel_config(CH7, true, SETUP0, AIN7, REF_NEG);    //MotorVeloR
+  AD7173.set_channel_config(CH8, true, SETUP0, AIN8, REF_NEG);    //MotorCurrR
+  AD7173.set_channel_config(CH9, false, SETUP0, AIN9, REF_NEG); 
   AD7173.set_channel_config(CH10, true, SETUP0, AIN10, REF_NEG);  //PotentioLP1
-  AD7173.set_channel_config(CH11, false, SETUP0, AIN11, REF_NEG);
-  AD7173.set_channel_config(CH12, false, SETUP0, AIN12, REF_NEG); //ForceSensorL
-  AD7173.set_channel_config(CH13, false, SETUP0, AIN13, REF_NEG);
-  AD7173.set_channel_config(CH14, false, SETUP0, AIN14, REF_NEG);
-  AD7173.set_channel_config(CH15, false, SETUP0, AIN15, REF_NEG);
+  AD7173.set_channel_config(CH11, true, SETUP0, AIN11, REF_NEG);  //PotentioRP2
+  AD7173.set_channel_config(CH12, true, SETUP0, AIN12, REF_NEG);  //TorqueSensorL
+  AD7173.set_channel_config(CH13, true, SETUP0, AIN13, REF_NEG);  //TorqueSensorR
+  AD7173.set_channel_config(CH14, true, SETUP0, AIN14, REF_NEG);  //ForceSensorL
+  AD7173.set_channel_config(CH15, true, SETUP0, AIN15, REF_NEG);  //ForceSensorR
   /* set the ADC SETUP0 coding mode to UNIPOLAR output */
   /* SETUP0 - SETUP7 */
   /* BIPOLAR, UNIPOLAR */
@@ -96,14 +96,14 @@ void ADC_Init(void) {
  * Get the ADC value of all channels once
  */
 void getADC(void) {
-  for(int i=0;i<ENABLED_CH;i++) {
+  for(int i=0;i<ENABLED_CH_Work;i++) {
     while(digitalRead(ADC_MISO) == HIGH) {
       } //wait for data
     /* get ADC conversion result */
     AD7173.get_data(ADC_data[i], true);
   }
   // reorder the rank 0~F
-  for(int i=0;i<ENABLED_CH;i++) {
+  for(int i=0;i<ENABLED_CH_Work;i++) {
     char tempValue[6];  // store the ADC data
     char tempState[2];  // store the ADC status
     for(int j=0;j<3;j++) {

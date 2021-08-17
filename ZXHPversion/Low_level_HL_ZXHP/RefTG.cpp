@@ -40,16 +40,16 @@ void HL_ReferTorqueGenerate(uint8_t RTGMode) {
     if(mode == Standing) {
       desiredTorqueL = 0;
       desiredTorqueR = 0;
-      // enable motor control
-      digitalWrite(MotorEnableL,HIGH);
-      digitalWrite(MotorEnableR,HIGH);
+      // disable motor control
+      digitalWrite(MotorEnableL,LOW);
+      digitalWrite(MotorEnableR,LOW);
     }
     else if(mode == Walking) {
       desiredTorqueL = 0;
       desiredTorqueR = 0;
       // disable motor control
-      digitalWrite(MotorEnableL,LOW);
-      digitalWrite(MotorEnableR,LOW);      
+      digitalWrite(MotorEnableL,HIGH);
+      digitalWrite(MotorEnableR,HIGH);      
     }
     else if(mode == ExitState) {
       desiredTorqueL = 0;
@@ -81,8 +81,20 @@ void HL_ReferTorqueGenerate(uint8_t RTGMode) {
       digitalWrite(MotorEnableL,HIGH);
       digitalWrite(MotorEnableR,HIGH);
     }
-    
   }
+  // Restrict the reference command range, share the same threshold with low-level torque controller
+  if(desiredTorqueL >= LimitInput) {
+    desiredTorqueL = LimitInput;
+  }
+  else if(desiredTorqueL < 0) {
+    desiredTorqueL = 0;
+  } 
+  if(desiredTorqueR >= LimitInput) {
+    desiredTorqueR = LimitInput;
+  }
+  else if(desiredTorqueR < 0) {
+    desiredTorqueR = 0;
+  }  
   
 }
 

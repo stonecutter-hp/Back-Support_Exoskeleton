@@ -11,6 +11,8 @@ PID pidR;  // control parameter of right motor
 // the desired torque from PC is defined in communication receiving parameter part
 int16_t PWM_commandL;   // range: 0.1*PWMperiod_L~0.9*PWMperiod_L
 int16_t PWM_commandR;   // range: 0.1*PWMperiod_R~0.9*PWMperiod_R
+int8_t PWMSignL;        // to mark the rotation direction of the left motor
+int8_t PWMSignR;        // to mark the rotation direction of the right motor
 bool Control_update = true;    // control update flag
 
 
@@ -19,6 +21,10 @@ bool Control_update = true;    // control update flag
 // Parameters for lowe-level control
 float Estimated_TdMotorCurrentL;   // Td feedback from left motor current feedback
 float Estimated_TdMotorCurrentR;   // Td feedback from right motor current feedback
+float Estimated_TdTorqueL;         // Td feedback from left torque sensor
+float TorqueL_InitValue;           // Auxiliary parameter for left torque sensor
+float Estimated_TdTorqueR;         // Td feedback from right torque sensor
+float TorqueR_InitValue;           // Auxiliary parameter for right torque sensor
 float Estimated_TdForceSensorL;    // Td feedback from left force sensor
 float ForceSensorL_InitValue;      // Auxiliary parameter for left force sensor
 float Estimated_TdForceSensorR;    // Td feedback from right force sensor
@@ -29,24 +35,15 @@ float Estimated_TdR;               // Estimated compact Td feedback of right sid
 /**
  * Control parameter initialization for Low-level controller
  * Initial parameters including: 
- * PWM commands; Iterative force feedback; PID struct parameters (PID controller parameters) related to PWM command.
+ * PWM commands; PID struct parameters (PID controller parameters) related to PWM command.
  * Here use increment PID algorithm: Delta.U = Kp*( (ek-ek_1) + (Tcontrol/Ti)*ek + (Td/Tcontrol)*(ek+ek_2-2*ek_1) )
  */
 void Control_Init(void) {
   /* Initialize PWM command */
   PWM_commandL = 0;
   PWM_commandR = 0;
-  
-  /* Initialize interation torque feedback */
-  Estimated_TdMotorCurrentL = 0;
-  Estimated_TdMotorCurrentR = 0;
-  Estimated_TdForceSensorL = 0;
-  ForceSensorL_InitValue = 0;
-  Estimated_TdForceSensorR = 0;
-  ForceSensorR_InitValue = 0;
-  Estimated_TdL = 0;
-  Estimated_TdR = 0;
-
+  PWMSignL = PosSign;
+  PWMSignR = PosSign;  
   /* Initialize PID struct parameters*/
   // initialize the control parameter of left motor
   pidL.set = desiredTorqueL;
@@ -80,51 +77,117 @@ void Control_Init(void) {
 }
 
 /**
+ * Control auxiliary parameter initialization
+ * Initial parameters including: 
+ * Interative force feedback
+ */
+void ControlAux_Init() {
+  /* Initialize interation torque feedback */
+  Estimated_TdMotorCurrentL = 0;
+  Estimated_TdMotorCurrentR = 0;
+  Estimated_TdTorqueL = 0;         // Td feedback from left torque sensor
+  TorqueL_InitValue = 0;           // Auxiliary parameter for left torque sensor
+  Estimated_TdTorqueR = 0;         // Td feedback from right torque sensor
+  TorqueR_InitValue = 0;           // Auxiliary parameter for right torque sensor
+  Estimated_TdForceSensorL = 0;
+  ForceSensorL_InitValue = 0;
+  Estimated_TdForceSensorR = 0;
+  ForceSensorR_InitValue = 0;
+  Estimated_TdL = 0;
+  Estimated_TdR = 0;  
+}
+
+/**
  * Pre-processing for sensor feedback related to low-level controller 
  * to make sure the initial status of sensor is good for calibration
+ * @return int8_t - Sensor ready flag: 0-Not Ready; 1-Ready
  */
-void LLPreproSensorInit() {
+int8_t LLPreproSensorInit() {
   int8_t SensorReady;
   int8_t SensorReady_1;
   int8_t SensorReady_2;
+  int8_t SensorReady_3;
+  int8_t SensorReady_4;
+    
   SensorReady = 0;
-  while(SensorReady == 0){
-    // Collect info from ADC including: ForceSensors(Interaction force) and Motor status 
-    getADCaverage(1);
-    delay(1);
-    // Initialize the inital value for each sensor feedback
-    // Notice to check the Initial value is ADC raw data or Processed data
-    ForceSensorL_InitValue = Aver_ADC_value[ForceSensorL]/ForceSensorL_Sensitivity;
-    ForceSensorR_InitValue = Aver_ADC_value[ForceSensorR]/ForceSensorR_Sensitivity;
-    // Here place program to check if these initial value of each sensor is near the expected position. 
-    // If not, recalibration the initial value of the sensor feedback 
-    if(ForceSensorL_InitValue > ForceSensorL_CaliValue + ForceSensorL_Tol || ForceSensorL_InitValue < ForceSensorL_CaliValue - ForceSensorL_Tol)
-    {SensorReady_1 = 0;}  
-    else {SensorReady_1 = 1;}
-    if(ForceSensorR_InitValue > ForceSensorR_CaliValue + ForceSensorR_Tol || ForceSensorR_InitValue < ForceSensorR_CaliValue - ForceSensorR_Tol)
-    {SensorReady_2 = 0;}
-    else {SensorReady_2 = 1;}
-    SensorReady = SensorReady_1*SensorReady_2;
+  // Collect info from ADC including: Potentiometets(HipAng), TorqueSensors/ForceSensors(Interaction force)
+  // and Motor status
+  getADCaverage(1);
+  delay(1);
+  // Initialize the inital value for each sensor feedback
+  // Notice to check the Initial value is ADC raw data or Processed data
+  TorqueL_InitValue = Aver_ADC_value[TorqueSensorL]/TorqueSensorL_Sensitivity;
+  TorqueR_InitValue = Aver_ADC_value[TorqueSensorR]/TorqueSensorR_Sensitivity;
+  ForceSensorL_InitValue = Aver_ADC_value[ForceSensorL]/ForceSensorL_Sensitivity;
+  ForceSensorR_InitValue = Aver_ADC_value[ForceSensorR]/ForceSensorR_Sensitivity;
+  // Here place program to check if these initial value of each sensor is near the expected position. 
+  // If not, recalibration the initial value of the sensor feedback 
+  if(TorqueL_InitValue > TorqueSensorL_CaliValue + TorqueSensorL_Tol || TorqueL_InitValue < TorqueSensorL_CaliValue - TorqueSensorL_Tol)
+  {SensorReady_1 = 0;}
+  else {SensorReady_1 = 1;}
+  if(TorqueR_InitValue > TorqueSensorR_CaliValue + TorqueSensorR_Tol || TorqueR_InitValue < TorqueSensorR_CaliValue - TorqueSensorR_Tol)
+  {SensorReady_2 = 0;}
+  else {SensorReady_2 = 1;}
+  if(ForceSensorL_InitValue > ForceSensorL_CaliValue + ForceSensorL_Tol || ForceSensorL_InitValue < ForceSensorL_CaliValue - ForceSensorL_Tol)
+  {SensorReady_3 = 0;}  
+  else {SensorReady_3 = 1;}
+  if(ForceSensorR_InitValue > ForceSensorR_CaliValue + ForceSensorR_Tol || ForceSensorR_InitValue < ForceSensorR_CaliValue - ForceSensorR_Tol)
+  {SensorReady_4 = 0;}
+  else {SensorReady_4 = 1;}
+  SensorReady_3 = 1;  // This is because NO FORCE SENSOR is used at present
+  SensorReady = SensorReady_1*SensorReady_2*SensorReady_3*SensorReady_4;
+
+  if(SensorReady == 0) {
+    Serial.println("Sensor NotReady for Low-level Controller.");
   }
-  Serial.println("Sensor Ready for Low-level Controller.");  
+  else {
+    Serial.println("Sensor Ready for Low-level Controller.");
+  }
+  return SensorReady;
+}
+
+/**
+ * Pre-processing for sensor feedback related to both low-level controller 
+ * and high-level control to make sure the initial status of sensor is good for calibration
+ * @return int8_t - Sensor ready flag: 0-Not Ready; 1-Ready
+ */
+int8_t PreproSensorInit() {
+  int8_t SensorReady;
+  int8_t SensorReady_1;
+  int8_t SensorReady_2;
+
+  SensorReady = 0;
+  SensorReady_1 = LLPreproSensorInit();
+  SensorReady_2 = HLPreproSensorInit();
+  SensorReady = SensorReady_1*SensorReady_2;
+
+  if(SensorReady == 0) {
+    Serial.println("NotReady.");
+  }
+  else {
+    Serial.println("Ready.");
+  }
+  return SensorReady;
 }
 
 /**
  * Processing sensor feedback for Low-level closed-loop control
  */
-void sensorFeedbackPro(void) {
-  // ------- Interation torque feedback info processing for low-level controller ------------------
-//  Estimated_TdMotorCurrentL = (Aver_ADC_value[MotorCurrL]-2)*9/2;                    // Td feedback from motor driver, here ESCON set 0~4V:-9~9A
-//  Estimated_TdForceSensorL = Aver_ADC_value[ForceSensorL]*ForceSensorL_Sensitivity;  // Td feedback from Force sensor L
-//  Estimated_TdL = 0.1*Estimated_TdForceSensorL+0.9*Estimated_TdMotorCurrentL;        // Td feedback used for low-level closed-loop control
-  
-  // --------- Trunk flexion velocity info processing for high-level controller ------------ 
+void sensorFeedbackPro() {
+  /* Interation torque feedback info processing for low-level controller */
+  // Td feedback from motor driver, here ESCON set 0~4V:-6~6A
+  Estimated_TdMotorCurrentL = (Aver_ADC_value[MotorCurrL]-2)*6/2;
+  Estimated_TdMotorCurrentR = (Aver_ADC_value[MotorCurrR]-2)*6/2;
+  // Td feedback from Torque sensor                                            
+  Estimated_TdTorqueL = Aver_ADC_value[TorqueSensorL]/TorqueSensorL_Sensitivity - TorqueL_InitValue;
+  Estimated_TdTorqueR = Aver_ADC_value[TorqueSensorR]/TorqueSensorR_Sensitivity - TorqueR_InitValue;
+//  // Td feedback from Force sensor
+//  Estimated_TdForceSensorL = Aver_ADC_value[ForceSensorL]/ForceSensorL_Sensitivity - ForceSensorL_Sensitivity;  
+//  Estimated_TdForceSensorR = Aver_ADC_value[ForceSensorR]/ForceSensorR_Sensitivity - ForceSensorR_Sensitivity; 
+  // Td feedback used for low-level closed-loop control
+  Estimated_TdL = Estimated_TdTorqueL;        
+  Estimated_TdR = Estimated_TdTorqueR;
 
-  // --------- Hip joint angle feedback info processing for high-level controller ----------
-//  HipAngleL = (Aver_ADC_value[PotentioLP1]-HipAngleL_InitValue)/PotentioLP1_Sensitivity;
-
-  // --------- Thigh angle feedback info processing for high-level controller --------------
-//  ThighAngL = 180-HipAngL-angleActualC[rollChan];  //(TrunkFleAng = angleActualC[rollChan])
 }
 
 /**
@@ -147,8 +210,8 @@ void Control(uint8_t ContMode) {
   if(ContMode == 1) {
     /************************ PID control for left motor *************************/
     pidL.set = desiredTorqueL;
-    pidL.currT = Estimated_TdL;    // get current toruqe feedback
-    pidL.Err = pidL.set - pidL.currT;             // calculate the error of this time
+    pidL.currT = Estimated_TdL;              // get current toruqe feedback
+    pidL.Err = pidL.set - pidL.currT;        // calculate the error of this time
     // P
     dk1L = pidL.Err - pidL.Err_p;
     PoutL = pidL.Kp*dk1L;
@@ -173,17 +236,19 @@ void Control(uint8_t ContMode) {
     pidL.currCurrent = Value_sign(pidL.currTa)*pidL.currTa/GearRatio/MotorCurrentConstant;
     pidL.currpwm = pidL.pwm_cycle*(pidL.currCurrent*0.8/MotorMaximumCurrent+0.1);
     // set limitation of PWM duty cycle
-    if(pidL.currpwm > 0.9*pidL.pwm_cycle) {
-      pidL.currpwm = 0.9*pidL.pwm_cycle;
+    if(pidL.currpwm > PWMUpperBound*pidL.pwm_cycle) {
+      pidL.currpwm = PWMUpperBound*pidL.pwm_cycle;
     }
-    else if(pidL.currpwm < 0.1*pidL.pwm_cycle) {
-      pidL.currpwm = 0.1*pidL.pwm_cycle;
+    else if(pidL.currpwm < PWMLowerBound*pidL.pwm_cycle) {
+      pidL.currpwm = PWMLowerBound*pidL.pwm_cycle;
     }
     // determine motor rotation direction
     if(pidL.currTa >= 0) {
+      PWMSignL = PosSign;
     	digitalWrite(MotorRotationL,LOW);
     }
     else if(pidL.currTa < 0) {
+      PWMSignL = NegSign;
     	digitalWrite(MotorRotationL,HIGH);
     }
     PWM_commandL = pidL.currpwm;
@@ -200,7 +265,7 @@ void Control(uint8_t ContMode) {
     PoutR = pidR.Kp*dk1R;
     // I
     IoutR = (pidR.Kp*pidR.Tcontrol)/pidR.Ti;
-    IoutR = IoutR*pidR.Err;
+    IoutR = IoutR*pidR.Err*0;
     // D
     dk2R = pidR.Err+pidR.Err_pp-2*pidR.Err_p;
     DoutR = (pidR.Kp*pidR.Td)/pidR.Tcontrol;
@@ -219,17 +284,19 @@ void Control(uint8_t ContMode) {
     pidR.currCurrent = Value_sign(pidR.currTa)*pidR.currTa/GearRatio/MotorCurrentConstant;
     pidR.currpwm = pidR.pwm_cycle*(pidR.currCurrent*0.8/MotorMaximumCurrent+0.1);
     // set limitation of PWM duty cycle
-    if(pidR.currpwm > 0.9*pidR.pwm_cycle) {
-      pidR.currpwm = 0.9*pidR.pwm_cycle;
+    if(pidR.currpwm > PWMUpperBound*pidR.pwm_cycle) {
+      pidR.currpwm = PWMUpperBound*pidR.pwm_cycle;
     }
-    else if(pidR.currpwm < 0.1*pidR.pwm_cycle) {
-      pidR.currpwm = 0.1*pidR.pwm_cycle;
+    else if(pidR.currpwm < PWMLowerBound*pidR.pwm_cycle) {
+      pidR.currpwm = PWMLowerBound*pidR.pwm_cycle;
     }
     // determine motor rotation direction
     if(pidR.currTa >= 0) {
+      PWMSignR = PosSign;
     	digitalWrite(MotorRotationR,LOW);
     }
     else if(pidR.currTa < 0) {
+      PWMSignR = NegSign;
     	digitalWrite(MotorRotationR,HIGH);
     }
     PWM_commandR = pidR.currpwm;
@@ -243,17 +310,17 @@ void Control(uint8_t ContMode) {
     desiredCurrentL = desiredTorqueL/GearRatio/MotorCurrentConstant;
     desiredCurrentR = desiredTorqueR/GearRatio/MotorCurrentConstant;
     PWM_commandL = PWMperiod_L*(desiredCurrentL*0.8/MotorMaximumCurrent+0.1);
-    if(PWM_commandL >= 0.9*PWMperiod_L) {
-      PWM_commandL = 0.9*PWMperiod_L;
+    if(PWM_commandL >= PWMUpperBound*PWMperiod_L) {
+      PWM_commandL = PWMUpperBound*PWMperiod_L;
     }
-    else if(PWM_commandL <= 0.1*PWMperiod_L) {
-      PWM_commandL = 0.1*PWMperiod_L;
+    else if(PWM_commandL <= PWMLowerBound*PWMperiod_L) {
+      PWM_commandL = PWMLowerBound*PWMperiod_L;
     }
-    if(PWM_commandR >= 0.9*PWMperiod_R) {
-      PWM_commandR = 0.9*PWMperiod_R;
+    if(PWM_commandR >= PWMUpperBound*PWMperiod_R) {
+      PWM_commandR = PWMUpperBound*PWMperiod_R;
     }
-    else if(PWM_commandR <= 0.1*PWMperiod_R) {
-      PWM_commandR = 0.1*PWMperiod_R;
+    else if(PWM_commandR <= PWMLowerBound*PWMperiod_R) {
+      PWM_commandR = PWMLowerBound*PWMperiod_R;
     }
   }
   // set the pwm duty cycle  

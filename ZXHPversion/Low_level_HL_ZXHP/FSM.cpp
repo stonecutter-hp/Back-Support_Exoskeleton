@@ -23,10 +23,12 @@ UIDCont UID_Subject1;          // UID strategy parameters for specific subjects
 /* Intermediate auxiliary parameters for UID strategy */
 // Parameters Directly feedback from sensor
 float HipAngL;                     // Left hip joint angle
+float HipVelL_Motor;               // Left hip joint velocity from motor velocity feedback
 float HipAngL_InitValue;           // Auxiliary parameter for left hip joint angle
 float HipAngL_T0InitValue;         // Auxiliary parameter of T0 left hip joint angle
 float HipAngL_MaxValue;            // Auxiliary parameter of Max left hip joint bending angle
 float HipAngR;                     // Right hip joint angle
+float HipVelR_Motor;               // Right hip joint velocity from motor velocity feedback
 float HipAngR_InitValue;           // Auxiliary parameter for right hip joint angle
 float HipAngR_T0InitValue;         // Auxiliary parameter of T0 right hip joint angle
 float HipAngR_MaxValue;            // Auxiliary parameter of Max right hip joint bending angle
@@ -41,6 +43,8 @@ float TrunkFleVel;                 // Trunk flexion angular velocity
 float HipAngMean;                  // (Left hip angle + right hip angle)/2
 float HipAngDiff;                  // (Left hip angle - right hip angle)
 float HipAngStd;                   // Std(HipAngMean) within certain time range
+float HipAngVelL;                  // Velocity of HipAngL
+float HipAngVelR;                  // Velocity of HipAngR
 float HipAngVel;                   // Velocity of HipAngMean
 float ThighAngL;                   // Left thigh angle
 float ThighAngL_T0InitValue;       // Auxiliary parameter of T0 left thigh angle for RTG
@@ -49,7 +53,13 @@ float ThighAngR_T0InitValue;       // Auxiliary parameter of T0 right thigh angl
 float ThighAngMean;                // (Left thigh angle + right thigh angle)/2
 float ThighAngStd;                 // Std(ThighAngMean) within certain time range
 float HipAngDiffStd;               // Std(HipAngDiff) within certain time range
+// Time parameters for velocity calculation
+unsigned long starttime;          
+unsigned long stoptime;
+unsigned long looptime;
 // A window store the historical HipAngMean value of certain cycle for standard deviation calculation
+float HipAngPreL[FilterCycles];
+float HipAngPreR[FilterCycles];
 float HipAngMeanPre[FilterCycles];
 float HipAngMeanBar;               // Auxiliary parameter X_bar for standard deviation calculation
 // A window store the historical HipAngDiff value of certain cycle for standard deviation calculation
@@ -66,13 +76,19 @@ float HipAngDiffStdPre[FilterCycles];
  * Sensor feedbacks, status flags, thresholds and auxiliary parameters used for UID strategy
  */
 void UID_Init(void) {
+  /* Loop time Initialization */
+  starttime = 1;
+  stoptime = 2;
+  looptime = stoptime - starttime;
   /* Initialize sensor feedbacks */
   // Parameters for UID strategy directly feedback from sensor
   HipAngL = 0;                     // Left hip joint angle
+  HipVelL_Motor = 0;               // Left hip joint velocity from motor velocity feedback
   HipAngL_InitValue = 0;           // Auxiliary parameter for left hip joint angle
   HipAngL_T0InitValue = 0;         // Auxiliary parameter of T0 left hip joint angle
   HipAngL_MaxValue = 0;            // Auxiliary parameter of Max left hip joint bending angle
   HipAngR = 0;                     // Right hip joint angle
+  HipVelR_Motor = 0;               // Right hip joint velocity from motor velocity feedback
   HipAngR_InitValue = 0;           // Auxiliary parameter for right hip joint angle
   HipAngR_T0InitValue = 0;         // Auxiliary parameter of T0 right hip joint angle
   HipAngR_MaxValue = 0;            // Auxiliary parameter of Max right hip joint bending angle
@@ -87,6 +103,8 @@ void UID_Init(void) {
   HipAngMean = 0;                  // (Left hip angle + right hip angle)/2
   HipAngDiff = 0;                  // (Left hip angle - right hip angle)
   HipAngStd = 0;                   // Std(HipAngMean) within certain time range
+  HipAngVelL = 0;                  // Velocity of HipAngL
+  HipAngVelR = 0;                  // Velocity of HipAngR
   HipAngVel = 0;                   // Velocity of HipAngMean
   ThighAngL = 0;                   // Left thigh angle
   ThighAngL_T0InitValue = 0;       // Auxiliary parameter of T0 left thigh angle
@@ -134,6 +152,7 @@ void UID_Init(void) {
   UID_Subject1.ThrThighAngVel = 30;       // deg/s, Threshold for mean thigh angle velocity
   UID_Subject1.StdRange = 10;             // Standard deviation calculation range
   UID_Subject1.RatioTol = 0.2;            // Ratio tolerance related to hip angle for transition between standing and lowering&lifting
+  // Following threshold setting are mainly for exit state
   UID_Subject1.ThrHipAngDiffStd = 20;     // deg, Threshold for standard deviation of difference between left and right hip angle
   UID_Subject1.ThrTrunkFleAngEMin = -15;  // deg, Threshold for allowable minimum trunk flexion angle
   UID_Subject1.ThrTrunkFleAngEMax = 140;  // deg, Threshold for allowable maximum trunk flexion angle
@@ -142,6 +161,8 @@ void UID_Init(void) {
   
   // Initialize auxiliary parameters for Std calculation and Finite state machine
   for(int i=0; i<FilterCycles; i++) {
+    HipAngPreL[i] = 0;
+    HipAngPreR[i] = 0;
     HipAngMeanPre[i] = 0;
     HipAngDiffPre[i] = 0;
     HipAngStdPre[i] = 0;
@@ -154,39 +175,49 @@ void UID_Init(void) {
 /**
  * Pre-processing for sensor feedback related to high-level controller 
  * to make sure the initial status of sensor is good for calibration
+ * @return int8_t - Sensor ready flag: 0-Not Ready; 1-Ready
  */
-void HLPreproSensorInit() {
+int8_t HLPreproSensorInit() {
   int8_t SensorReady;
   int8_t SensorReady_1;
   int8_t SensorReady_2;
   int8_t SensorReady_3;
+  
   SensorReady = 0;
-  while(SensorReady == 0){
-    // Initialize present yaw angle as 0 reference. Notice inside the function info will be collected
-    // from IMUC simultaneously including: TrunkAng, TrunkVel
-    yawAngleR20(ForcedInit,OperaitonAloIMUC);
-    delay(1);
-    // Collect info from ADC including: Potentiometets(HipAng), ForceSensors(Interaction force)
-    // and Motor status 
-    getADCaverage(1);
-    delay(1);
-    // Initialize the inital value for each sensor feedback
-    // Notice to check the Initial value is ADC raw data or Processed data
-    HipAngL_InitValue = Aver_ADC_value[PotentioLP1]/PotentioLP1_Sensitivity;
-    HipAngR_InitValue = Aver_ADC_value[PotentioRP2]/PotentioRP2_Sensitivity;
-    TrunkFleAng_InitValue = angleActualC[rollChan];
-    // Here place program to check if these initial value of each sensor is near the expected position. 
-    // If not, recalibration the initial value of the sensor feedback 
-    if(HipAngL_InitValue > HipAngL_CaliValue + HipAngL_Tol || HipAngL_InitValue < HipAngL_CaliValue - HipAngL_Tol) {SensorReady_1 = 0;}
-    else {SensorReady_1 = 1;}
-    if(HipAngR_InitValue > HipAngR_CaliValue + HipAngR_Tol || HipAngR_InitValue < HipAngR_CaliValue - HipAngR_Tol) {SensorReady_2 = 0;}
-    else {SensorReady_2 = 1;}
-    if(TrunkFleAng_InitValue > TrunkFleAng_CaliValue + TrunkFleAng_Tol || TrunkFleAng_InitValue < TrunkFleAng_CaliValue - TrunkFleAng_Tol)
-    {SensorReady_3 = 0;}
-    else {SensorReady_3 = 1;}
-    SensorReady = SensorReady_1*SensorReady_2*SensorReady_3;
+  // Initialize present yaw angle as 0 reference. Notice inside the function info will be collected
+  // from IMUC simultaneously including: TrunkAng, TrunkVel
+  yawAngleR20(ForcedInit,OperaitonAloIMUC);
+  delay(1);
+  // Collect info from ADC including: Potentiometets(HipAng), TorqueSensors/ForceSensors(Interaction force)
+  // and Motor status 
+  getADCaverage(1);
+  delay(1);
+  // Initialize the inital value for each sensor feedback
+  // Notice to check the Initial value is ADC raw data or Processed data
+  HipAngL_InitValue = Aver_ADC_value[PotentioLP1]/PotentioLP1_Sensitivity;
+  HipAngR_InitValue = Aver_ADC_value[PotentioRP2]/PotentioRP2_Sensitivity;
+  TrunkFleAng_InitValue = angleActualC[rollChan];
+  // Here place program to check if these initial value of each sensor is near the expected position. 
+  // If not, recalibration the initial value of the sensor feedback 
+  if(HipAngL_InitValue > HipAngL_CaliValue + HipAngL_Tol || HipAngL_InitValue < HipAngL_CaliValue - HipAngL_Tol) 
+  {SensorReady_1 = 0;}
+  else {SensorReady_1 = 1;}
+  if(HipAngR_InitValue > HipAngR_CaliValue + HipAngR_Tol || HipAngR_InitValue < HipAngR_CaliValue - HipAngR_Tol) 
+  {SensorReady_2 = 0;}
+  else {SensorReady_2 = 1;}
+  if(TrunkFleAng_InitValue > TrunkFleAng_CaliValue + TrunkFleAng_Tol || TrunkFleAng_InitValue < TrunkFleAng_CaliValue - TrunkFleAng_Tol)
+  {SensorReady_3 = 0;}
+  else {SensorReady_3 = 1;}
+  SensorReady = SensorReady_1*SensorReady_2*SensorReady_3;
+
+  if(SensorReady == 0) {
+    Serial.println("Sensor NotReady for High-level Controller.");
   }
-  Serial.println("Sensor Ready for High-level Controller.");
+  else {
+    Serial.println("Sensor Ready for High-level Controller.");
+  }
+  return SensorReady;
+  
 }
 
 /**
@@ -244,17 +275,24 @@ void HLsensorFeedbackPro() {
 //  MovingAverageFilter(PotentioRP2,5);
 //  // Smooth the trunk flexion angle feedback
 //  MovingAverFilterIMUC(rollChan,5);
-  // Directly feedback from sensor
+
+  /* Directly feedback from sensor */
   HipAngL = Aver_ADC_value[PotentioLP1]/PotentioLP1_Sensitivity - HipAngL_InitValue;
   HipAngR = Aver_ADC_value[PotentioRP2]/PotentioRP2_Sensitivity - HipAngR_InitValue;
+  // when ESCON set 0~4V:-4000~4000rpm
+  HipVelL_Motor = (Aver_ADC_value[MotorVeloL]-2)*4000*3;          //unit: deg/s 
+  HipVelR_Motor = (Aver_ADC_value[MotorVeloR]-2)*4000*3;          //unit: deg/s 
   TrunkFleAng = angleActualC[rollChan] - TrunkFleAng_InitValue;
   TrunkYawAngPro();
   TrunkFleVel = velActualC[rollChan];
-  // Calculated from sensor feedback
+  /* Calculated from sensor feedback */
   HipAngMean = (HipAngL+HipAngR)/2;
   HipAngDiff = HipAngL-HipAngR;
-  HipAngStd = HipAngStdCal(UID_Subject1.StdRange);
-  HipAngVel = (HipAngMeanPre[FilterCycles-1] - HipAngMeanPre[FilterCycles-2])*ADC_updateFre;
+  // ATTENTION that the historical hip angle are updated in HipAngStdCal(), threfore the hip velocity should be calculated after it !!!
+  HipAngStd = HipAngStdCal(UID_Subject1.StdRange);   
+  HipAngVelL = (HipAngPreL[FilterCycles-1] - HipAngPreL[FilterCycles-2])/looptime*1000;
+  HipAngVelR = (HipAngPreR[FilterCycles-1] - HipAngPreR[FilterCycles-2])/looptime*1000;
+  HipAngVel = (HipAngMeanPre[FilterCycles-1] - HipAngMeanPre[FilterCycles-2])/looptime*1000;
   ThighAngL = HipAngL - TrunkFleAng;
   ThighAngR = HipAngR - TrunkFleAng;
   ThighAngMean = (ThighAngL+ThighAngR)/2;
@@ -296,9 +334,13 @@ double HipAngStdCal(int cycles) {
   interMean = HipAngMeanBar + (HipAngMean - HipAngMeanPre[FilterCycles-cycles])/cycles;
   // update the data in the moving window
   for(int j=0; j<FilterCycles-1; j++) {
+    HipAngPreL[j] = HipAngPreL[j+1];
+    HipAngPreR[j] = HipAngPreR[j+1];
     HipAngMeanPre[j] = HipAngMeanPre[j+1];
     HipAngStdPre[j] = HipAngStdPre[j+1];
   }
+  HipAngPreL[FilterCycles-1] = HipAngL;
+  HipAngPreR[FilterCycles-1] = HipAngR;
   HipAngMeanPre[FilterCycles-1] = HipAngMean;
   // store the last time mean value
   HipAngMeanBar = interMean;
@@ -384,7 +426,7 @@ void HL_UserIntentDetect(uint8_t UIDMode) {
   }
   ExitPhase();
   // Reset the recorded state at To and peak moment
-  if((mode == Standing && PreMode = Lifting)||mode == ExitState) {
+  if((mode == Standing && PreMode == Lifting)||mode == ExitState) {
     if(RecordStateReset) {
       HipAngL_T0InitValue = 0;
       HipAngR_T0InitValue = 0;
