@@ -872,16 +872,6 @@ void Control(uint8_t ContMode) {
     }
     // Small torque cannnot extend cable due to friendly friction
     if(pidL.currTa < 0 && pidL.currT < 4) {pidL.currTa = 0;}
-    
-    pidL.currCurrent = Value_sign(pidL.currTa)*pidL.currTa/GearRatio/MotorCurrentConstant;
-    pidL.currpwm = pidL.pwm_cycle*(pidL.currCurrent*0.8/MotorMaximumCurrent+0.1);
-    // set limitation of PWM duty cycle
-    if(pidL.currpwm > PWMUpperBound*pidL.pwm_cycle) {
-      pidL.currpwm = PWMUpperBound*pidL.pwm_cycle;
-    }
-    else if(pidL.currpwm < PWMLowerBound*pidL.pwm_cycle) {
-      pidL.currpwm = PWMLowerBound*pidL.pwm_cycle;
-    }
     // determine motor rotation direction
     if(pidL.currTa >= 0) {
       PWMSignL = PosSign;
@@ -891,6 +881,16 @@ void Control(uint8_t ContMode) {
       PWMSignL = NegSign;
       if(pidL.currTa < LimitReverse_TaL) {pidL.currTa = LimitReverse_TaL;}
       digitalWrite(MotorRotationL,LOW);
+    }
+
+    pidL.currCurrent = Value_sign(pidL.currTa)*pidL.currTa/GearRatio/MotorCurrentConstant;
+    pidL.currpwm = pidL.pwm_cycle*(pidL.currCurrent*0.8/MotorMaximumCurrent+0.1);
+    // set limitation of PWM duty cycle
+    if(pidL.currpwm > PWMUpperBound*pidL.pwm_cycle) {
+      pidL.currpwm = PWMUpperBound*pidL.pwm_cycle;
+    }
+    else if(pidL.currpwm < PWMLowerBound*pidL.pwm_cycle) {
+      pidL.currpwm = PWMLowerBound*pidL.pwm_cycle;
     }
     PWM_commandL = pidL.currpwm;
     //update the error
@@ -926,16 +926,6 @@ void Control(uint8_t ContMode) {
     }
     // Small torque cannnot extend cable due to friendly friction
     if(pidR.currTa < 0 && pidR.currT < 4) {pidR.currTa = 0;}
-    
-    pidR.currCurrent = Value_sign(pidR.currTa)*pidR.currTa/GearRatio/MotorCurrentConstant;
-    pidR.currpwm = pidR.pwm_cycle*(pidR.currCurrent*0.8/MotorMaximumCurrent+0.1);
-    // set limitation of PWM duty cycle
-    if(pidR.currpwm > PWMUpperBound*pidR.pwm_cycle) {
-      pidR.currpwm = PWMUpperBound*pidR.pwm_cycle;
-    }
-    else if(pidR.currpwm < PWMLowerBound*pidR.pwm_cycle) {
-      pidR.currpwm = PWMLowerBound*pidR.pwm_cycle;
-    }
     // determine motor rotation direction
     if(pidR.currTa >= 0) {
       PWMSignR = PosSign;
@@ -945,6 +935,16 @@ void Control(uint8_t ContMode) {
       PWMSignR = NegSign;
       if(pidR.currTa < LimitReverse_TaR) {pidR.currTa = LimitReverse_TaR;}
       digitalWrite(MotorRotationR,HIGH);
+    }
+    
+    pidR.currCurrent = Value_sign(pidR.currTa)*pidR.currTa/GearRatio/MotorCurrentConstant;
+    pidR.currpwm = pidR.pwm_cycle*(pidR.currCurrent*0.8/MotorMaximumCurrent+0.1);
+    // set limitation of PWM duty cycle
+    if(pidR.currpwm > PWMUpperBound*pidR.pwm_cycle) {
+      pidR.currpwm = PWMUpperBound*pidR.pwm_cycle;
+    }
+    else if(pidR.currpwm < PWMLowerBound*pidR.pwm_cycle) {
+      pidR.currpwm = PWMLowerBound*pidR.pwm_cycle;
     }
     PWM_commandR = pidR.currpwm;
     //update the error
