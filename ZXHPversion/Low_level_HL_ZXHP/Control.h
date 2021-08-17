@@ -53,10 +53,10 @@ extern bool Control_update;    // control update flag
 // Previously workable Kp/Ki/Kd for test bench with large torsion spring:
 // 0.58/0/0.28  0.68/0/0.3
 #define KP_L 0.5              // Kp for PID control of motor L
-#define KI_L 0.2              // Ki for PID control of motor L
+#define KI_L 0.0000002        // Ki for PID control of motor L
 #define KD_L 0.28             // Kd for PID control of motor L
 #define KP_R 1                // Kp for PID control of motor R
-#define KI_R 0.002            // Ki for PID control of motor R
+#define KI_R 0.0000002        // Ki for PID control of motor R
 #define KD_R 0.00267          // Kd for PID control of motor R
 #define LimitDelta_TaL 500000 // Limitation of delta control command of motor L
 #define LimitTotal_TaL 7      // Limitation of total control command of motor L
@@ -69,9 +69,9 @@ extern bool Control_update;    // control update flag
 /**************************************** Transmission system parameters definition ********************************/
 // The output ability of the actuation unit with 19:1 gear ratio is better restricted to 0~8.9 Nm (0.0525*9*19)
 // The following parameter may be adjusted after calibrateds
-#define MotorCurrentConstant 0.0437      //motor current constant Nm/A
-#define MotorMaximumCurrent 9            //motor maximum current A configured in EXCON studio
-#define GearRatio 19                     //gear ratio is 19:1
+#define MotorCurrentConstant 0.0302      //motor current constant Nm/A
+#define MotorMaximumCurrent 6            //motor maximum current A configured in EXCON studio
+#define GearRatio 378                    //gear ratio is 126*3:1
 
 /******************** Low-level controller related sensor feedback calibration value definition ********************/
 // Expected initial value range (CaliValue +- Tol) of sensor feedback for initial calibration
