@@ -8,7 +8,7 @@
 char USART_RX_BUF[USART_REC_LEN];     // receiving buffer
 int USART_RX_STA = 0;                 // recieving number flag
 bool receiveCompleted = false;        // receiving completing flag
-bool receiveContinuing = false;       // receiving continuous flag to avoid the multiple data format in buffer: xx\r\n+xx\r\n+xx...
+bool receiveContinuing = true;        // receiving continuous flag to avoid the multiple data format in buffer: xx\r\n+xx\r\n+xx...
 bool SendPC_update = true;            // data sending to PC enable flag
 char SwitchFlag = '0';                // mark if new command have recieved before sending data to PC
 char USART_TX_BUF[USART_TX_LEN];      // sending buffer
@@ -92,8 +92,8 @@ void receiveDatafromPC(void) {
  * PC to MCU Protocol: TLxxxxTRxxxxMxx\r\n (0x0D,0x0A)
  */
 void receivedDataPro(void) {
-  // Remind that the recieved data are stored in receiving buffer USART_RX_BUF[0~USART_RX_STA-1]: TLxxxxTRxxxxMxx
-  // if the receiving cycle is correct completed
+  /* Remind that the recieved data are stored in receiving buffer USART_RX_BUF[0~USART_RX_STA-1]: 
+     TLxxxxTRxxxxMxx if the receiving cycle is correctly completed */
 
   // Length and first character are checked to esure the command is recieved correctly
   if(receiveCompleted && USART_RX_STA == RevievCharNum) {
@@ -150,6 +150,7 @@ void receivedDataPro(void) {
  * AL/Rxxxxx: (deg) Potentiometer feedback for hip angle feedback
  *                  first number indicate sign: 0 for -, 1 for +
  * Pxxxxx: (deg) Pitch angle for trunk
+ *               first number indicate sign: 0 for -, 1 for +
  * Yxxxxx: (deg) yaw angle for trunk
  *               first number indicate sign: 0 for -, 1 for + 
  * Vxxxxx: (deg/s) Pitch angular velocity for trunk

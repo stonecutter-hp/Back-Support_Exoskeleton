@@ -175,7 +175,8 @@ extern float fricCompenTermR; // The friction compensation term
  * Control parameter initialization for Low-level controller
  * Initial parameters including: 
  * Reference torque command and Intermediate quantities related to PWM command;
- * PID struct parameters (PID controller parameters).  
+ * PID struct parameters (PID controller parameters);
+ * Friction compensation related parameters
  * Here use increment PID algorithm: 
  * Delta.U = Kp*( (ek-ek_1) + (Tcontrol/Ti)*ek + (Td/Tcontrol)*(ek+ek_2-2*ek_1) )
  */
@@ -187,7 +188,6 @@ void Control_Init(void);
  * Intermediate value of Interative force and hip angle feedback; 
  * Mode indicators
  * Phase indicators
- * Friction compensation related parameters
  */
 void ControlAux_Init(void);
 

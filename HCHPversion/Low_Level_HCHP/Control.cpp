@@ -79,7 +79,8 @@ float fricCompenTermR; // The friction compensation term
  * Control parameter initialization for Low-level controller
  * Initial parameters including: 
  * Reference torque command and Intermediate quantities related to PWM command;
- * PID struct parameters (PID controller parameters).  
+ * PID struct parameters (PID controller parameters);
+ * Friction compensation related parameters
  * Here use increment PID algorithm: 
  * Delta.U = Kp*( (ek-ek_1) + (Tcontrol/Ti)*ek + (Td/Tcontrol)*(ek+ek_2-2*ek_1) )
  */
@@ -109,7 +110,7 @@ void Control_Init() {
   pidL.Err_p = 0;
   pidL.Err_pp = 0;
 
-  /* initialize the control parameter of right motor */
+  /* Initialize the control parameter of right motor */
   pidR.set = desiredTorqueR;
   pidR.currTa = 0;
   pidR.currCurrent = pidR.currTa/MotorCurrentConstant;
@@ -125,9 +126,6 @@ void Control_Init() {
   pidR.Err_pp = 0;
 
   /* Parameters for friction compensation */
-  starttime = 1;
-  stoptime = 2;
-  looptime = stoptime - starttime;
   lastTorqueL = 0;
   fricCoL = 0;
   fricOffsetL = 0;
@@ -148,9 +146,12 @@ void Control_Init() {
  * Intermediate value of Interative force and hip angle feedback; 
  * Mode indicators
  * Phase indicators
- * Friction compensation related parameters
  */
 void ControlAux_Init() {
+  /* Loop time Initialization */
+  starttime = 1;
+  stoptime = 2;
+  looptime = stoptime - starttime;
   /* Initialize mode and side from high-level UID strategy */
   // Motion detection mode, default is 0 (stop state) to send Ready signal for 
   // for handshake with high-level controller

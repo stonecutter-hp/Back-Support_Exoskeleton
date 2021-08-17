@@ -83,6 +83,7 @@ void receivedDataPro(void);
  * AL/Rxxxxx: (deg) Potentiometer feedback for hip angle feedback
  *                  first number indicate sign: 0 for -, 1 for +
  * Pxxxxx: (deg) Pitch angle for trunk
+ *               first number indicate sign: 0 for -, 1 for +
  * Yxxxxx: (deg) yaw angle for trunk
  *               first number indicate sign: 0 for -, 1 for + 
  * Vxxxxx: (deg/s) Pitch angular velocity for trunk
