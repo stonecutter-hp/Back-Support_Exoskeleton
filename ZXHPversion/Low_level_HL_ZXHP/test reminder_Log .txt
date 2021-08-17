@@ -6,8 +6,8 @@ Make sure the motor direction is correctly controlled
 The std calculation function shhould be tested
 The hip joint velocity calculation quality should be evaluated compared with velocity from IMU and velocity from motor driver
 The thigh angle, hip joint angle and trunk angle relationship checking
-SendingPC protocol confirmation
-Enum data assignment
+SendingPC feedback accuracy confirmation
+Enum data assignment   √
 
 
 
