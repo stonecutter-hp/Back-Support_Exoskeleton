@@ -5,9 +5,9 @@ global ExoP;
 delete(Ttimer);
 clear Ttimer
 % Check if serial port error or not
-if isvalid(ExoP.config{1,1})
+% if isvalid(ExoP.config{1,1})
     ProgStop();
-end
+% end
 %% Saving data
 stopStateDis();
 DataSaving();
