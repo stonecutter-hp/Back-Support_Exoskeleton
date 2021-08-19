@@ -43,8 +43,8 @@ typedef struct
 extern PID pidL;  // control parameter of left motor
 extern PID pidR;  // control parameter of right motor
 // the desired torque from PC is defined in communication receiving parameter part
-extern int16_t PWM_commandL;   // range: 0.1*PWMperiod_L~0.9*PWMperiod_L
-extern int16_t PWM_commandR;   // range: 0.1*PWMperiod_R~0.9*PWMperiod_R
+extern int16_t PWM_commandL;   // range: PWMLowerBound*PWMperiod_L~PWMUpperBound*PWMperiod_L
+extern int16_t PWM_commandR;   // range: PWMLowerBound*PWMperiod_R~PWMUpperBound*PWMperiod_R
 extern int8_t PWMSignL;        // to mark the rotation direction of the left motor
 extern int8_t PWMSignR;        // to mark the rotation direction of the right motor
 extern bool Control_update;    // control update flag

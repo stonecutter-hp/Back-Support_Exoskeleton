@@ -8,8 +8,8 @@
 PID pidL;  // control parameter of left motor
 PID pidR;  // control parameter of right motor
 // the desired torque from PC is defined in communication receiving parameter part
-int16_t PWM_commandL;   // range: 0.1*PWMperiod_L~0.9*PWMperiod_L
-int16_t PWM_commandR;   // range: 0.1*PWMperiod_R~0.9*PWMperiod_R
+int16_t PWM_commandL;   // range: PWMLowerBound*PWMperiod_L~PWMUpperBound*PWMperiod_L
+int16_t PWM_commandR;   // range: PWMLowerBound*PWMperiod_R~PWMUpperBound*PWMperiod_R
 int8_t PWMSignL;        // to mark the rotation direction of the left motor
 int8_t PWMSignR;        // to mark the rotation direction of the right motor
 bool Control_update = true;  // control update flag
