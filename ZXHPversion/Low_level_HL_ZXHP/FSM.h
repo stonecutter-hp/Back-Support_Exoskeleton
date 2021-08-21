@@ -115,6 +115,7 @@ extern float TrunkFleAng_InitValue;       // Auxiliary parameter for trunk pitch
 extern float TrunkFleAng_T0InitValue;     // Auxiliary parameter for T0 trunk pitch angle
 extern float PreTrunkVel;                 // Last time's Trunk flexion angular velocity (For acceleration calculation)
 extern float TrunkFleVel;                 // Trunk flexion angular velocity
+extern float PreTrunkFleAcc;              // Last time's Trunk flexion angular acceleration (For filter)
 extern float TrunkFleAcc;                 // Trunk flexion angular acceleration
 
 // Parameters calculated from sensor feedback
@@ -123,9 +124,11 @@ extern float HipAngDiff;                  // (Left hip angle - right hip angle)
 extern float HipAngStd;                   // Std(HipAngMean) within certain time range
 extern float PreHipAngVelL;               // Last time's velocity of HipAngL
 extern float HipAngVelL;                  // Velocity of HipAngL
+extern float PreHipAngAccL;               // Last time's Acceleration of HipAngL (For filter)
 extern float HipAngAccL;                  // Acceleration of HipAngL
 extern float PreHipAngVelR;               // Last time's velocity of HipAngR
 extern float HipAngVelR;                  // Velocity of HipAngR
+extern float PreHipAngAccR;               // Last time's Acceleration of HipAngR (For filter)
 extern float HipAngAccR;                  // Acceleration of HipAngR
 extern float HipAngVel;                   // Velocity of HipAngMean
 extern float ThighAngL;                   // Left thigh angle
@@ -288,5 +291,13 @@ float PeakvalueDetect(float *Pevalue, uint8_t Peakmode);
  * @return unsigned char - detected direction: 1-increasing direction, 2-decreasing direction, 0-uncertain
  */
 uint8_t DireStdDetect(float *Angvalue, int cycles); 
+
+/**
+ * Low-pass filter 
+ * @param float - cut off frequency of the low-pass filter
+ * @param float - sampling rate
+ * @return float - coefficient of the filter 
+ */
+float lowPassFilter(float cutFre, float samplRate);
 
 #endif

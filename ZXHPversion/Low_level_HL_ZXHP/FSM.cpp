@@ -40,6 +40,7 @@ float TrunkFleAng_InitValue;       // Auxiliary parameter for trunk pitch angle
 float TrunkFleAng_T0InitValue;     // Auxiliary parameter for T0 trunk pitch angle
 float PreTrunkVel;                 // Last time's Trunk flexion angular velocity (For acceleration calculation)
 float TrunkFleVel;                 // Trunk flexion angular velocity
+float PreTrunkFleAcc;              // Last time's Trunk flexion angular acceleration (For filter)
 float TrunkFleAcc;                 // Trunk flexion angular acceleration
 // Parameters calculated from sensor feedback
 float HipAngMean;                  // (Left hip angle + right hip angle)/2
@@ -47,9 +48,11 @@ float HipAngDiff;                  // (Left hip angle - right hip angle)
 float HipAngStd;                   // Std(HipAngMean) within certain time range
 float PreHipAngVelL;               // Last time's velocity of HipAngL
 float HipAngVelL;                  // Velocity of HipAngL
+float PreHipAngAccL;               // Last time's Acceleration of HipAngL (For filter)
 float HipAngAccL;                  // Acceleration of HipAngL
 float PreHipAngVelR;               // Last time's velocity of HipAngR
 float HipAngVelR;                  // Velocity of HipAngR
+float PreHipAngAccR;               // Last time's Acceleration of HipAngR (For filter)
 float HipAngAccR;                  // Acceleration of HipAngR
 float HipAngVel;                   // Velocity of HipAngMean
 float ThighAngL;                   // Left thigh angle
@@ -106,6 +109,7 @@ void UID_Init(void) {
   TrunkFleAng_T0InitValue = 0;     // Auxiliary parameter for T0 trunk pitch angle
   PreTrunkVel = 0;
   TrunkFleVel = 0;                 // Trunk flexion angular velocity
+  PreTrunkFleAcc = 0;              // Last time's Trunk flexion angular acceleration (For filter)
   TrunkFleAcc = 0;                 // Trunk flexion angular acceleration
   // Parameters for UID strategy calculated from sensor feedback
   HipAngMean = 0;                  // (Left hip angle + right hip angle)/2
@@ -113,9 +117,11 @@ void UID_Init(void) {
   HipAngStd = 0;                   // Std(HipAngMean) within certain time range
   PreHipAngVelL = 0;               // Last time's velocity of HipAngL
   HipAngVelL = 0;                  // Velocity of HipAngL
+  PreHipAngAccL = 0;               // Last time's Acceleration of HipAngL (For filter)
   HipAngAccL = 0;                  // Acceleration of HipAngL
   PreHipAngVelR = 0;               // Last time's velocity of HipAngR
   HipAngVelR = 0;                  // Velocity of HipAngR
+  PreHipAngAccR = 0;               // Last time's Acceleration of HipAngR (For filter)
   HipAngAccR = 0;                  // Acceleration of HipAngR
   HipAngVel = 0;                   // Velocity of HipAngMean
   ThighAngL = 0;                   // Left thigh angle
@@ -298,7 +304,11 @@ void HLsensorFeedbackPro() {
   TrunkYawAngPro();
   PreTrunkVel = TrunkFleVel;
   TrunkFleVel = velActualC[rollChan];
-  TrunkFleAcc = (TrunkFleVel-PreTrunkVel)/looptime*1000;
+  PreTrunkFleAcc = TrunkFleAcc;                                   // Last filtered acceleration
+  TrunkFleAcc = (TrunkFleVel-PreTrunkVel)/looptime*1000;          // This time unfiltered acceleration
+  // Low-pass filtering for acceleration 
+  // TrunkFleAcc = PreTrunkFleAcc+lowPassFilter(2,100)*(TrunkFleAcc - PreTrunkFleAcc);                              
+
   /* Calculated from sensor feedback */
   HipAngMean = (HipAngL+HipAngR)/2;
   HipAngDiff = HipAngL-HipAngR;
@@ -306,10 +316,16 @@ void HLsensorFeedbackPro() {
   HipAngStd = HipAngStdCal(UID_Subject1.StdRange);   
   PreHipAngVelL = HipAngVelL;      // Last time's velocity of HipAngL
   HipAngVelL = (HipAngPreL[FilterCycles-1] - HipAngPreL[FilterCycles-2])/looptime*1000;
-  HipAngAccL = (HipAngVelL - PreHipAngVelL)/looptime*1000;                  // Acceleration of HipAngL  
+  PreHipAngAccL = HipAngAccL;                                     // Last filtered acceleration
+  HipAngAccL = (HipAngVelL - PreHipAngVelL)/looptime*1000;        // This time unfiltered acceleration of HipAngL  
+  // Low-pass filtering for acceleration of HipAngL
+  // HipAngAccL = PreHipAngAccL+lowPassFilter(2,100)*(HipAngAccL - PreHipAngAccL);  
   PreHipAngVelR = HipAngVelR;      // Last time's velocity of HipAngR
   HipAngVelR = (HipAngPreR[FilterCycles-1] - HipAngPreR[FilterCycles-2])/looptime*1000;
-  HipAngAccR = (HipAngVelR - PreHipAngVelR)/looptime*1000; 
+  PreHipAngAccR = HipAngAccR;                                     // Last filtered acceleration
+  HipAngAccR = (HipAngVelR - PreHipAngVelR)/looptime*1000;        // This time unfiltered acceleration of HipAngR
+  // Low-pass filtering for acceleration of HipAngR
+  // HipAngAccR = PreHipAngAccR+lowPassFilter(2,100)*(HipAngAccR - PreHipAngAccR);   
   HipAngVel = (HipAngMeanPre[FilterCycles-1] - HipAngMeanPre[FilterCycles-2])/looptime*1000;
   ThighAngL = HipAngL - TrunkFleAng;
   ThighAngR = HipAngR - TrunkFleAng;
@@ -697,4 +713,18 @@ uint8_t DireStdDetect(float *Angvalue, int cycles) {
     DirectFlag = 0;
   }
   return DirectFlag;
+}
+
+/**
+ * Low-pass filter 
+ * @param float - cut off frequency of the low-pass filter
+ * @param float - sampling rate
+ * @return float - coefficient of the filter 
+ */
+float lowPassFilter(float cutFre, float samplRate) {
+  float RC = 1/(cutFre*2*M_PI);
+  float dt = 1/samplRate;
+  float alpha = dt/(RC+dt);
+
+  return alpha;
 }
