@@ -17,7 +17,7 @@ const int attRatio[16] = {1,  1,  1,  1,  22.5,   2,  2,  2,  2,  2,   1,   1,  
 #define ADC_SS PA4           //SPI1_NSS-CS 
 #define ADC_MISO PA6         //SPI1_MISO-DOUT/RDY
 #define ENABLED_CH 16        //sum of ADC Channels
-#define ENABLED_CH_Work 10   //Practical working channels
+#define ENABLED_CH_Work 8    //Practical working channels
 #define MotorCurrL 6         //ADC channel assigned for left motor current feedback
 #define MotorCurrR 8         //ADC channel assigned for right motor current feedback
 #define MotorVeloL 5         //ADC channel assigned for left motor velocity feedback
@@ -31,10 +31,12 @@ const int attRatio[16] = {1,  1,  1,  1,  22.5,   2,  2,  2,  2,  2,   1,   1,  
 #define FilterCycles 20      //FilterCycles for moving/exponetial average filter
 
 // Parameters for ADC raw data processing for sensors
-#define PotentioLP1_Sensitivity 0.0083   //0.0083 = 2.5/300 (v/deg); for left potentiometer calibration 
-#define PotentioRP2_Sensitivity 0.0083   //0.0083 = 2.5/300 (v/deg); for right potentiometer calibration 
-#define TorqueSensorL_Sensitivity 1      // v/Nm, for left torque sensor calibration 
-#define TorqueSensorR_Sensitivity 1      // v/Nm, for right torque sensor calibration 
+#define PotentioLP1_Sensitivity 114              // 120 = 300/2.5 (deg/v); for left potentiometer calibration 
+#define PotentioRP2_Sensitivity 105.6            // 120 = 300/2.5 (deg/v); for right potentiometer calibration 
+#define TorqueSensorL_Sensitivity 37.843         // Nm/v, for left torque sensor calibration 
+#define TorqueSensorL_Offset 1.2614              // v, for left torque sensor calibration 
+#define TorqueSensorR_Sensitivity -31.704426     // Nm/v, for right torque sensor calibration 
+#define TorqueSensorR_Offset 1.33404             // v, for right torque sensor calibration 
 #define ForceSensorL_Sensitivity 1       // v/N, for left force sensor calibration
 #define ForceSensorR_Sensitivity 1       // v/N, for right force sensor calibration
 

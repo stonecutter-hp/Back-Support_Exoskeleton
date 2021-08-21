@@ -14,11 +14,13 @@ void GeneralIO_Init(void) {
   pinMode(LED1, OUTPUT);
   pinMode(MotorEnableL, OUTPUT);
   pinMode(MotorRotationL, OUTPUT);
+  pinMode(MotorEnableR, OUTPUT);
+  pinMode(MotorRotationR, OUTPUT);
   // Initial pin status assignment for left motor
   digitalWrite(MotorRotationL,LOW);  // ensure the correct right rotation direction (CCW for work bench)
   digitalWrite(MotorEnableL,LOW);    // initially disable motor  
   // Initial pin status assignment for right motor
-  digitalWrite(MotorRotationR,LOW);  // ensure the correct right rotation direction (CCW for work bench)
+  digitalWrite(MotorRotationR,HIGH);  // ensure the correct right rotation direction (CCW for work bench)
   digitalWrite(MotorEnableR,LOW);    // initially disable motor 
 
   

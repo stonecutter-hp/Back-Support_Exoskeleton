@@ -54,8 +54,8 @@ void ADC_Init(void) {
   AD7173.set_channel_config(CH11, true, SETUP0, AIN11, REF_NEG);  //PotentioRP2
   AD7173.set_channel_config(CH12, true, SETUP0, AIN12, REF_NEG);  //TorqueSensorL
   AD7173.set_channel_config(CH13, true, SETUP0, AIN13, REF_NEG);  //TorqueSensorR
-  AD7173.set_channel_config(CH14, true, SETUP0, AIN14, REF_NEG);  //ForceSensorL
-  AD7173.set_channel_config(CH15, true, SETUP0, AIN15, REF_NEG);  //ForceSensorR
+  AD7173.set_channel_config(CH14, false, SETUP0, AIN14, REF_NEG); //ForceSensorL
+  AD7173.set_channel_config(CH15, false, SETUP0, AIN15, REF_NEG); //ForceSensorR
   /* set the ADC SETUP0 coding mode to UNIPOLAR output */
   /* SETUP0 - SETUP7 */
   /* BIPOLAR, UNIPOLAR */

@@ -38,13 +38,19 @@ float TrunkYaw_T0InitValue;        // Auxiliary parameter for T0 trunk yaw angle
 float TrunkFleAng;                 // Trunk flexion angle
 float TrunkFleAng_InitValue;       // Auxiliary parameter for trunk pitch angle
 float TrunkFleAng_T0InitValue;     // Auxiliary parameter for T0 trunk pitch angle
+float PreTrunkVel;                 // Last time's Trunk flexion angular velocity (For acceleration calculation)
 float TrunkFleVel;                 // Trunk flexion angular velocity
+float TrunkFleAcc;                 // Trunk flexion angular acceleration
 // Parameters calculated from sensor feedback
 float HipAngMean;                  // (Left hip angle + right hip angle)/2
 float HipAngDiff;                  // (Left hip angle - right hip angle)
 float HipAngStd;                   // Std(HipAngMean) within certain time range
+float PreHipAngVelL;               // Last time's velocity of HipAngL
 float HipAngVelL;                  // Velocity of HipAngL
+float HipAngAccL;                  // Acceleration of HipAngL
+float PreHipAngVelR;               // Last time's velocity of HipAngR
 float HipAngVelR;                  // Velocity of HipAngR
+float HipAngAccR;                  // Acceleration of HipAngR
 float HipAngVel;                   // Velocity of HipAngMean
 float ThighAngL;                   // Left thigh angle
 float ThighAngL_T0InitValue;       // Auxiliary parameter of T0 left thigh angle for RTG
@@ -98,13 +104,19 @@ void UID_Init(void) {
   TrunkFleAng = 0;                 // Trunk flexion angle
   TrunkFleAng_InitValue = 0;       // Auxiliary parameter for trunk pitch angle
   TrunkFleAng_T0InitValue = 0;     // Auxiliary parameter for T0 trunk pitch angle
+  PreTrunkVel = 0;
   TrunkFleVel = 0;                 // Trunk flexion angular velocity
+  TrunkFleAcc = 0;                 // Trunk flexion angular acceleration
   // Parameters for UID strategy calculated from sensor feedback
   HipAngMean = 0;                  // (Left hip angle + right hip angle)/2
   HipAngDiff = 0;                  // (Left hip angle - right hip angle)
   HipAngStd = 0;                   // Std(HipAngMean) within certain time range
+  PreHipAngVelL = 0;               // Last time's velocity of HipAngL
   HipAngVelL = 0;                  // Velocity of HipAngL
+  HipAngAccL = 0;                  // Acceleration of HipAngL
+  PreHipAngVelR = 0;               // Last time's velocity of HipAngR
   HipAngVelR = 0;                  // Velocity of HipAngR
+  HipAngAccR = 0;                  // Acceleration of HipAngR
   HipAngVel = 0;                   // Velocity of HipAngMean
   ThighAngL = 0;                   // Left thigh angle
   ThighAngL_T0InitValue = 0;       // Auxiliary parameter of T0 left thigh angle
@@ -194,8 +206,8 @@ int8_t HLPreproSensorInit() {
   delay(1);
   // Initialize the inital value for each sensor feedback
   // Notice to check the Initial value is ADC raw data or Processed data
-  HipAngL_InitValue = Aver_ADC_value[PotentioLP1]/PotentioLP1_Sensitivity;
-  HipAngR_InitValue = Aver_ADC_value[PotentioRP2]/PotentioRP2_Sensitivity;
+  HipAngL_InitValue = Aver_ADC_value[PotentioLP1]*PotentioLP1_Sensitivity;
+  HipAngR_InitValue = Aver_ADC_value[PotentioRP2]*PotentioRP2_Sensitivity;
   TrunkFleAng_InitValue = angleActualC[rollChan];
   // Here place program to check if these initial value of each sensor is near the expected position. 
   // If not, recalibration the initial value of the sensor feedback 
@@ -277,21 +289,27 @@ void HLsensorFeedbackPro() {
 //  MovingAverFilterIMUC(rollChan,5);
 
   /* Directly feedback from sensor */
-  HipAngL = Aver_ADC_value[PotentioLP1]/PotentioLP1_Sensitivity - HipAngL_InitValue;
-  HipAngR = Aver_ADC_value[PotentioRP2]/PotentioRP2_Sensitivity - HipAngR_InitValue;
+  HipAngL = Aver_ADC_value[PotentioLP1]*PotentioLP1_Sensitivity - HipAngL_InitValue;
+  HipAngR = Aver_ADC_value[PotentioRP2]*PotentioRP2_Sensitivity - HipAngR_InitValue;
   // when ESCON set 0~4V:-4000~4000rpm
   HipVelL_Motor = (Aver_ADC_value[MotorVeloL]-2)*4000*3;          //unit: deg/s 
   HipVelR_Motor = (Aver_ADC_value[MotorVeloR]-2)*4000*3;          //unit: deg/s 
   TrunkFleAng = angleActualC[rollChan] - TrunkFleAng_InitValue;
   TrunkYawAngPro();
+  PreTrunkVel = TrunkFleVel;
   TrunkFleVel = velActualC[rollChan];
+  TrunkFleAcc = (TrunkFleVel-PreTrunkVel)/looptime*1000;
   /* Calculated from sensor feedback */
   HipAngMean = (HipAngL+HipAngR)/2;
   HipAngDiff = HipAngL-HipAngR;
   // ATTENTION that the historical hip angle are updated in HipAngStdCal(), threfore the hip velocity should be calculated after it !!!
   HipAngStd = HipAngStdCal(UID_Subject1.StdRange);   
+  PreHipAngVelL = HipAngVelL;      // Last time's velocity of HipAngL
   HipAngVelL = (HipAngPreL[FilterCycles-1] - HipAngPreL[FilterCycles-2])/looptime*1000;
+  HipAngAccL = (HipAngVelL - PreHipAngVelL)/looptime*1000;                  // Acceleration of HipAngL  
+  PreHipAngVelR = HipAngVelR;      // Last time's velocity of HipAngR
   HipAngVelR = (HipAngPreR[FilterCycles-1] - HipAngPreR[FilterCycles-2])/looptime*1000;
+  HipAngAccR = (HipAngVelR - PreHipAngVelR)/looptime*1000; 
   HipAngVel = (HipAngMeanPre[FilterCycles-1] - HipAngMeanPre[FilterCycles-2])/looptime*1000;
   ThighAngL = HipAngL - TrunkFleAng;
   ThighAngR = HipAngR - TrunkFleAng;

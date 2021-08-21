@@ -66,6 +66,20 @@ extern bool Control_update;    // control update flag
 #define PWMLowerBound 0.12    // Lower bound of the PWM cycle duty
 #define LimitInput 15         // Limitation of input command, here for open-loop is Ta, for closed loop is Td
 
+/* Parameters for human motion compensation */
+extern bool MotionComEnable;
+// These model parameter is set the same for both left and right CSEA system
+// The detialed value can be obtained from system identification
+#define actuationJa 0
+#define actuationBa 0
+extern float lastHuMComL;
+extern float humanMotionComL;
+extern float deltaHuMComL;
+extern float lastHuMComR;
+extern float humanMotionComR;
+extern float deltaHuMComR;
+
+
 /**************************************** Transmission system parameters definition ********************************/
 // The output ability of the actuation unit with 19:1 gear ratio is better restricted to 0~8.9 Nm (0.0525*9*19)
 // The following parameter may be adjusted after calibrateds
@@ -100,6 +114,12 @@ extern float Estimated_TdForceSensorR;    // Td feedback from right force sensor
 extern float ForceSensorR_InitValue;      // Auxiliary parameter for right force sensor
 extern float Estimated_TdL;               // Estimated compact Td feedback of left side
 extern float Estimated_TdR;               // Estimated compact Td feedback of right side
+
+/**
+ * Human motion effect compensation term
+ * Here the system model parameters of tht left&right CSEA system is assumed as the same
+ */
+void humanMotionCompen(void);
 
 /**
  * Control parameter initialization for Low-level controller

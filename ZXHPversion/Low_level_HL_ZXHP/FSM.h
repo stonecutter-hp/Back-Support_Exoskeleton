@@ -113,13 +113,20 @@ extern float TrunkYaw_T0InitValue;        // Auxiliary parameter for T0 trunk ya
 extern float TrunkFleAng;                 // Trunk flexion angle
 extern float TrunkFleAng_InitValue;       // Auxiliary parameter for trunk pitch angle
 extern float TrunkFleAng_T0InitValue;     // Auxiliary parameter for T0 trunk pitch angle
+extern float PreTrunkVel;                 // Last time's Trunk flexion angular velocity (For acceleration calculation)
 extern float TrunkFleVel;                 // Trunk flexion angular velocity
+extern float TrunkFleAcc;                 // Trunk flexion angular acceleration
+
 // Parameters calculated from sensor feedback
 extern float HipAngMean;                  // (Left hip angle + right hip angle)/2
 extern float HipAngDiff;                  // (Left hip angle - right hip angle)
 extern float HipAngStd;                   // Std(HipAngMean) within certain time range
+extern float PreHipAngVelL;               // Last time's velocity of HipAngL
 extern float HipAngVelL;                  // Velocity of HipAngL
+extern float HipAngAccL;                  // Acceleration of HipAngL
+extern float PreHipAngVelR;               // Last time's velocity of HipAngR
 extern float HipAngVelR;                  // Velocity of HipAngR
+extern float HipAngAccR;                  // Acceleration of HipAngR
 extern float HipAngVel;                   // Velocity of HipAngMean
 extern float ThighAngL;                   // Left thigh angle
 extern float ThighAngL_T0InitValue;       // Auxiliary parameter of T0 left thigh angle for RTG

@@ -15,6 +15,13 @@ int8_t PWMSignL;        // to mark the rotation direction of the left motor
 int8_t PWMSignR;        // to mark the rotation direction of the right motor
 bool Control_update = true;    // control update flag
 
+/* Parameters for human motion compensation */
+float lastHuMComL;
+float humanMotionComL;
+float deltaHuMComL;
+float lastHuMComR;
+float humanMotionComR;
+float deltaHuMComR;
 
 
 /*************************************** Intermediate auxiliary parameters for control ****************************/ 
@@ -31,6 +38,29 @@ float Estimated_TdForceSensorR;    // Td feedback from right force sensor
 float ForceSensorR_InitValue;      // Auxiliary parameter for right force sensor
 float Estimated_TdL;               // Estimated compact Td feedback of left side
 float Estimated_TdR;               // Estimated compact Td feedback of right side
+
+/**
+ * Human motion effect compensation term
+ * Here the system model parameters of the left&right CSEA system is assumed as the same
+ */
+void humanMotionCompen(void) {
+  float CompenHipVelL;
+  float CompenHipVelR;
+  float CompenHipAccL;
+  float CompenHipAccR;
+  
+  CompenHipVelL = -HipAngVelL;
+  CompenHipVelR = -HipAngVelR;
+  CompenHipAccL = -HipAngAccL;
+  CompenHipAccR = -HipAngAccR; 
+
+  lastHuMComL = humanMotionComL;
+  humanMotionComL = actuationJa*CompenHipAccL+actuationBa*CompenHipVelL;
+  deltaHuMComL = humanMotionComL - lastHuMComL;
+  lastHuMComR = humanMotionComR;
+  humanMotionComR = actuationJa*CompenHipAccR+actuationBa*CompenHipVelR;
+  deltaHuMComR = humanMotionComR - lastHuMComR;
+}
 
 /**
  * Control parameter initialization for Low-level controller
@@ -74,6 +104,14 @@ void Control_Init(void) {
   pidR.Err = 0;
   pidR.Err_p = 0;
   pidR.Err_pp = 0;
+
+  /* Parameters for human motion compensation */
+  lastHuMComL = 0;
+  humanMotionComL = 0;
+  deltaHuMComL = humanMotionComL - lastHuMComL;
+  lastHuMComR = 0;
+  humanMotionComR = 0;
+  deltaHuMComR = humanMotionComR - lastHuMComR;
 }
 
 /**
@@ -116,8 +154,8 @@ int8_t LLPreproSensorInit() {
   delay(1);
   // Initialize the inital value for each sensor feedback
   // Notice to check the Initial value is ADC raw data or Processed data
-  TorqueL_InitValue = Aver_ADC_value[TorqueSensorL]/TorqueSensorL_Sensitivity;
-  TorqueR_InitValue = Aver_ADC_value[TorqueSensorR]/TorqueSensorR_Sensitivity;
+  TorqueL_InitValue = (Aver_ADC_value[TorqueSensorL]-TorqueSensorL_Offset)*TorqueSensorL_Sensitivity;
+  TorqueR_InitValue = (Aver_ADC_value[TorqueSensorR]-TorqueSensorR_Offset)*TorqueSensorR_Sensitivity;
   ForceSensorL_InitValue = Aver_ADC_value[ForceSensorL]/ForceSensorL_Sensitivity;
   ForceSensorR_InitValue = Aver_ADC_value[ForceSensorR]/ForceSensorR_Sensitivity;
   // Here place program to check if these initial value of each sensor is near the expected position. 
@@ -179,8 +217,8 @@ void sensorFeedbackPro() {
   Estimated_TdMotorCurrentL = (Aver_ADC_value[MotorCurrL]-2)*6/2;
   Estimated_TdMotorCurrentR = (Aver_ADC_value[MotorCurrR]-2)*6/2;
   // Td feedback from Torque sensor                                            
-  Estimated_TdTorqueL = Aver_ADC_value[TorqueSensorL]/TorqueSensorL_Sensitivity - TorqueL_InitValue;
-  Estimated_TdTorqueR = Aver_ADC_value[TorqueSensorR]/TorqueSensorR_Sensitivity - TorqueR_InitValue;
+  Estimated_TdTorqueL = (Aver_ADC_value[TorqueSensorL]-TorqueSensorL_Offset)*TorqueSensorL_Sensitivity - TorqueL_InitValue;
+  Estimated_TdTorqueR = (Aver_ADC_value[TorqueSensorR]-TorqueSensorR_Offset)*TorqueSensorR_Sensitivity - TorqueR_InitValue;
 //  // Td feedback from Force sensor
 //  Estimated_TdForceSensorL = Aver_ADC_value[ForceSensorL]/ForceSensorL_Sensitivity - ForceSensorL_Sensitivity;  
 //  Estimated_TdForceSensorR = Aver_ADC_value[ForceSensorR]/ForceSensorR_Sensitivity - ForceSensorR_Sensitivity; 
@@ -223,7 +261,7 @@ void Control(uint8_t ContMode) {
     DoutL = (pidL.Kp*pidL.Td)/pidL.Tcontrol;
     DoutL = DoutL*dk2L;
     // calculate the delta value of this time
-    pidL.Delta_Ta = (PoutL+IoutL+DoutL);
+    pidL.Delta_Ta = (PoutL+IoutL+DoutL)+deltaHuMComL;
     // set limitation of surdden variation of control output
     if((Value_sign(pidL.Delta_Ta)*pidL.Delta_Ta) >= LimitDelta_TaL) {
     	pidL.Delta_Ta = LimitDelta_TaL*Value_sign(pidL.Delta_Ta);
@@ -271,7 +309,7 @@ void Control(uint8_t ContMode) {
     DoutR = (pidR.Kp*pidR.Td)/pidR.Tcontrol;
     DoutR = DoutR*dk2R;
     // calculate the delta value of this time
-    pidR.Delta_Ta = (PoutR+IoutR+DoutR);
+    pidR.Delta_Ta = (PoutR+IoutR+DoutR)+deltaHuMComR;
     // set limitation of surdden variation of control output
     if((Value_sign(pidR.Delta_Ta)*pidR.Delta_Ta) >= LimitDelta_TaR) {
     	pidR.Delta_Ta = LimitDelta_TaR*Value_sign(pidR.Delta_Ta);
@@ -293,11 +331,11 @@ void Control(uint8_t ContMode) {
     // determine motor rotation direction
     if(pidR.currTa >= 0) {
       PWMSignR = PosSign;
-    	digitalWrite(MotorRotationR,LOW);
+    	digitalWrite(MotorRotationR,HIGH);
     }
     else if(pidR.currTa < 0) {
       PWMSignR = NegSign;
-    	digitalWrite(MotorRotationR,HIGH);
+    	digitalWrite(MotorRotationR,LOW);
     }
     PWM_commandR = pidR.currpwm;
     //update the error
@@ -310,6 +348,7 @@ void Control(uint8_t ContMode) {
     desiredCurrentL = desiredTorqueL/GearRatio/MotorCurrentConstant;
     desiredCurrentR = desiredTorqueR/GearRatio/MotorCurrentConstant;
     PWM_commandL = PWMperiod_L*(desiredCurrentL*0.8/MotorMaximumCurrent+0.1);
+    PWM_commandR = PWMperiod_R*(desiredCurrentR*0.8/MotorMaximumCurrent+0.1);
     if(PWM_commandL >= PWMUpperBound*PWMperiod_L) {
       PWM_commandL = PWMUpperBound*PWMperiod_L;
     }

@@ -116,6 +116,7 @@ void loop() {
   }
   if(Control_update) {
     sensorFeedbackPro();                       // processing sensor feedback for low-level closed-loop control
+//    humanMotionCompen();                       // inertia compensation
     Control(1);                                // calculate controlled command: PWM duty cycles
     Control_update = false;                    // At present the frequency of low-level control is the same as ADC sensor feedback update frequency
   }
