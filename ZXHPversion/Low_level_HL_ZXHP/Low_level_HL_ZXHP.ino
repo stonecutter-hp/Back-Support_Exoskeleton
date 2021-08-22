@@ -22,17 +22,27 @@ Log
   in the 'Thoughs Keeping notebook'
 20210424
   Finish intial FSM frame programing: Based on global coordinate of joint angle
+20210816
+  Determined the communication protocol and logic which is similar to HCHP version for 
+  the convenience of future GUI developing
   
 
 ***Program logic***
+( 1) Check if any command from High-level controller )
 1) Read sensor feedback including: 
-    potentiometer for hip angle feedback, 
-    motor driver for motor current and velocity feedback (for potential cascaded control), 
-    force sensor for interaction force indication,
-    IMU for human trunk angle feedback -->
+   Potentiometer,
+   Torque sensor,
+   Motor velocity from motor driver,
+   IMU -->
 2) Simple user intention detection and reference torque generation calculation -->
 3) calculate the actual control commmand for motor -->
-4) send sensor feedback to PC.
+4) send sensor feedback to PC, including:
+    Torque feedback from torque sensor,
+    potentiometer for hip angle feedback, 
+    Hip angular velocity,
+    IMU for human trunk angle feedback,
+    PWM duty cycle,
+    Desired torque command.
 */
 
 void setup() {
