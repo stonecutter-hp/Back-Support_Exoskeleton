@@ -13,10 +13,11 @@
 // Ch5~Ch9 is for motor driver signal detection with attenuation ratio 1:2
 // Ch10~Ch15 is for potentiometer with no attenuation
 // --------------------- CH0 CH1 CH2 CH3   CH4   CH5 CH6 CH7 CH8 CH9 CH10 CH11 CH12 CH13 CH14 CH15
-const int attRatio[16] = {1,  1,  1,  1,  22.5,   2,  2,  2,  2,  2,   1,   1,   1,   1,   1,   1};
+const double attRatio[16] = {1,  1,  1,  1,  22.5,   2,  2,  2,  2,  2,   1,   1,   1,   1,   1,   1};
 #define ADC_SS PA4           //SPI1_NSS-CS 
 #define ADC_MISO PA6         //SPI1_MISO-DOUT/RDY
 #define ENABLED_CH 16        //sum of ADC Channels
+#define ENABLED_CH_Work 6    //Practical working channels
 #define MotorCurrL 6         //ADC channel assigned for left motor current feedback
 #define MotorCurrR 8         //ADC channel assigned for right motor current feedback
 #define MotorVeloL 5         //ADC channel assigned for left motor velocity feedback
@@ -30,13 +31,13 @@ const int attRatio[16] = {1,  1,  1,  1,  22.5,   2,  2,  2,  2,  2,   1,   1,  
 #define FilterCycles 10      //FilterCycles for moving/exponetial average filter
 
 // Parameters for ADC raw data processing for sensors
-#define LoadCellL_Sensitivity 0.00166    //for load cell calibration
-#define LoadCellR_Sensitivity 0.00166    //for load cell calibration
-#define PotentioLP1_Sensitivity 0.0083   //0.0083 = 2.5/300 (v/deg); for potentiometer calibration 
-#define PotentioLP2_Sensitivity 0.0083   //0.0083 = 2.5/300 (v/deg); for potentiometer calibration 
-#define PotentioLP3_Sensitivity 0.0083   //0.0083 = 2.5/300 (v/deg); for potentiometer calibration 
-#define PotentioLP4_Sensitivity 0.0083   //0.0083 = 2.5/300 (v/deg); for potentiometer calibration 
-
+// Referring to the results from sensorCalibration.ino
+#define LoadCellL_Sensitivity 0.00193    //0.00166    //0.00191(1.5mv/v)    //0.00227(1.78mv/v)  //from load cell calibration
+#define LoadCellR_Sensitivity 0.00169    //0.00162    //0.00166    //from load cell calibration
+#define PotentioLP1_Sensitivity 0.0080   //0.0077 = 2.5/325 (v/deg); from potentiometer calibration 
+#define PotentioLP2_Sensitivity 0.0077   //0.0077 = 2.5/325 (v/deg); from potentiometer calibration 
+#define PotentioLP3_Sensitivity 0.0077   //0.0077 = 2.5/325 (v/deg); from potentiometer calibration 
+#define PotentioLP4_Sensitivity 0.0080   //0.0077 = 2.5/325 (v/deg); from potentiometer calibration 
 
 
 /* ADC conversion data and STATUS register */

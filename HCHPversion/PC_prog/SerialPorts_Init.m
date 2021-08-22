@@ -37,12 +37,17 @@ P.config{1,1} = McuSerial;
 % try to open the assigned MCU&PC communication port
 try
     fopen(McuSerial);
-    fscanf(McuSerial);   % as the MCU keep sending data
+    Transtate = fscanf(McuSerial); 
     disp('MCU COM opened !');
 catch
     msgbox('Can not open MCU COM !');
     return
 end
 
+% Wait for correct handshake ready signal
+% as the MCU should keep sending ReadyFlag  
+while strcmp(Transtate,P.ReadyFlag)
+    Transtate = fscanf(McuSerial);
+end
 
 end

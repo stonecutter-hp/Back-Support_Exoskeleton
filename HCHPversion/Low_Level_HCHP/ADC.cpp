@@ -37,20 +37,20 @@ void ADC_Init(void) {
   /* true/false to enable/disable channel */
   /* SETUP0 - SETUP7 */
   /* AIN0 - AIN16 */
-  AD7173.set_channel_config(CH0, true, SETUP0, AIN0, REF_NEG);    //LoadCellL
-  AD7173.set_channel_config(CH1, false, SETUP0, AIN1, REF_NEG);   
+  AD7173.set_channel_config(CH0, true, SETUP0, AIN0, REF_NEG);     //LoadCellL
+  AD7173.set_channel_config(CH1, true, SETUP0, AIN1, REF_NEG);     //LoadCellR
   AD7173.set_channel_config(CH2, false, SETUP0, AIN2, REF_NEG);
   AD7173.set_channel_config(CH3, false, SETUP0, AIN3, REF_NEG);
   AD7173.set_channel_config(CH4, false, SETUP0, AIN4, REF_NEG);
-  AD7173.set_channel_config(CH5, false, SETUP0, AIN5, REF_NEG);   //MotorVeloL
-  AD7173.set_channel_config(CH6, false, SETUP0, AIN6, REF_NEG);   //MotorCurrL
-  AD7173.set_channel_config(CH7, false, SETUP0, AIN7, REF_NEG);
-  AD7173.set_channel_config(CH8, false, SETUP0, AIN8, REF_NEG);
+  AD7173.set_channel_config(CH5, false, SETUP0, AIN5, REF_NEG);    //MotorVeloL
+  AD7173.set_channel_config(CH6, false, SETUP0, AIN6, REF_NEG);    //MotorCurrL
+  AD7173.set_channel_config(CH7, false, SETUP0, AIN7, REF_NEG);    //MotorVeloR
+  AD7173.set_channel_config(CH8, false, SETUP0, AIN8, REF_NEG);    //MotorCurrL
   AD7173.set_channel_config(CH9, false, SETUP0, AIN9, REF_NEG);
-  AD7173.set_channel_config(CH10, true, SETUP0, AIN10, REF_NEG);  //PotentioLP1
-  AD7173.set_channel_config(CH11, false, SETUP0, AIN11, REF_NEG);
-  AD7173.set_channel_config(CH12, false, SETUP0, AIN12, REF_NEG);
-  AD7173.set_channel_config(CH13, false, SETUP0, AIN13, REF_NEG);
+  AD7173.set_channel_config(CH10, true, SETUP0, AIN10, REF_NEG);   //left torsion spring potentiometer
+  AD7173.set_channel_config(CH11, true, SETUP0, AIN11, REF_NEG);   //left hip angle
+  AD7173.set_channel_config(CH12, true, SETUP0, AIN12, REF_NEG);   //right torsion spring potentiometer
+  AD7173.set_channel_config(CH13, true, SETUP0, AIN13, REF_NEG);   //right hip angle
   AD7173.set_channel_config(CH14, false, SETUP0, AIN14, REF_NEG);
   AD7173.set_channel_config(CH15, false, SETUP0, AIN15, REF_NEG);
   /* set the ADC SETUP0 coding mode to UNIPOLAR output */
@@ -70,7 +70,8 @@ void ADC_Init(void) {
   /* SPS_1, SPS_2, SPS_5, SPS_10, SPS_16, SPS_20, SPS_49, SPS_59, SPS_100, SPS_200 */
   /* SPS_381, SPS_503, SPS_1007, SPS_2597, SPS_5208, SPS_10417, SPS_15625, SPS_31250 */
   AD7173.set_filter_config(FILTER0, SPS_2597);
-
+  // AD7173.set_filter_config(FILTER1, SPS_5208);
+  
   /* set the ADC data and clock mode */
   /* CONTINUOUS_CONVERSION_MODE, SINGLE_CONVERSION_MODE */
   /* in SINGLE_CONVERSION_MODE after all setup channels are sampled the ADC goes into STANDBY_MODE */
@@ -149,14 +150,14 @@ void ExponentialMovingFilter(int channel, float alpha) {
  * Get the ADC value of all channels once
  */
 void getADC(void) {
-  for(int i=0;i<ENABLED_CH;i++) {
+  for(int i=0;i<ENABLED_CH_Work;i++) {
     while(digitalRead(ADC_MISO) == HIGH) {
       } //wait for data
     /* get ADC conversion result */
     AD7173.get_data(ADC_data[i], true);
   }
   // reorder the rank 0~F
-  for(int i=0;i<ENABLED_CH;i++) {
+  for(int i=0;i<ENABLED_CH_Work;i++) {
     char tempValue[6];  // store the ADC data
     char tempState[2];  // store the ADC status
     for(int j=0;j<3;j++) {

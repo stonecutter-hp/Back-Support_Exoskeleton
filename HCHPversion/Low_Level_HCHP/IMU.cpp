@@ -41,6 +41,10 @@ float TrunkFleAng;             // deg, Trunk flexion angle
 float TrunkFleAng_InitValue;   // deg, Auxiliary parameter for trunk pitch angle
 float TrunkFleVel;             // deg/s, Trunk flexion angular velocity
 
+/* Last time's IMU feedback and tolerance delta feedback to avoid outliers */
+float Last_TrunkFleAng;        // deg, Last time trunk flexion angle
+float Last_TrunkYawAng;        // deg, Last time trunk yaw angle
+
 /**
  * IMU angle feedback return to zero
  */

@@ -1,0 +1,2 @@
+20210816
+For the high-level and low-level all in MCU version, there is no StopState but only ExitState

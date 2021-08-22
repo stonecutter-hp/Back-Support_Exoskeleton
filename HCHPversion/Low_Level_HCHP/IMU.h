@@ -53,10 +53,10 @@ extern double IMU_value_Prev[3][3];                     // store last time angle
 /* IMU feedback calibration value definition */
 // Expected initial value range (CaliValue +- Tol) of sensor feedback for initial calibration
 // the initial values should be adjusted along with prototype design
-#define TrunkFleAng_CaliValue 0
-#define TrunkFleAng_Tol 0
+#define TrunkFleAng_CaliValue 10
+#define TrunkFleAng_Tol 10
 #define TrunkFleYaw_CaliValue 0
-#define TrunkFleYaw_Tol 0
+#define TrunkFleYaw_Tol 1000
 #define ForcedInit 1
 #define LogicInit  0
 
@@ -66,6 +66,12 @@ extern float TrunkYaw_InitValue;      // deg, Auxiliary parameter for trunk yaw 
 extern float TrunkFleAng;             // deg, Trunk flexion angle
 extern float TrunkFleAng_InitValue;   // deg, Auxiliary parameter for trunk pitch angle
 extern float TrunkFleVel;             // deg/s, Trunk flexion angular velocity
+
+/* Last time's IMU feedback and tolerance delta feedback to avoid outliers */
+extern float Last_TrunkFleAng;        // deg, Last time trunk flexion angle
+extern float Last_TrunkYawAng;        // deg, Last time trunk yaw angle
+#define Delta_TrunkFleAng 20000       // deg, Maximum allowable trunk flexion angle change within a cycle
+#define Delta_TrunkYawAng 80000       // deg, Maximum allowable trunk yaw angle change from spring within a cycle
 
 /**
  * IMU angle feedback return to zero

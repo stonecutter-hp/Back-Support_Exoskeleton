@@ -1,3 +1,4 @@
+20210421
 For PC High-level controller:
   Setup all the control parameters 
   --> Configure Timer 
@@ -9,7 +10,33 @@ For PC High-level controller:
   --> Check if running time is exceed maximum allowable time, if it is, then stop timer
   --> When stop timer for high-level controller, timer object is deleted; Stop command for low-level controller is sended; Stop and delete PC Serial port object; finally saving experiment data.
 
+20210529
+For PC High-level controller with GUI:
+  Run the GUI program
+  --> Before Run the prorgram, click Reset button for state reset
+  --> Enter expected frequency and program running time
+  --> Click Run button to run the program: Read the input frequency and time -> Set system parameters -> enter the main program
+  --> Initialize serial port
+  --> Handshake with low-level controller
+  --> After successful handshake, intialize timer 
+  --> Inside TimeCallback Fcn, First functional function is to receive data from MCU: Read data from MCU: With enabling flag of delay info package feedback detection: True - Enable next Control and Command Sending program as long as info package from MCU is correctly received; False - Detect if the info package is real-time or not, if it is, enable Control and Command Sending, if it is not, wait until real-time pacakge is received or delay receiving cycle exceed maximum allowable cycles P.MaxDelay -> Decomposite data
+  --> Time is up for Auto Stop or Manually Stop
+  --> Stop and delete timer item
+  --> Send stop command to low-level controller
+  --> Wait to confirm stop command is recieved if Auto stopped/Manually stopped with normal serial port communcication ('Ready/NotReady' signal recieved)
+  --> Close and delete serial port item
 
+20210526
 For MCU Low-level controller:
-  Initialization --> Get info package from PC (If received, update information, if not received, continue next step) --> Get ADC and IMU feedback --> Sensor feedback processing, including yaw angle set to zero --> Control --> Send info package to PC
-  
+  Set all the control parameters with 'Stop' state
+  --> Sensor pre process to reset at expected initial position for sensor feedback initial value setup
+  --> Enter loop(). With 'Stop' state, keep seeking handshake with high-level controller. Without 'Stop' state, skip handshake attempt 
+  --> Get info package from High-level controller(If received, update information, if not received, continue next step) 
+  --> Get ADC and IMU feedback 
+  --> Yaw initial angle set to zero 
+  --> Sensor feedback processing: -> Motor status update -> Torsion spring torque feedback update -> Trunk angle&velocity and hip angle feedback update -> Cable torque feedback update -> Compact assistive torque feedback calculation -> Phase index update
+  --> Low level Control based on the compact assistive torque feedback
+  --> Send info package to PC
+
+For prototype operation logic:
+  Referring to system description document

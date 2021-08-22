@@ -76,7 +76,7 @@ P.adotPV = [];      % angular velocity of trunk motion in pitch direction from M
 % no real-time info package is recieved by PC 
 
 % Total number of char received from MCU, this number should be coincided
-% with the MCU2PC communication protocol
+% with the MCU2PC communication protocol (include terminator \r\n)
 P.ReceiveDataNum = 60;   
 % Total number of char send to MCU, this number should be coincided with
 % the PC2MCU communication protocol (exclude terminator \r\n) which is
@@ -93,6 +93,10 @@ P.MaxDelay = 5;          % maximum allowable number of allowable no-newest feedb
 % cycles P.MaxDelay
 P.DelayEnable = true;       
 P.DelayMark = [];        % store the delay mark Mx from MCU
+
+% Ready feedback from low-level for handshake, should keep identical to
+% low-level setting
+P.ReadyFlag = ['Ready.',13,10];
 
 %% For biomechanical model parameter setting
 % refer to the P1C draft

@@ -9,4 +9,7 @@ Logic:
   --> High-level control:  -> Yaw angle reset detection -> High-level sensor feedback processing -> UID -> RTG
   --> Low-level control 
   --> Send data to PC
-  
+
+20210521
+For prototype operation logic:
+  Referring to system description document
