@@ -40,7 +40,7 @@ flag = true;
 % Also some security operation can be added if over P.MaxDelay loop no 
 % command is recieved from PC like: stop(P.config{2,1});
 
-if(TransState(position-2) == 'M' && flag)
+if(TransState(position-2) == 'M')
     % Store this time's delay flag
     ExoP.DelayMark = [ExoP.DelayMark; TransState(position-1)];
     if(~(ExoP.DelayEnable) && ExoP.DelayNumber < ExoP.MaxDelay)
@@ -52,6 +52,7 @@ if(TransState(position-2) == 'M' && flag)
         else
             Control_Update = 0;
             Send_Update = 0;
+            flag = false;
             ExoP.DelayNumber = ExoP.DelayNumber+1;
         end
     else
@@ -79,6 +80,8 @@ if(Control_Update && flag)
             flag = false;
         end
         position = position+6;
+    else
+        TransTorqueTL = 0;
     end
     % LLxxxx
     if(ExoP.RecItem(2) == 1 && flag)
@@ -91,6 +94,8 @@ if(Control_Update && flag)
             flag = false;
         end
         position = position+6;
+    else
+        TransForceLL = 0;
     end
     % ALxxxxx
     if(ExoP.RecItem(3) == 1 && flag)
@@ -106,6 +111,8 @@ if(Control_Update && flag)
             flag = false;            
         end
         position = position+7;
+    else
+        TransAngleAL = 0;
     end
     % TRxxxx
     if(ExoP.RecItem(4) == 1 && flag)
@@ -118,6 +125,8 @@ if(Control_Update && flag)
             flag = false; 
         end
         position = position+6;
+    else
+        TransTorqueTR = 0;
     end
     % LRxxxx
     if(ExoP.RecItem(5) == 1 && flag)
@@ -130,6 +139,8 @@ if(Control_Update && flag)
             flag = false;            
         end
         position = position+6;
+    else
+        TransForceLR = 0;
     end
     % ARxxxxx
     if(ExoP.RecItem(6) == 1 && flag)
@@ -145,6 +156,8 @@ if(Control_Update && flag)
             flag = false;            
         end
         position = position+7;
+    else
+        TransAngleAR = 0;
     end
     % Pxxxxx
     if(ExoP.RecItem(7) == 1 && flag)
@@ -160,6 +173,8 @@ if(Control_Update && flag)
             flag = false;             
         end
         position = position+6;
+    else
+        TransAngleP = 0;
     end
     % Yxxxxx
     if(ExoP.RecItem(8) == 1 && flag)
@@ -175,6 +190,8 @@ if(Control_Update && flag)
             flag = false;             
         end
         position = position+6;
+    else
+        TransAngleY = 0;
     end
     %Vxxxxx
     if(ExoP.RecItem(9) == 1 && flag)
@@ -190,6 +207,8 @@ if(Control_Update && flag)
             flag = false;              
         end
         position = position+6;
+    else
+        TransVeloV = 0;
     end
     %CLxxxx
     if(ExoP.RecItem(10) == 1 && flag)
@@ -205,6 +224,8 @@ if(Control_Update && flag)
             flag = false;
         end
         position = position+6;
+    else
+        TransPWML = 0;
     end
     %CRxxxx
     if(ExoP.RecItem(11) == 1 && flag)
@@ -219,6 +240,8 @@ if(Control_Update && flag)
             Send_Update = 0;
             flag = false;
         end
+    else
+        TransPWMR = 0;
     end
 
 end

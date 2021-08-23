@@ -46,8 +46,8 @@ P.fricEnable = 0;
 % info ON and 0 for item info OFF
 % The order of item corresponds to each marker follows communication
 % protocol of MCU2PC:
-% MxTLxxxxLLxxxxALxxxxxTRxxxxLRxxxxARxxxxxPxxxxxYxxxxxVxxxxxCLxxxxCRxxxx\r\n 
-P.RecItem = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1];
+%          MxTLxxxxLLxxxxALxxxxxTRxxxxLRxxxxARxxxxxPxxxxxYxxxxxVxxxxxCLxxxxCRxxxx\r\n 
+P.RecItem = [1,    1,    1,     1,    1,    1,     1,    1,    1,    1,    1];
 P.torqueTL = [];    % torque feedback of left torsion spring
 P.forceLL = [];     % left cable force feedback
 P.angleAL = [];     % angle of left hip
