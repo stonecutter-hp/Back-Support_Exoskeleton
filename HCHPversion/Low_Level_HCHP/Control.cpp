@@ -365,7 +365,7 @@ int8_t LLPreproSensorInit() {
 void lowLevelStateMgr() {
   /* State Manage for Stop state */
   if(mode == StopState) {
-    // Initial low-level controller and auxiliary parameters
+    // Initial low-level controller and auxiliary parameters (sensor feedback info)
     Control_Init();
     ControlAux_Init(); 
     // Initial motor control pin mode
