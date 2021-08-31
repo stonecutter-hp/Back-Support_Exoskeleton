@@ -298,8 +298,8 @@ void HLsensorFeedbackPro() {
   HipAngL = Aver_ADC_value[PotentioLP1]*PotentioLP1_Sensitivity - HipAngL_InitValue;
   HipAngR = Aver_ADC_value[PotentioRP2]*PotentioRP2_Sensitivity - HipAngR_InitValue;
   // when ESCON set 0~4V:-4000~4000rpm
-  HipVelL_Motor = (Aver_ADC_value[MotorVeloL]-2)*4000*3;          //unit: deg/s 
-  HipVelR_Motor = (Aver_ADC_value[MotorVeloR]-2)*4000*3;          //unit: deg/s 
+  HipVelL_Motor = (Aver_ADC_value[MotorVeloL]-2)*7000*3;          //unit: deg/s 
+  HipVelR_Motor = (Aver_ADC_value[MotorVeloR]-2)*7000*3;          //unit: deg/s 
   TrunkFleAng = angleActualC[rollChan] - TrunkFleAng_InitValue;
   TrunkYawAngPro();
   PreTrunkVel = TrunkFleVel;

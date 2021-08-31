@@ -52,19 +52,19 @@ extern bool Control_update;    // control update flag
  
 // Previously workable Kp/Ki/Kd for test bench with large torsion spring:
 // 0.58/0/0.28  0.68/0/0.3
-#define KP_L 0.5              // Kp for PID control of motor L
+#define KP_L 0.2              // Kp for PID control of motor L
 #define KI_L 0.0000002        // Ki for PID control of motor L
 #define KD_L 0.28             // Kd for PID control of motor L
-#define KP_R 1                // Kp for PID control of motor R
+#define KP_R 0.2              // Kp for PID control of motor R
 #define KI_R 0.0000002        // Ki for PID control of motor R
-#define KD_R 0.00267          // Kd for PID control of motor R
-#define LimitDelta_TaL 500000 // Limitation of delta control command of motor L
-#define LimitTotal_TaL 7      // Limitation of total control command of motor L
-#define LimitDelta_TaR 500000 // Limitation of delta control command of motor R
-#define LimitTotal_TaR 7      // Limitation of total control command of motor R
-#define PWMUpperBound 0.75    // Upper bound of the PWM cycle duty
+#define KD_R 0.28             // Kd for PID control of motor R
+#define LimitDelta_TaL 3      // Limitation of delta control command of motor L
+#define LimitTotal_TaL 30     // Limitation of total control command of motor L
+#define LimitDelta_TaR 3      // Limitation of delta control command of motor R
+#define LimitTotal_TaR 30     // Limitation of total control command of motor R
+#define PWMUpperBound 0.85    // Upper bound of the PWM cycle duty
 #define PWMLowerBound 0.12    // Lower bound of the PWM cycle duty
-#define LimitInput 15         // Limitation of input command, here for open-loop is Ta, for closed loop is Td
+#define LimitInput 30         // Limitation of input command, here for open-loop is Ta, for closed loop is Td
 
 /* Parameters for human motion compensation */
 extern bool MotionComEnable;
@@ -83,8 +83,8 @@ extern float deltaHuMComR;
 /**************************************** Transmission system parameters definition ********************************/
 // The output ability of the actuation unit with 19:1 gear ratio is better restricted to 0~8.9 Nm (0.0525*9*19)
 // The following parameter may be adjusted after calibrateds
-#define MotorCurrentConstant 0.0302      //motor current constant Nm/A
-#define MotorMaximumCurrent 6            //motor maximum current A configured in EXCON studio
+#define MotorCurrentConstant 0.0137      //motor current constant Nm/A
+#define MotorMaximumCurrent 7            //motor maximum current A configured in EXCON studio
 #define GearRatio 378                    //gear ratio is 126*3:1
 
 /******************** Low-level controller related sensor feedback calibration value definition ********************/
