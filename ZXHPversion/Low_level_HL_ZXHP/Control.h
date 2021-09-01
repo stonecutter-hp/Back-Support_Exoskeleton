@@ -48,19 +48,23 @@ extern int16_t PWM_commandL;   // range: 0.1*PWMperiod_L~0.9*PWMperiod_L
 extern int16_t PWM_commandR;   // range: 0.1*PWMperiod_R~0.9*PWMperiod_R
 extern int8_t PWMSignL;        // to mark the rotation direction of the left motor
 extern int8_t PWMSignR;        // to mark the rotation direction of the right motor
+extern float maxInterTorqueL;  // restriction of the maximum allowable assistive torque of left hip considering safety and torque sensor feedback
+extern float minInterTorqueL;  // restriction of the minimum allowable assistive torque of left hip considering safety and torque sensor feedback
+extern float maxInterTorqueR;  // restriction of the maximum allowable assistive torque of right hip considering safety and torque sensor feedback
+extern float minInterTorqueR;  // restriction of the minimum allowable assistive torque of right hip considering safety and torque sensor feedback
 extern bool Control_update;    // control update flag
  
 // Previously workable Kp/Ki/Kd for test bench with large torsion spring:
 // 0.58/0/0.28  0.68/0/0.3
-#define KP_L 0.2              // Kp for PID control of motor L
+#define KP_L 1.2              // Kp for PID control of motor L
 #define KI_L 0.0000002        // Ki for PID control of motor L
-#define KD_L 0.28             // Kd for PID control of motor L
-#define KP_R 0.2              // Kp for PID control of motor R
+#define KD_L 0.1              // Kd for PID control of motor L
+#define KP_R 1.2              // Kp for PID control of motor R
 #define KI_R 0.0000002        // Ki for PID control of motor R
-#define KD_R 0.28             // Kd for PID control of motor R
-#define LimitDelta_TaL 3      // Limitation of delta control command of motor L
+#define KD_R 0.1              // Kd for PID control of motor R
+#define LimitDelta_TaL 15     // Limitation of delta control command of motor L
 #define LimitTotal_TaL 30     // Limitation of total control command of motor L
-#define LimitDelta_TaR 3      // Limitation of delta control command of motor R
+#define LimitDelta_TaR 15     // Limitation of delta control command of motor R
 #define LimitTotal_TaR 30     // Limitation of total control command of motor R
 #define PWMUpperBound 0.85    // Upper bound of the PWM cycle duty
 #define PWMLowerBound 0.12    // Lower bound of the PWM cycle duty

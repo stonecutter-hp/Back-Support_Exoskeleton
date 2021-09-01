@@ -866,6 +866,8 @@ void Control(uint8_t ContMode) {
     }
     pidL.currTa += pidL.Delta_Ta;
     /* set limitation of total controller output */
+    // Small torque cannnot extend cable due to friendly friction
+    if(pidL.currTa < 0 && pidL.currT < 4) {pidL.currTa = 0;}
     // Bounded control output
     if((Value_sign(pidL.currTa)*pidL.currTa) >= LimitTotal_TaL) {
       pidL.currTa = LimitTotal_TaL*Value_sign(pidL.currTa);

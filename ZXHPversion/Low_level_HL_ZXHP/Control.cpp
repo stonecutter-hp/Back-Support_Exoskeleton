@@ -13,6 +13,10 @@ int16_t PWM_commandL;   // range: 0.1*PWMperiod_L~0.9*PWMperiod_L
 int16_t PWM_commandR;   // range: 0.1*PWMperiod_R~0.9*PWMperiod_R
 int8_t PWMSignL;        // to mark the rotation direction of the left motor
 int8_t PWMSignR;        // to mark the rotation direction of the right motor
+float maxInterTorqueL;  // restriction of the maximum allowable assistive torque of left hip considering safety and torque sensor feedback
+float minInterTorqueL;  // restriction of the minimum allowable assistive torque of left hip considering safety and torque sensor feedback
+float maxInterTorqueR;  // restriction of the maximum allowable assistive torque of right hip considering safety and torque sensor feedback
+float minInterTorqueR;  // restriction of the minimum allowable assistive torque of right hip considering safety and torque sensor feedback
 bool Control_update = true;    // control update flag
 
 /* Parameters for human motion compensation */
@@ -112,6 +116,12 @@ void Control_Init(void) {
   lastHuMComR = 0;
   humanMotionComR = 0;
   deltaHuMComR = humanMotionComR - lastHuMComR;
+
+  /* Restriction of maximum and minimum interaction torque */
+  maxInterTorqueL = 0.98*(0-TorqueSensorL_Offset)*TorqueSensorL_Sensitivity;    // restriction of the maximum allowable assistive torque of left hip considering safety and torque sensor feedback
+  minInterTorqueL = 0.98*(2.5-TorqueSensorL_Offset)*TorqueSensorL_Sensitivity;  // restriction of the minimum allowable assistive torque of left hip considering safety and torque sensor feedback
+  maxInterTorqueR = 0.98*(2.5-TorqueSensorR_Offset)*TorqueSensorR_Sensitivity;  // restriction of the maximum allowable assistive torque of right hip considering safety and torque sensor feedback
+  minInterTorqueR = 0.98*(0-TorqueSensorR_Offset)*TorqueSensorR_Sensitivity;    // restriction of the minimum allowable assistive torque of right hip considering safety and torque sensor feedback
 }
 
 /**
@@ -262,15 +272,42 @@ void Control(uint8_t ContMode) {
     DoutL = DoutL*dk2L;
     // calculate the delta value of this time
     pidL.Delta_Ta = (PoutL+IoutL+DoutL)+deltaHuMComL;
-    // set limitation of surdden variation of control output
+    /* set limitation of sudden variation of control output */
+    // make sure the interaction torque feedback are between the minmum and maximum restriction
+    if(Estimated_TdL >= maxInterTorqueL-TorqueL_InitValue && pidL.Delta_Ta > 0) {
+      pidL.Delta_Ta = 0;
+    }
+    else if(Estimated_TdL <= minInterTorqueL-TorqueL_InitValue && pidL.Delta_Ta < 0) {
+      pidL.Delta_Ta = 0;
+    }
+    // limited delta Ta
     if((Value_sign(pidL.Delta_Ta)*pidL.Delta_Ta) >= LimitDelta_TaL) {
-    	pidL.Delta_Ta = LimitDelta_TaL*Value_sign(pidL.Delta_Ta);
+      pidL.Delta_Ta = LimitDelta_TaL*Value_sign(pidL.Delta_Ta);
     }
     pidL.currTa += pidL.Delta_Ta;
-    // set limitation of total controller output
-    if((Value_sign(pidL.currTa)*pidL.currTa) >= LimitTotal_TaL) {
-    	pidL.currTa = LimitTotal_TaL*Value_sign(pidL.currTa);
+    /* set limitation of total controller output */
+    // Avoid sudden motor reversion under small torque command with small torque feedback due to stiction for safety
+    // by limit total controller command output
+    // Better restrict for different status like TM or AM with different constraints like average human motion compensation value and a small value
+    if((Value_sign(Estimated_TdL)*Estimated_TdL) <= 2 && (Value_sign(desiredTorqueL)*desiredTorqueL) <= 2) {
+      if((Value_sign(pidL.currTa)*pidL.currTa) >= 4) {
+        pidL.currTa = 4*Value_sign(pidL.currTa);
+      }
     }
+    // Bounded control output
+    if((Value_sign(pidL.currTa)*pidL.currTa) >= LimitTotal_TaL) {
+      pidL.currTa = LimitTotal_TaL*Value_sign(pidL.currTa);
+    }
+    // determine motor rotation direction
+    if(pidL.currTa >= 0) {
+      PWMSignL = PosSign;
+      digitalWrite(MotorRotationL,LOW);
+    }
+    else if(pidL.currTa < 0) {
+      PWMSignL = NegSign;
+      digitalWrite(MotorRotationL,HIGH);
+    }
+
     pidL.currCurrent = Value_sign(pidL.currTa)*pidL.currTa/GearRatio/MotorCurrentConstant;
     pidL.currpwm = pidL.pwm_cycle*(pidL.currCurrent*0.8/MotorMaximumCurrent+0.1);
     // set limitation of PWM duty cycle
@@ -279,15 +316,6 @@ void Control(uint8_t ContMode) {
     }
     else if(pidL.currpwm < PWMLowerBound*pidL.pwm_cycle) {
       pidL.currpwm = PWMLowerBound*pidL.pwm_cycle;
-    }
-    // determine motor rotation direction
-    if(pidL.currTa >= 0) {
-      PWMSignL = PosSign;
-    	digitalWrite(MotorRotationL,LOW);
-    }
-    else if(pidL.currTa < 0) {
-      PWMSignL = NegSign;
-    	digitalWrite(MotorRotationL,HIGH);
     }
     PWM_commandL = pidL.currpwm;
     //update the error
@@ -310,15 +338,42 @@ void Control(uint8_t ContMode) {
     DoutR = DoutR*dk2R;
     // calculate the delta value of this time
     pidR.Delta_Ta = (PoutR+IoutR+DoutR)+deltaHuMComR;
-    // set limitation of surdden variation of control output
+    /* set limitation of sudden variation of control output */
+    // make sure the interaction torque feedback are between the minmum and maximum restriction
+    if(Estimated_TdR >= maxInterTorqueR-TorqueR_InitValue && pidR.Delta_Ta > 0) {
+      pidR.Delta_Ta = 0;
+    }
+    else if(Estimated_TdR <= minInterTorqueR-TorqueR_InitValue && pidR.Delta_Ta < 0) {
+      pidR.Delta_Ta = 0;
+    }
+    // limited delta Ta
     if((Value_sign(pidR.Delta_Ta)*pidR.Delta_Ta) >= LimitDelta_TaR) {
-    	pidR.Delta_Ta = LimitDelta_TaR*Value_sign(pidR.Delta_Ta);
+      pidR.Delta_Ta = LimitDelta_TaR*Value_sign(pidR.Delta_Ta);
     }
     pidR.currTa += pidR.Delta_Ta;
-    // set limitation of total controller output
-    if((Value_sign(pidR.currTa)*pidR.currTa) >= LimitTotal_TaR) {
-    	pidR.currTa = LimitTotal_TaR*Value_sign(pidR.currTa);
+    /* set limitation of total controller output */
+    // Avoid sudden motor reversion under small torque command with small torque feedback due to stiction for safety
+    // by limit total controller command output
+    // Better restrict for different status like TM or AM with different constraints like average human motion compensation value and a small value
+    if((Value_sign(Estimated_TdR)*Estimated_TdR) <= 2 && (Value_sign(desiredTorqueR)*desiredTorqueR) <= 2) {
+      if((Value_sign(pidR.currTa)*pidR.currTa) >= 4) {
+        pidR.currTa = 4*Value_sign(pidR.currTa);
+      }
     }
+    // Bounded control output
+    if((Value_sign(pidR.currTa)*pidR.currTa) >= LimitTotal_TaR) {
+      pidR.currTa = LimitTotal_TaR*Value_sign(pidR.currTa);
+    }
+    // determine motor rotation direction
+    if(pidR.currTa >= 0) {
+      PWMSignR = PosSign;
+      digitalWrite(MotorRotationR,HIGH);
+    }
+    else if(pidR.currTa < 0) {
+      PWMSignR = NegSign;
+      digitalWrite(MotorRotationR,LOW);
+    }
+
     pidR.currCurrent = Value_sign(pidR.currTa)*pidR.currTa/GearRatio/MotorCurrentConstant;
     pidR.currpwm = pidR.pwm_cycle*(pidR.currCurrent*0.8/MotorMaximumCurrent+0.1);
     // set limitation of PWM duty cycle
@@ -327,15 +382,6 @@ void Control(uint8_t ContMode) {
     }
     else if(pidR.currpwm < PWMLowerBound*pidR.pwm_cycle) {
       pidR.currpwm = PWMLowerBound*pidR.pwm_cycle;
-    }
-    // determine motor rotation direction
-    if(pidR.currTa >= 0) {
-      PWMSignR = PosSign;
-    	digitalWrite(MotorRotationR,HIGH);
-    }
-    else if(pidR.currTa < 0) {
-      PWMSignR = NegSign;
-    	digitalWrite(MotorRotationR,LOW);
     }
     PWM_commandR = pidR.currpwm;
     //update the error
