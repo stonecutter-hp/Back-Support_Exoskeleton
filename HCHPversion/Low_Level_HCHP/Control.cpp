@@ -859,7 +859,7 @@ void Control(uint8_t ContMode) {
     DoutL = DoutL*dk2L;
     // calculate the delta value of this time
     pidL.Delta_Ta = (PoutL+IoutL+DoutL)+deltaFricComL;
-    // set limitation of surdden variation of control output 
+    /* set limitation of sudden variation of control output */
     // If pidL.Delta_Ta = (PoutL+IoutL+DoutL)+deltaFricComL, then total limited for PID and friction simutenuosly
     if((Value_sign(pidL.Delta_Ta)*pidL.Delta_Ta) >= LimitDelta_TaL) {
       pidL.Delta_Ta = LimitDelta_TaL*Value_sign(pidL.Delta_Ta);
@@ -872,8 +872,6 @@ void Control(uint8_t ContMode) {
     if((Value_sign(pidL.currTa)*pidL.currTa) >= LimitTotal_TaL) {
       pidL.currTa = LimitTotal_TaL*Value_sign(pidL.currTa);
     }
-    // Small torque cannnot extend cable due to friendly friction
-    if(pidL.currTa < 0 && pidL.currT < 4) {pidL.currTa = 0;}
     // determine motor rotation direction
     if(pidL.currTa >= 0) {
       PWMSignL = PosSign;
@@ -915,19 +913,19 @@ void Control(uint8_t ContMode) {
     DoutR = DoutR*dk2R;
     // calculate the delta value of this time
     pidR.Delta_Ta = (PoutR+IoutR+DoutR)+deltaFricComR;
-    // set limitation of surdden variation of control output 
+    /* set limitation of sudden variation of control output */
     // If pidR.Delta_Ta = (PoutR+IoutR+DoutR)+deltaFricComR, then total limited for PID and friction simutenuosly
     if((Value_sign(pidR.Delta_Ta)*pidR.Delta_Ta) >= LimitDelta_TaR) {
       pidR.Delta_Ta = LimitDelta_TaR*Value_sign(pidR.Delta_Ta);
     }
     pidR.currTa += pidR.Delta_Ta;
     /* set limitation of total controller output */
+    // Small torque cannnot extend cable due to friendly friction
+    if(pidR.currTa < 0 && pidR.currT < 4) {pidR.currTa = 0;}
     // Bounded control output
     if((Value_sign(pidR.currTa)*pidR.currTa) >= LimitTotal_TaR) {
       pidR.currTa = LimitTotal_TaR*Value_sign(pidR.currTa);
     }
-    // Small torque cannnot extend cable due to friendly friction
-    if(pidR.currTa < 0 && pidR.currT < 4) {pidR.currTa = 0;}
     // determine motor rotation direction
     if(pidR.currTa >= 0) {
       PWMSignR = PosSign;
