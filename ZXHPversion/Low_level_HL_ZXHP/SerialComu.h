@@ -25,7 +25,7 @@ extern bool SendPC_update;                    // data sending to PC enable flag
 extern char SwitchFlag;                       // mark if new command have recieved before sending data to PC
 extern char USART_TX_BUF[USART_TX_LEN];       // sending buffer
 extern int USART_TX_STA;                      // sending number flag
-extern bool SendItemFlag[14];                  // for convinient of adjust feedback item 
+extern bool SendItemFlag[16];                  // for convinient of adjust feedback item 
 /******************************** Communication receiving data definition ******************************/
 extern char inChar1;
 extern char inChar2;
@@ -55,13 +55,15 @@ void receiveDatafromPC(void);
 void receivedDataPro(void);
 
 /**
- * @ MCU to PC protocol: MxTLxxxxxALxxxxxVLxxxxxTRxxxxxARxxxxxVRxxxxxPxxxxxYxxxxxVxxxxxCLxxxxCRxxxxDLxxxxDRxxxxSxxx\r\n
+ * @ MCU to PC protocol: MxTLxxxxxALxxxxxVLxxxxxHLxxxxxTRxxxxxARxxxxxVRxxxxxHRxxxxxPxxxxxYxxxxxVxxxxxCLxxxxCRxxxxDLxxxxDRxxxxSxxx\r\n
  * TL/Rxxxxx: (Nm) Torque feedback for left/right transmission system 
  *                 first number indicate sign: 0 for -, 1 for +
  * AL/Rxxxxx: (deg) Hip angle feedback from potentiometer
  *                  first number indicate sign: 0 for -, 1 for +
  * VL/Rxxxxx: (deg/s) Hip angular velocity feedback
  *                    first number indicate sign: 0 for -, 1 for +
+ * HL/Rxxxxx: (deg/s^2) Hip angular acceleration feedback
+ *                      first number indicate sign: 0 for -, 1 for +
  * Pxxxxx: (deg) Pitch angle for trunk
  *               first number indicate sign: 0 for -, 1 for +
  * Yxxxxx: (deg) yaw angle for trunk

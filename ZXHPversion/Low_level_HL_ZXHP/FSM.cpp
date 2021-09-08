@@ -296,10 +296,17 @@ void HLsensorFeedbackPro() {
 
   /* Directly feedback from sensor */
   HipAngL = Aver_ADC_value[PotentioLP1]*PotentioLP1_Sensitivity - HipAngL_InitValue;
-  HipAngR = Aver_ADC_value[PotentioRP2]*PotentioRP2_Sensitivity - HipAngR_InitValue;
-  // when ESCON set 0~4V:-4000~4000rpm
-  HipVelL_Motor = (Aver_ADC_value[MotorVeloL]-2)*7000*3;          //unit: deg/s 
-  HipVelR_Motor = (Aver_ADC_value[MotorVeloR]-2)*7000*3;          //unit: deg/s 
+  HipAngR = HipAngR_InitValue - Aver_ADC_value[PotentioRP2]*PotentioRP2_Sensitivity;
+  // when ESCON set 0~4V:-7000~7000rpm
+  PreHipAngVelL = HipVelL_Motor;                                  // Last filtered velocity of HipAngL from motor
+  HipVelL_Motor = (Aver_ADC_value[MotorVeloL]-2)*7000*6;          // unit: deg/s
+  // Low-pass filtering for velocity of HipAngL
+  // HipVelL_Motor = PreHipAngVelL+lowPassFilter(1,100)*(HipVelL_Motor - PreHipAngVelL);  
+  PreHipAngVelR = HipVelR_Motor;                                  // Last filtered velocity of HipAngR from motor
+  HipVelR_Motor = (Aver_ADC_value[MotorVeloR]-2)*7000*6;          // unit: deg/s
+  // Low-pass filtering for velocity of HipAngR
+  // HipVelR_Motor = PreHipAngVelR+lowPassFilter(1,100)*(HipVelR_Motor - PreHipAngVelR);   
+  
   TrunkFleAng = angleActualC[rollChan] - TrunkFleAng_InitValue;
   TrunkYawAngPro();
   PreTrunkVel = TrunkFleVel;
@@ -307,25 +314,29 @@ void HLsensorFeedbackPro() {
   PreTrunkFleAcc = TrunkFleAcc;                                   // Last filtered acceleration
   TrunkFleAcc = (TrunkFleVel-PreTrunkVel)/looptime*1000;          // This time unfiltered acceleration
   // Low-pass filtering for acceleration 
-  // TrunkFleAcc = PreTrunkFleAcc+lowPassFilter(2,100)*(TrunkFleAcc - PreTrunkFleAcc);                              
+  // TrunkFleAcc = PreTrunkFleAcc+lowPassFilter(1,100)*(TrunkFleAcc - PreTrunkFleAcc);                              
 
   /* Calculated from sensor feedback */
   HipAngMean = (HipAngL+HipAngR)/2;
   HipAngDiff = HipAngL-HipAngR;
   // ATTENTION that the historical hip angle are updated in HipAngStdCal(), threfore the hip velocity should be calculated after it !!!
   HipAngStd = HipAngStdCal(UID_Subject1.StdRange);   
-  PreHipAngVelL = HipAngVelL;      // Last time's velocity of HipAngL
-  HipAngVelL = (HipAngPreL[FilterCycles-1] - HipAngPreL[FilterCycles-2])/looptime*1000;
-  PreHipAngAccL = HipAngAccL;                                     // Last filtered acceleration
-  HipAngAccL = (HipAngVelL - PreHipAngVelL)/looptime*1000;        // This time unfiltered acceleration of HipAngL  
+  PreHipAngVelL = HipAngVelL;                                                             // Last filtered velocity of HipAngL
+  HipAngVelL = (HipAngPreL[FilterCycles-1] - HipAngPreL[FilterCycles-2])/looptime*1000;   // This time unfiltered velocity of HipAngL
+  // Low-pass filtering for velocity of HipAngL
+  // HipAngVelL = PreHipAngVelL+lowPassFilter(1,100)*(HipAngVelL - PreHipAngVelL);
+  PreHipAngAccL = HipAngAccL;                                                             // Last filtered acceleration of HipAngL
+  HipAngAccL = (HipAngVelL - PreHipAngVelL)/looptime*1000;                                // This time unfiltered acceleration of HipAngL 
   // Low-pass filtering for acceleration of HipAngL
-  // HipAngAccL = PreHipAngAccL+lowPassFilter(2,100)*(HipAngAccL - PreHipAngAccL);  
-  PreHipAngVelR = HipAngVelR;      // Last time's velocity of HipAngR
-  HipAngVelR = (HipAngPreR[FilterCycles-1] - HipAngPreR[FilterCycles-2])/looptime*1000;
-  PreHipAngAccR = HipAngAccR;                                     // Last filtered acceleration
-  HipAngAccR = (HipAngVelR - PreHipAngVelR)/looptime*1000;        // This time unfiltered acceleration of HipAngR
+  // HipAngAccL = PreHipAngAccL+lowPassFilter(1,100)*(HipAngAccL - PreHipAngAccL);  
+  PreHipAngVelR = HipAngVelR;                                                             // Last filtered velocity of HipAngR
+  HipAngVelR = (HipAngPreR[FilterCycles-1] - HipAngPreR[FilterCycles-2])/looptime*1000;   // This time unfiltered velocity of HipAngR
+  // Low-pass filtering for velocity of HipAngR
+  // HipAngVelR = PreHipAngVelR+lowPassFilter(1,100)*(HipAngVelR - PreHipAngVelR); 
+  PreHipAngAccR = HipAngAccR;                                                             // Last filtered acceleration
+  HipAngAccR = (HipAngVelR - PreHipAngVelR)/looptime*1000;                                // This time unfiltered acceleration of HipAngR
   // Low-pass filtering for acceleration of HipAngR
-  // HipAngAccR = PreHipAngAccR+lowPassFilter(2,100)*(HipAngAccR - PreHipAngAccR);   
+  // HipAngAccR = PreHipAngAccR+lowPassFilter(1,100)*(HipAngAccR - PreHipAngAccR);   
   HipAngVel = (HipAngMeanPre[FilterCycles-1] - HipAngMeanPre[FilterCycles-2])/looptime*1000;
   ThighAngL = HipAngL - TrunkFleAng;
   ThighAngR = HipAngR - TrunkFleAng;

@@ -47,7 +47,7 @@ float Estimated_TdR;               // Estimated compact Td feedback of right sid
  * Human motion effect compensation term
  * Here the system model parameters of the left&right CSEA system is assumed as the same
  */
-void humanMotionCompen(void) {
+void humanMotionCompen() {
   float CompenHipVelL;
   float CompenHipVelR;
   float CompenHipAccL;
@@ -59,11 +59,29 @@ void humanMotionCompen(void) {
   CompenHipAccR = -HipAngAccR; 
 
   lastHuMComL = humanMotionComL;
-  humanMotionComL = actuationJa*CompenHipAccL+actuationBa*CompenHipVelL;
-  deltaHuMComL = humanMotionComL - lastHuMComL;
   lastHuMComR = humanMotionComR;
-  humanMotionComR = actuationJa*CompenHipAccR+actuationBa*CompenHipVelR;
+
+  if(mode == Lowering) {
+    // Ta = Tpid + (1/1.5 - 1)*Tr
+    humanMotionComL = -0.33*desiredTorqueL;
+    humanMotionComR = -0.33*desiredTorqueR;
+  }
+  else if(mode == Lifting) {
+    // Ta = Tpid + (1/0.5 - 1)*Tr
+    humanMotionComL = 0.45*desiredTorqueL;
+    humanMotionComR = 0.45*desiredTorqueR;    
+  }
+  else if(mode == Walking) {
+    humanMotionComL = actuationJa*CompenHipAccL+actuationBa*CompenHipVelL;
+    humanMotionComR = actuationJa*CompenHipAccR+actuationBa*CompenHipVelR;
+  }
+  else {
+    humanMotionComL = 0;
+    humanMotionComR = 0;
+  }
+  deltaHuMComL = humanMotionComL - lastHuMComL;
   deltaHuMComR = humanMotionComR - lastHuMComR;
+
 }
 
 /**
@@ -222,10 +240,12 @@ int8_t PreproSensorInit() {
  * Processing sensor feedback for Low-level closed-loop control
  */
 void sensorFeedbackPro() {
+  MovingAverageFilter(TorqueSensorL,5);
+  MovingAverageFilter(TorqueSensorR,5);
   /* Interation torque feedback info processing for low-level controller */
-  // Td feedback from motor driver, here ESCON set 0~4V:-6~6A
-  Estimated_TdMotorCurrentL = (Aver_ADC_value[MotorCurrL]-2)*6/2;
-  Estimated_TdMotorCurrentR = (Aver_ADC_value[MotorCurrR]-2)*6/2;
+  // Td feedback from motor driver, here ESCON set 0~4V:-7~7A
+  Estimated_TdMotorCurrentL = (Aver_ADC_value[MotorCurrL]-2)*7/2;
+  Estimated_TdMotorCurrentR = (Aver_ADC_value[MotorCurrR]-2)*7/2;
   // Td feedback from Torque sensor                                            
   Estimated_TdTorqueL = (Aver_ADC_value[TorqueSensorL]-TorqueSensorL_Offset)*TorqueSensorL_Sensitivity - TorqueL_InitValue;
   Estimated_TdTorqueR = (Aver_ADC_value[TorqueSensorR]-TorqueSensorR_Offset)*TorqueSensorR_Sensitivity - TorqueR_InitValue;

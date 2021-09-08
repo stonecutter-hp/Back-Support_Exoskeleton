@@ -31,8 +31,8 @@ const int attRatio[16] = {1,  1,  1,  1,  22.5,   2,  2,  2,  2,  2,   1,   1,  
 #define FilterCycles 20      //FilterCycles for moving/exponetial average filter
 
 // Parameters for ADC raw data processing for sensors
-#define PotentioLP1_Sensitivity 114              // 120 = 300/2.5 (deg/v); for left potentiometer calibration 
-#define PotentioRP2_Sensitivity 105.6            // 120 = 300/2.5 (deg/v); for right potentiometer calibration 
+#define PotentioLP1_Sensitivity 105              // 120 = 300/2.5 (deg/v); for left potentiometer calibration 
+#define PotentioRP2_Sensitivity 103              // 120 = 300/2.5 (deg/v); for right potentiometer calibration 
 #define TorqueSensorL_Sensitivity -31.6          // Nm/v, for left torque sensor calibration 
 #define TorqueSensorL_Offset 1.2614              // v, for left torque sensor calibration 
 #define TorqueSensorR_Sensitivity 31.7           // Nm/v, for right torque sensor calibration 

@@ -13,8 +13,8 @@ bool SendPC_update = true;            // data sending to PC enable flag
 char SwitchFlag = '0';                // mark if new command have recieved before sending data to PC
 char USART_TX_BUF[USART_TX_LEN];      // sending buffer
 int USART_TX_STA = 0;                 // sending number flag
-// Protocol form: MxTLxxxxxALxxxxxVLxxxxxTRxxxxxARxxxxxVRxxxxxPxxxxxYxxxxxVxxxxxCLxxxxCRxxxxDLxxxxDRxxxxSxxx\r\n
-bool SendItemFlag[14] = {true, true, true, true, true, true, true, true, true, true, true, true, true, true};
+// Protocol form: MxTLxxxxxALxxxxxVLxxxxxHLxxxxxTRxxxxxARxxxxxVRxxxxxHRxxxxxPxxxxxYxxxxxVxxxxxCLxxxxCRxxxxDLxxxxDRxxxxSxxx\r\n
+bool SendItemFlag[16] = {true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true};
 
 /*********************************** Communication receiving data definition ************************************/
 char inChar1;
@@ -145,13 +145,15 @@ void receivedDataPro(void) {
 }
 
 /**
- * @ MCU to PC protocol: MxTLxxxxxALxxxxxVLxxxxxTRxxxxxARxxxxxVRxxxxxPxxxxxYxxxxxVxxxxxCLxxxxCRxxxxDLxxxxDRxxxxSxxx\r\n
+ * @ MCU to PC protocol: MxTLxxxxxALxxxxxVLxxxxxHLxxxxxTRxxxxxARxxxxxVRxxxxxHRxxxxxPxxxxxYxxxxxVxxxxxCLxxxxCRxxxxDLxxxxDRxxxxSxxx\r\n
  * TL/Rxxxxx: (Nm) Torque feedback for left/right transmission system 
  *                 first number indicate sign: 0 for -, 1 for +
  * AL/Rxxxxx: (deg) Hip angle feedback from potentiometer
  *                  first number indicate sign: 0 for -, 1 for +
  * VL/Rxxxxx: (deg/s) Hip angular velocity feedback
  *                    first number indicate sign: 0 for -, 1 for +
+ * HL/Rxxxxx: (deg/s^2) Hip angular acceleration feedback
+ *                      first number indicate sign: 0 for -, 1 for +
  * Pxxxxx: (deg) Pitch angle for trunk
  *               first number indicate sign: 0 for -, 1 for +
  * Yxxxxx: (deg) yaw angle for trunk
@@ -240,9 +242,27 @@ void sendDatatoPC() {
       inter = (dec/Calcu_Pow(10,3-t))%10;
       USART_TX_BUF[position++] = inter+48;
     }      
+  }
+  // HLxxxxx
+  if(SendItemFlag[3] == true) {
+    USART_TX_BUF[position++] = 'H';
+    USART_TX_BUF[position++] = 'L';
+    SignMark = Value_sign(HipAngAccL);
+    if(SignMark == PosSign) {
+      USART_TX_BUF[position++] = PosSign+48;
+    }
+    else {
+      USART_TX_BUF[position++] = NegSign+48;
+    }
+    // ±xxx.x
+    dec = SignMark*HipAngAccL*Calcu_Pow(10,1);
+    for(int t=0; t<4; t++) {
+      inter = (dec/Calcu_Pow(10,3-t))%10;
+      USART_TX_BUF[position++] = inter+48;
+    }      
   }  
   // TRxxxxx
-  if(SendItemFlag[3] == true) {
+  if(SendItemFlag[4] == true) {
     USART_TX_BUF[position++] = 'T';
     USART_TX_BUF[position++] = 'R';
     SignMark = Value_sign(Estimated_TdR);
@@ -260,7 +280,7 @@ void sendDatatoPC() {
     }
   }
   // ARxxxxx
-  if(SendItemFlag[4] == true) {
+  if(SendItemFlag[5] == true) {
     USART_TX_BUF[position++] = 'A';
     USART_TX_BUF[position++] = 'R';
     SignMark = Value_sign(HipAngR);
@@ -278,7 +298,7 @@ void sendDatatoPC() {
     }      
   }
   // VRxxxxx
-  if(SendItemFlag[5] == true) {
+  if(SendItemFlag[6] == true) {
     USART_TX_BUF[position++] = 'V';
     USART_TX_BUF[position++] = 'R';
     SignMark = Value_sign(HipAngVelR);
@@ -295,8 +315,26 @@ void sendDatatoPC() {
       USART_TX_BUF[position++] = inter+48;
     }      
   }  
+  // HRxxxxx
+  if(SendItemFlag[7] == true) {
+    USART_TX_BUF[position++] = 'H';
+    USART_TX_BUF[position++] = 'R';
+    SignMark = Value_sign(HipAngAccR);
+    if(SignMark == PosSign) {
+      USART_TX_BUF[position++] = PosSign+48;
+    }
+    else {
+      USART_TX_BUF[position++] = NegSign+48;
+    }
+    // ±xxx.x
+    dec = SignMark*HipAngAccR*Calcu_Pow(10,1);
+    for(int t=0; t<4; t++) {
+      inter = (dec/Calcu_Pow(10,3-t))%10;
+      USART_TX_BUF[position++] = inter+48;
+    }      
+  }
   // Pxxxxx, Notice the X-axis (practical pitch angle) is assigned as roll channel in the program
-  if(SendItemFlag[6] == true) {
+  if(SendItemFlag[8] == true) {
     USART_TX_BUF[position++] = 'P';
     SignMark = Value_sign(TrunkFleAng);
     if(SignMark == PosSign) {
@@ -313,7 +351,7 @@ void sendDatatoPC() {
     }      
   }
   // Yxxxxx
-  if(SendItemFlag[7] == true) {
+  if(SendItemFlag[9] == true) {
     USART_TX_BUF[position++] = 'Y';
     SignMark = Value_sign(TrunkYawAng);
     if(SignMark == PosSign) {
@@ -330,7 +368,7 @@ void sendDatatoPC() {
     }      
   }
   // Vxxxxx
-  if(SendItemFlag[8] == true) {
+  if(SendItemFlag[10] == true) {
     USART_TX_BUF[position++] = 'V';
     SignMark = Value_sign(TrunkFleVel);
     if(SignMark == PosSign) {
@@ -347,7 +385,7 @@ void sendDatatoPC() {
     }             
   }
   // CLxxxx
-  if(SendItemFlag[9] == true) {
+  if(SendItemFlag[11] == true) {
     USART_TX_BUF[position++] = 'C';
     USART_TX_BUF[position++] = 'L';
     // ±xxx
@@ -359,7 +397,7 @@ void sendDatatoPC() {
     }
   }
   // CRxxxx
-  if(SendItemFlag[10] == true) {
+  if(SendItemFlag[12] == true) {
     USART_TX_BUF[position++] = 'C';
     USART_TX_BUF[position++] = 'R';     
     // ±xxx
@@ -371,7 +409,7 @@ void sendDatatoPC() {
     }
   }
   // DLxxxx
-  if(SendItemFlag[11] == true) {
+  if(SendItemFlag[13] == true) {
     USART_TX_BUF[position++] = 'D';
     USART_TX_BUF[position++] = 'L';     
     // xx.xx
@@ -382,7 +420,7 @@ void sendDatatoPC() {
     }
   }  
   // DRxxxx
-  if(SendItemFlag[12] == true) {
+  if(SendItemFlag[14] == true) {
     USART_TX_BUF[position++] = 'D';
     USART_TX_BUF[position++] = 'R';     
     // xx.xx
@@ -393,7 +431,7 @@ void sendDatatoPC() {
     }
   } 
   // Sxxx
-  if(SendItemFlag[13] == true) {
+  if(SendItemFlag[15] == true) {
     USART_TX_BUF[position++] = 'S';
     //xxx
     // MotionType
