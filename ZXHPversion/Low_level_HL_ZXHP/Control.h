@@ -62,6 +62,8 @@ extern bool Control_update;    // control update flag
 #define KP_R 2.7              // Kp for PID control of motor R
 #define KI_R 0.0000002        // Ki for PID control of motor R
 #define KD_R 0.1              // Kd for PID control of motor R
+#define LimitDelta_KPL 15     // Limitation of delta pid's PoutL
+#define LimitDelta_KPR 15     // Limitation of delta pid's PoutR
 #define LimitDelta_TaL 15     // Limitation of delta control command of motor L
 #define LimitTotal_TaL 30     // Limitation of total control command of motor L
 #define LimitDelta_TaR 15     // Limitation of delta control command of motor R
@@ -69,6 +71,7 @@ extern bool Control_update;    // control update flag
 #define PWMUpperBound 0.85    // Upper bound of the PWM cycle duty
 #define PWMLowerBound 0.12    // Lower bound of the PWM cycle duty
 #define LimitInput 30         // Limitation of input command, here for open-loop is Ta, for closed loop is Td
+#define DeltaInput 2          // Limitation of delta input command
 
 /* Parameters for human motion compensation */
 extern bool MotionComEnable;
@@ -76,6 +79,7 @@ extern bool MotionComEnable;
 // The detialed value can be obtained from system identification
 #define actuationJa 0
 #define actuationBa 0
+#define deltaComLimit 5
 extern float lastHuMComL;
 extern float humanMotionComL;
 extern float deltaHuMComL;
@@ -95,9 +99,9 @@ extern float deltaHuMComR;
 // Expected initial value range (CaliValue +- Tol) of sensor feedback for initial calibration
 // the initial values should be adjusted along with prototype design
 #define TorqueSensorL_CaliValue 0
-#define TorqueSensorL_Tol 0
+#define TorqueSensorL_Tol 4
 #define TorqueSensorR_CaliValue 0
-#define TorqueSensorR_Tol 0
+#define TorqueSensorR_Tol 4
 #define ForceSensorL_CaliValue 0
 #define ForceSensorL_Tol 0
 #define ForceSensorR_CaliValue 0

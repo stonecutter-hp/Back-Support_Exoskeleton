@@ -4,8 +4,10 @@
 
 #include "RefTG.h"
 
-float desiredTorqueL;    // desired motor torque of left motor
-float desiredTorqueR;    // desired motor torque of right motor
+float desiredTorqueL;    // desired torque command of left motor actuation 
+float desiredTorqueR;    // desired torque command of right motor actuation
+float PredesiredTorqueL; // previous desired torque command of left motor actuation 
+float PredesiredTorqueR; // previous desired torque command of right motor actuation 
 
 RTGCont RTG_Subject1;    // RTG strategy parameters for specific subjects
 
@@ -16,6 +18,8 @@ RTGCont RTG_Subject1;    // RTG strategy parameters for specific subjects
  */
 void RTG_Init(void) {
   /* Initialize reference torque */
+  PredesiredTorqueL = 0;
+  PredesiredTorqueR = 0;
   desiredTorqueL = 0;
   desiredTorqueR = 0;
   
@@ -35,6 +39,11 @@ void RTG_Init(void) {
 void HL_ReferTorqueGenerate(uint8_t RTGMode) {
   float InterTorque;
   InterTorque = 0.0;
+
+  // Update last time's reference torque command
+  PredesiredTorqueL = desiredTorqueL;
+  PredesiredTorqueR = desiredTorqueR;
+
   // User reference torque generation strategy v1 (Referring to the 'Thoughts Keeping notbook')
   if(RTGMode == 1) {
     if(mode == Standing) {

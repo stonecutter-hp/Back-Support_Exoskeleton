@@ -59,6 +59,8 @@ extern bool Control_update;    // control update flag
 #define KP_R 0.75             // Kp for PID control of motor R
 #define KI_R 0.000001         // Ki for PID control of motor R
 #define KD_R 0.0028           // Kd for PID control of motor R
+#define LimitDelta_KPL 15     // Limitation of delta pid's PoutL
+#define LimitDelta_KPR 15     // Limitation of delta pid's PoutR
 #define LimitDelta_TaL 0.2    // Limitation of delta control command of motor L
 #define LimitTotal_TaL 7      // Limitation of total control command of motor L
 #define LimitReverse_TaL -2   // Limitation of the cable loosening direction control command of motor L

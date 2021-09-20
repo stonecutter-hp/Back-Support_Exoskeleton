@@ -8,8 +8,10 @@
 #include "Control.h"
 #include "FSM.h"
 
-extern float desiredTorqueL;    // desired motor torque of left motor
-extern float desiredTorqueR;    // desired motor torque of right motor
+extern float desiredTorqueL;    // desired torque command of left motor actuation 
+extern float desiredTorqueR;    // desired torque command of right motor actuation
+extern float PredesiredTorqueL; // previous desired torque command of left motor actuation 
+extern float PredesiredTorqueR; // previous desired torque command of right motor actuation 
 
 /* 
  * Controller parameter for Reference Torque Generation strategy, 

@@ -79,8 +79,18 @@ void humanMotionCompen() {
     humanMotionComL = 0;
     humanMotionComR = 0;
   }
+
+  // limitation of delta_compensation 
   deltaHuMComL = humanMotionComL - lastHuMComL;
   deltaHuMComR = humanMotionComR - lastHuMComR;
+  if(Value_sign(deltaHuMComL)*deltaHuMComL >= deltaComLimit) {
+    deltaHuMComL = Value_sign(deltaHuMComL)*deltaComLimit;
+    humanMotionComL = lastHuMComL+deltaHuMComL;
+  }
+  if(Value_sign(deltaHuMComR)*deltaHuMComR >= deltaComLimit) {
+    deltaHuMComR = Value_sign(deltaHuMComR)*deltaComLimit;
+    humanMotionComR = lastHuMComR+deltaHuMComR;
+  }  
 
 }
 
@@ -283,6 +293,11 @@ void Control(uint8_t ContMode) {
     // P
     dk1L = pidL.Err - pidL.Err_p;
     PoutL = pidL.Kp*dk1L;
+//    // Adjust mechanism of P components
+//    if(Value_sign(PoutL)*PoutL > LimitDelta_KPL) {
+//      PoutL = Value_sign(PoutL)*LimitDelta_KPL;
+//      pidL.Err = PoutL/pidL.Kp+pidL.Err_p;
+//    }
     // I
     IoutL = (pidL.Kp*pidL.Tcontrol)/pidL.Ti;
     IoutL = IoutL*pidL.Err*0;
@@ -349,6 +364,11 @@ void Control(uint8_t ContMode) {
     // P
     dk1R = pidR.Err - pidR.Err_p;
     PoutR = pidR.Kp*dk1R;
+//    // Adjust mechanism of P components
+//    if(Value_sign(PoutR)*PoutR > LimitDelta_KPR) {
+//      PoutR = Value_sign(PoutR)*LimitDelta_KPR;
+//      pidR.Err = PoutR/pidR.Kp+pidR.Err_p;
+//    }
     // I
     IoutR = (pidR.Kp*pidR.Tcontrol)/pidR.Ti;
     IoutR = IoutR*pidR.Err*0;

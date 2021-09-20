@@ -84,14 +84,14 @@ extern UIDCont UID_Subject1;    // UID strategy parameters for specific subjects
 /* High-level controller related sensor feedback calibration value definition */
 // Expected initial value range (CaliValue +- Tol) of sensor feedback for initial calibration
 // the initial values should be adjusted along with prototype design
-#define HipAngL_CaliValue 0
-#define HipAngL_Tol 0
-#define HipAngR_CaliValue 0
-#define HipAngR_Tol 0
-#define TrunkFleAng_CaliValue 0
-#define TrunkFleAng_Tol 0
+#define HipAngL_CaliValue 57
+#define HipAngL_Tol 5
+#define HipAngR_CaliValue 199
+#define HipAngR_Tol 5
+#define TrunkFleAng_CaliValue 12
+#define TrunkFleAng_Tol 5
 #define TrunkFleYaw_CaliValue 0
-#define TrunkFleYaw_Tol 0
+#define TrunkFleYaw_Tol 1000
 #define ForcedInit 1
 #define LogicInit  0
 

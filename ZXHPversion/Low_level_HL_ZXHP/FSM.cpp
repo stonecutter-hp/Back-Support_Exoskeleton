@@ -307,10 +307,10 @@ void HLsensorFeedbackPro() {
   // Low-pass filtering for velocity of HipAngR
   // HipVelR_Motor = PreHipAngVelR+lowPassFilter(1,100)*(HipVelR_Motor - PreHipAngVelR);   
   
-  TrunkFleAng = angleActualC[rollChan] - TrunkFleAng_InitValue;
+  TrunkFleAng = TrunkFleAng_InitValue - angleActualC[rollChan];
   TrunkYawAngPro();
   PreTrunkVel = TrunkFleVel;
-  TrunkFleVel = velActualC[rollChan];
+  TrunkFleVel = -velActualC[rollChan];
   PreTrunkFleAcc = TrunkFleAcc;                                   // Last filtered acceleration
   TrunkFleAcc = (TrunkFleVel-PreTrunkVel)/looptime*1000;          // This time unfiltered acceleration
   // Low-pass filtering for acceleration 
