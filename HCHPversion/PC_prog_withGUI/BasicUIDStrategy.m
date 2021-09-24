@@ -1,7 +1,7 @@
 function mode = BasicUIDStrategy()
 % This program is to conduct the basic UID strategy
-% The basic UID strategy for HCHP prototype can refer to the Notebook
-% 'Thoughts Keeping' in GOODNOTE APP 
+% The basic UID strategy for HCHP prototype can refer to V1P in the
+% Notebook 'Thoughts Keeping' in GOODNOTE APP 
 % mode(1) - state transition flag
 % mode(2) - motion state
 % mode(3) - asymmetric direction
@@ -25,7 +25,7 @@ HipDiffAngle = abs(ExoP.HipDiffAngle(end));   % Notice this is the absolute valu
 
 % (Population) Standard deviation of HipMeanAngle and HipDiffAngle
 HipStdAngle = std(ExoP.HipMeanAngle(max(1,end-Range+1):end),1);
-HipStdDiffAngle = std(ExoP.HipStdDiffAngle(max(1,end-Range+1):end),1);
+HipStdDiffAngle = std(ExoP.HipDiffAngle(max(1,end-Range+1):end),1);
 ExoP.HipStdAngle = [ExoP.HipStdAngle;HipStdAngle];
 ExoP.HipStdDiffAngle = [ExoP.HipStdDiffAngle;HipStdDiffAngle];
 

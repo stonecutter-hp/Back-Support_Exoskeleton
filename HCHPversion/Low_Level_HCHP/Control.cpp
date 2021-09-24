@@ -338,6 +338,16 @@ int8_t LLPreproSensorInit() {
   {SensorReady_FlxAng = 0;}  
   else {SensorReady_FlxAng = 1;} 
 
+  // Ser last time's sensor feedback to be zero
+  Last_HipAngL = 0;         
+  Last_HipAngR = 0;          
+  Last_Estimated_TdL = 0;      
+  Last_Estimated_TdR = 0;    
+  Last_Estimated_FcL = 0;     
+  Last_Estimated_FcR = 0;  
+  Last_TrunkFleAng = 0;        // deg, Last time trunk flexion angle
+  Last_TrunkYawAng = 0;        // deg, Last time trunk yaw angle
+  
   SensorReady = SensorReady_TdL*SensorReady_TdR*SensorReady_HipAngL*SensorReady_HipAngR;
   SensorReady = SensorReady*SensorReady_FcL*SensorReady_FcR*SensorReady_FlxAng;
   if(SensorReady == 0) {
