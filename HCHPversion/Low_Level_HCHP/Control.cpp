@@ -882,7 +882,9 @@ void Control(uint8_t ContMode) {
     pidL.currTa += pidL.Delta_Ta;
     /* set limitation of total controller output */
     // Small torque cannnot extend cable due to friendly friction
-    if(pidL.currTa < 0 && pidL.currT < 4) {pidL.currTa = 0;}
+    if(pidL.currTa < 0 && pidL.currT < 2) {pidL.currTa = 0;}
+    // Prevent unnormal motor input when there is no friction compensation
+    if(pidL.set < 0.7 && pidL.currTa > 0.7) {pidL.currTa = pidL.currTa-0.04;}
     // Bounded control output
     if((Value_sign(pidL.currTa)*pidL.currTa) >= LimitTotal_TaL) {
       pidL.currTa = LimitTotal_TaL*Value_sign(pidL.currTa);
@@ -941,7 +943,9 @@ void Control(uint8_t ContMode) {
     pidR.currTa += pidR.Delta_Ta;
     /* set limitation of total controller output */
     // Small torque cannnot extend cable due to friendly friction
-    if(pidR.currTa < 0 && pidR.currT < 4) {pidR.currTa = 0;}
+    if(pidR.currTa < 0 && pidR.currT < 2) {pidR.currTa = 0;}
+    // Prevent unnormal motor input when there is no friction compensation
+    if(pidR.set < 0.7 && pidR.currTa > 0.7) {pidR.currTa = pidR.currTa-0.04;}
     // Bounded control output
     if((Value_sign(pidR.currTa)*pidR.currTa) >= LimitTotal_TaR) {
       pidR.currTa = LimitTotal_TaR*Value_sign(pidR.currTa);
