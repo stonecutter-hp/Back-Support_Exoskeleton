@@ -77,20 +77,20 @@ void setup() {
   PWMmode_Init();
 
   /***************************** Sensor initial value calibration **********************/
-//  while(PreproSensorInit() == 0) ;
-//  delay(5);
+  while(PreproSensorInit() == 0) ;
+  delay(5);
   
   /****************************** Initial status checking ******************************/
   // Make sure the initial status is standing mode
-//  while(mode != Standing) {
-//    getADCaverage(1);
-//    // Collect info from IMUC including: TrunkAng, TrunkVel
-//    getIMUangleT();
-//    getIMUvelT();   
-//    HLsensorFeedbackPro();
-//    HL_UserIntentDetect(1);
-//  }
-//  Serial.println("Initial position is Standing now.");
+  while(mode != Standing) {
+    getADCaverage(1);
+    // Collect info from IMUC including: TrunkAng, TrunkVel
+    getIMUangleT();
+    getIMUvelT();   
+    HLsensorFeedbackPro();
+    HL_UserIntentDetect(1);
+  }
+ Serial.println("Initial position is Standing now.");
   // resume all the timers
   Timer1.resume();     // Motor L PWM
   Timer2.resume();     // Motor R PWM
@@ -126,7 +126,7 @@ void loop() {
   }
   if(Control_update) {
     sensorFeedbackPro();                       // processing sensor feedback for low-level closed-loop control
-//    humanMotionCompen();                       // inertia compensation
+    if(MotionComEnable) humanMotionCompen();                       // inertia compensation
     Control(1);                                // calculate controlled command: PWM duty cycles
     Control_update = false;                    // At present the frequency of low-level control is the same as ADC sensor feedback update frequency
   }

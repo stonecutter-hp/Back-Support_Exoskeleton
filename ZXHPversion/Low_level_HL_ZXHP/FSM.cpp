@@ -15,7 +15,8 @@ MotionType PreMode;            // last time's motion mode flag
 AsymSide side;                 // Asymmetric side flag
 BendTech tech;                 // bending tech flag  
 bool YawAngleUpdate = true;    // Yaw angle reset complete flag
-bool RecordStateReset = true;  // States recorded at T0 and the peak moment reset flag
+bool RecordStateReset = false; // States recorded at T0 and the peak moment reset flag
+bool BendTechClassFlag = false;  // Bending tech clasiffication flag
 
 /* Controller parameters and thresholds for UID strategy */
 UIDCont UID_Subject1;          // UID strategy parameters for specific subjects
@@ -36,6 +37,7 @@ float TrunkYawAng;                 // Trunk yaw angle
 float TrunkYaw_InitValue;          // Auxiliary parameter for trunk yaw angle
 float TrunkYaw_T0InitValue;        // Auxiliary parameter for T0 trunk yaw angle
 float TrunkFleAng;                 // Trunk flexion angle
+float TrunkFleAng_MaxValue;        // Auxiliary parameter of Max trunk pitch angle
 float TrunkFleAng_InitValue;       // Auxiliary parameter for trunk pitch angle
 float TrunkFleAng_T0InitValue;     // Auxiliary parameter for T0 trunk pitch angle
 float PreTrunkVel;                 // Last time's Trunk flexion angular velocity (For acceleration calculation)
@@ -46,6 +48,7 @@ float TrunkFleAcc;                 // Trunk flexion angular acceleration
 float HipAngMean;                  // (Left hip angle + right hip angle)/2
 float HipAngDiff;                  // (Left hip angle - right hip angle)
 float HipAngStd;                   // Std(HipAngMean) within certain time range
+float HipAngStdSign;               // sign of Std(HipAngMean)
 float PreHipAngVelL;               // Last time's velocity of HipAngL
 float HipAngVelL;                  // Velocity of HipAngL
 float PreHipAngAccL;               // Last time's Acceleration of HipAngL (For filter)
@@ -54,7 +57,7 @@ float PreHipAngVelR;               // Last time's velocity of HipAngR
 float HipAngVelR;                  // Velocity of HipAngR
 float PreHipAngAccR;               // Last time's Acceleration of HipAngR (For filter)
 float HipAngAccR;                  // Acceleration of HipAngR
-float HipAngVel;                   // Velocity of HipAngMean
+float HipAngVel;                   // (HipAngVelL + HipAngVelR)/2
 float ThighAngL;                   // Left thigh angle
 float ThighAngL_T0InitValue;       // Auxiliary parameter of T0 left thigh angle for RTG
 float ThighAngR;                   // Right thigh angle
@@ -62,6 +65,7 @@ float ThighAngR_T0InitValue;       // Auxiliary parameter of T0 right thigh angl
 float ThighAngMean;                // (Left thigh angle + right thigh angle)/2
 float ThighAngStd;                 // Std(ThighAngMean) within certain time range
 float HipAngDiffStd;               // Std(HipAngDiff) within certain time range
+float HipAngDiffVel;               // abs(HipAngVelL - HipAngVelR)
 // Time parameters for velocity calculation
 unsigned long starttime;          
 unsigned long stoptime;
@@ -76,8 +80,13 @@ float HipAngDiffPre[FilterCycles];
 float HipAngDiffBar;               // Auxiliary parameter X_bar for standard deviation calculation
 // A window store the historical HipAngStd value of certain cycle for Finite state machine
 float HipAngStdPre[FilterCycles];
+// A window store the historical abs(HipAngVel) value of certain cycle for Finite state machine
+float HipAngVelPre[FilterCycles];
 // A window store the historical HipAngDiffStd value of certain cycle for Finite state machine
 float HipAngDiffStdPre[FilterCycles];
+// A window store the historical TrunkFleAng value of certain cycle for Finite state machine
+float TrunkFleAngPre[FilterCycles];
+
 
 /**
  * Control parameter initialization for UID strategy
@@ -105,6 +114,7 @@ void UID_Init(void) {
   TrunkYaw_InitValue = 0;          // Auxiliary parameter for trunk yaw angle
   TrunkYaw_T0InitValue = 0;        // Auxiliary parameter for T0 trunk yaw angle
   TrunkFleAng = 0;                 // Trunk flexion angle
+  TrunkFleAng_MaxValue = 0;        // Auxiliary parameter of Max trunk pitch angle
   TrunkFleAng_InitValue = 0;       // Auxiliary parameter for trunk pitch angle
   TrunkFleAng_T0InitValue = 0;     // Auxiliary parameter for T0 trunk pitch angle
   PreTrunkVel = 0;
@@ -115,6 +125,7 @@ void UID_Init(void) {
   HipAngMean = 0;                  // (Left hip angle + right hip angle)/2
   HipAngDiff = 0;                  // (Left hip angle - right hip angle)
   HipAngStd = 0;                   // Std(HipAngMean) within certain time range
+  HipAngStdSign = 1;               // sign of Std(HipAngMean)
   PreHipAngVelL = 0;               // Last time's velocity of HipAngL
   HipAngVelL = 0;                  // Velocity of HipAngL
   PreHipAngAccL = 0;               // Last time's Acceleration of HipAngL (For filter)
@@ -123,7 +134,7 @@ void UID_Init(void) {
   HipAngVelR = 0;                  // Velocity of HipAngR
   PreHipAngAccR = 0;               // Last time's Acceleration of HipAngR (For filter)
   HipAngAccR = 0;                  // Acceleration of HipAngR
-  HipAngVel = 0;                   // Velocity of HipAngMean
+  HipAngVel = 0;                   // (HipAngVelL + HipAngVelR)/2
   ThighAngL = 0;                   // Left thigh angle
   ThighAngL_T0InitValue = 0;       // Auxiliary parameter of T0 left thigh angle
   ThighAngR = 0;                   // Right thigh angle
@@ -131,6 +142,7 @@ void UID_Init(void) {
   ThighAngMean = 0;                // (Left thigh angle + right thigh angle)/2
   ThighAngStd = 0;                 // Std(ThighAngMean) within certain time range
   HipAngDiffStd = 0;               // Std(HipAngDiff) within certain time range
+  HipAngDiffVel = 0;               // abs(HipAngVelL - HipAngVelR)
   
   /* Initialize UID status flags */  
   mode = ExitState;   // Motion detection mode, default is Stop state
@@ -140,43 +152,55 @@ void UID_Init(void) {
   
   /* Initialize thresholds for specific subject */
   // Parameters for UID strategy
-  UID_Subject1.ThrTrunkFleVel = 50;    // deg/s, Threshold for trunk flexion velocity
-  UID_Subject1.ThrHipAngMean_1 = 40;   // deg, Threshold 1 for mean value of summation of left and right hip angle
-  UID_Subject1.ThrHipAngMean_2 = 20;   // deg, Threshold 2 for mean value of summation of left and right hip angle  
+  UID_Subject1.ThrHipAngMean_1 = 20;   // deg, Threshold 1 for mean value of summation of left and right hip angle
+  UID_Subject1.ThrHipAngMean_2 = 21;   // deg, Threshold 2 for mean value of summation of left and right hip angle
+  UID_Subject1.ThrHipAngMean_3 = 35;   // deg, Threshold 3 for mean value of summation of left and right hip angle
+    
   UID_Subject1.ThrHipAngDiff_1 = 10;   // deg, Threshold 1 for difference between left and right hip angle
-  UID_Subject1.ThrHipAngStd_1 = 10;    // deg, Threshold 1 for standard deviation of mean hip angle
-  UID_Subject1.ThrHipAngStd_2 = 5;     // deg, Threshold 2 for standard deviation of mean hip angle
-  UID_Subject1.ThrHipAngStd_3 = 15;    // deg, Threshold 3 for standard deviation of mean hip angle
-  UID_Subject1.ThrHipAngStd_4 = 10;    // deg, Threshold 3 for standard deviation of mean hip angle
-  UID_Subject1.ThrHipVel = 10;         // deg/s, Threshold for mean hip angle velocity
-  UID_Subject1.ThrTrunkFleAng_1 = 15;  // deg, Threshold 1 for trunk flexion angle
-  UID_Subject1.ThrThighAngMean_2 = 15; // deg, Threshold 2 for mean thigh angle
-  // Threshold 1 for mean thigh angle
-  UID_Subject1.ThrThighAngMean_1 = UID_Subject1.ThrHipAngMean_1 - UID_Subject1.ThrTrunkFleAng_1;  
-  // Threshold 2 for trunk flexion angle
-  UID_Subject1.ThrTrunkFleAng_2 = UID_Subject1.ThrHipAngMean_1 - UID_Subject1.ThrThighAngMean_2;
-  // Notice that ThrThighAngMean_2 should not be smaller than ThrThighAngMean_1 if ThighAng comes from
-  // calculation of (HipAng - TrunkFleAng) instead of measurement
-  if(UID_Subject1.ThrThighAngMean_2 < UID_Subject1.ThrThighAngMean_1) {
-    UID_Subject1.ThrThighAngMean_2 = UID_Subject1.ThrThighAngMean_1;
-    UID_Subject1.ThrTrunkFleAng_1 = UID_Subject1.ThrTrunkFleAng_2;
-    // update again
-    // Threshold 1 for mean thigh angle
-    UID_Subject1.ThrThighAngMean_1 = UID_Subject1.ThrHipAngMean_1 - UID_Subject1.ThrTrunkFleAng_1;  
-    // Threshold 2 for trunk flexion angle
-    UID_Subject1.ThrTrunkFleAng_2 = UID_Subject1.ThrHipAngMean_1 - UID_Subject1.ThrThighAngMean_2;
-  }
-  UID_Subject1.ThrThighAngStd = 10;       // deg, Threshold for standard deviation of mean thigh angle
-  UID_Subject1.ThrThighAngVel = 30;       // deg/s, Threshold for mean thigh angle velocity
-  UID_Subject1.StdRange = 10;             // Standard deviation calculation range
-  UID_Subject1.RatioTol = 0.2;            // Ratio tolerance related to hip angle for transition between standing and lowering&lifting
+
+  UID_Subject1.ThrHipVel_1 = 10;       // deg/s, Threshold 1 for mean hip angle velocity
+  UID_Subject1.ThrHipVel_2 = 9;        // deg/s, Threshold 2 for mean hip angle velocity
+  UID_Subject1.ThrHipVel_3 = 30;       // deg/s, Threshold 3 for mean hip angle velocity
+  UID_Subject1.ThrHipVel_4 = 10;       // deg/s, Threshold 4 for mean hip angle velocity
+
+  UID_Subject1.ThrTrunkFleAng_1 = 12;  // deg, Threshold 1 for trunk flexion angle
+  UID_Subject1.ThrTrunkFleAng_2 = 3;   // deg, Threshold 2 for trunk flexion angle
+  UID_Subject1.ThrThighAngMean_1 = 3;  // deg, Threshold 2 for mean thigh angle
+  UID_Subject1.ThrThighAngMean_2 = 12; // deg, Threshold 2 for mean thigh angle
+  UID_Subject1.ThrRatioTech_1 = 0.6;   // ratio_1 for bending tech classification
+  UID_Subject1.ThrRatioTech_2 = 0.4;   // ratio_2 for bending tech classification
+
+  UID_Subject1.StdRange = 5;           // Standard deviation calculation range
+
+  UID_Subject1.RatioTol_1 = 0.2;       // Ratio tolerance related to hip angle for transition between standing and lowering&lifting
+  UID_Subject1.RatioTol_2 = 0.5;       // Ratio tolerance related to hip angle for transition between standing and lowering&lifting
+  UID_Subject1.RatioTol_3 = 0.3;       // Ratio tolerance related to hip angle for transition between standing and lowering&lifting
+  
+  UID_Subject1.ThrHipAngDiffVel_1 = 5; // deg/s, Threshold 1 for difference of angular velocity between left and right hip angle
+
+  UID_Subject1.ThrTrunkFleVel = 20;    // deg/s, Threshold for trunk flexion velocity
+  UID_Subject1.ThrThighAngStd = 10;    // deg, Threshold for standard deviation of mean thigh angle
+  UID_Subject1.ThrThighAngVel = 30;    // deg/s, Threshold for mean thigh angle velocity
+  UID_Subject1.ThrHipAngStd = 15;      // deg, Threshold for standard deviation of mean hip angle
+  
   // Following threshold setting are mainly for exit state
-  UID_Subject1.ThrHipAngDiffStd = 20;     // deg, Threshold for standard deviation of difference between left and right hip angle
+  UID_Subject1.ThrHipAngDiffVel_2 = 2000; // deg/s, Threshold 2 for difference of angular velocity between left and right hip angle
   UID_Subject1.ThrTrunkFleAngEMin = -15;  // deg, Threshold for allowable minimum trunk flexion angle
   UID_Subject1.ThrTrunkFleAngEMax = 140;  // deg, Threshold for allowable maximum trunk flexion angle
   UID_Subject1.ThrThighAngMeanEMin = -15; // deg, Threshold for allowable minimum thigh flexion angle 
   UID_Subject1.ThrThighAngMeanEMax = 140; // deg, Threshold for allowable maximum thigh flexion angle
-  
+
+  // Thresholds reasonability condition check
+  if(UID_Subject1.ThrHipAngMean_1 > UID_Subject1.ThrHipAngMean_2) {UID_Subject1.ThrHipAngMean_2 = UID_Subject1.ThrHipAngMean_1 + 5;}
+  if((1+UID_Subject1.RatioTol_1)*UID_Subject1.ThrHipAngMean_2 < UID_Subject1.ThrHipAngMean_2) {UID_Subject1.RatioTol_1 = 0.1;}
+  if(UID_Subject1.ThrHipAngMean_2 > UID_Subject1.ThrHipAngMean_3) {UID_Subject1.ThrHipAngMean_3 = UID_Subject1.ThrHipAngMean_2 + 5;}
+  if(UID_Subject1.ThrHipVel_4 > UID_Subject1.ThrHipVel_3) {UID_Subject1.ThrHipVel_3 = UID_Subject1.ThrHipVel_4;}
+  if(UID_Subject1.ThrHipVel_4 < UID_Subject1.ThrHipVel_2) {UID_Subject1.ThrHipVel_2 = UID_Subject1.ThrHipVel_4;}
+  if(UID_Subject1.ThrHipAngMean_2 <= (1-UID_Subject1.RatioTol_2)*UID_Subject1.ThrHipAngMean_3) 
+  {UID_Subject1.RatioTol_2 = 1 - UID_Subject1.ThrHipAngMean_2/UID_Subject1.ThrHipAngMean_3 + 0.1;}
+  if((1-UID_Subject1.RatioTol_3)*UID_Subject1.ThrHipAngMean_2 >= (1-UID_Subject1.RatioTol_2)*UID_Subject1.ThrHipAngMean_3)
+  {UID_Subject1.RatioTol_3 = 1 - (1-UID_Subject1.RatioTol_2)*UID_Subject1.ThrHipAngMean_3/UID_Subject1.ThrHipAngMean_2 + 0.1;}
+
   // Initialize auxiliary parameters for Std calculation and Finite state machine
   for(int i=0; i<FilterCycles; i++) {
     HipAngPreL[i] = 0;
@@ -184,7 +208,9 @@ void UID_Init(void) {
     HipAngMeanPre[i] = 0;
     HipAngDiffPre[i] = 0;
     HipAngStdPre[i] = 0;
+    HipAngVelPre[i] = 0;
     HipAngDiffStdPre[i] = 0;
+    TrunkFleAngPre[i] = 0;
   }
   HipAngMeanBar = 0;
   HipAngDiffBar = 0;
@@ -308,36 +334,46 @@ void HLsensorFeedbackPro() {
   // HipVelR_Motor = PreHipAngVelR+lowPassFilter(1,100)*(HipVelR_Motor - PreHipAngVelR);   
   
   TrunkFleAng = TrunkFleAng_InitValue - angleActualC[rollChan];
+  TrunkFleAngPre[FilterCycles-1] = TrunkFleAng;
   TrunkYawAngPro();
   PreTrunkVel = TrunkFleVel;
   TrunkFleVel = -velActualC[rollChan];
   PreTrunkFleAcc = TrunkFleAcc;                                   // Last filtered acceleration
   TrunkFleAcc = (TrunkFleVel-PreTrunkVel)/looptime*1000;          // This time unfiltered acceleration
   // Low-pass filtering for acceleration 
-  // TrunkFleAcc = PreTrunkFleAcc+lowPassFilter(1,100)*(TrunkFleAcc - PreTrunkFleAcc);                              
+  TrunkFleAcc = PreTrunkFleAcc+lowPassFilter(1,100)*(TrunkFleAcc - PreTrunkFleAcc);                              
 
   /* Calculated from sensor feedback */
   HipAngMean = (HipAngL+HipAngR)/2;
   HipAngDiff = HipAngL-HipAngR;
   // ATTENTION that the historical hip angle are updated in HipAngStdCal(), threfore the hip velocity should be calculated after it !!!
-  HipAngStd = HipAngStdCal(UID_Subject1.StdRange);   
+  HipAngStd = HipAngStdCal(UID_Subject1.StdRange);
+  HipAngStdSign = HipAngMeanPre[FilterCycles-1] - HipAngMeanPre[FilterCycles-UID_Subject1.StdRange];
+  HipAngStdSign = Value_sign(HipAngStdSign);
+
   PreHipAngVelL = HipAngVelL;                                                             // Last filtered velocity of HipAngL
   HipAngVelL = (HipAngPreL[FilterCycles-1] - HipAngPreL[FilterCycles-2])/looptime*1000;   // This time unfiltered velocity of HipAngL
   // Low-pass filtering for velocity of HipAngL
-  // HipAngVelL = PreHipAngVelL+lowPassFilter(1,100)*(HipAngVelL - PreHipAngVelL);
+  HipAngVelL = PreHipAngVelL+lowPassFilter(1,100)*(HipAngVelL - PreHipAngVelL);
+
   PreHipAngAccL = HipAngAccL;                                                             // Last filtered acceleration of HipAngL
   HipAngAccL = (HipAngVelL - PreHipAngVelL)/looptime*1000;                                // This time unfiltered acceleration of HipAngL 
   // Low-pass filtering for acceleration of HipAngL
-  // HipAngAccL = PreHipAngAccL+lowPassFilter(1,100)*(HipAngAccL - PreHipAngAccL);  
+  HipAngAccL = PreHipAngAccL+lowPassFilter(1,100)*(HipAngAccL - PreHipAngAccL); 
+
   PreHipAngVelR = HipAngVelR;                                                             // Last filtered velocity of HipAngR
   HipAngVelR = (HipAngPreR[FilterCycles-1] - HipAngPreR[FilterCycles-2])/looptime*1000;   // This time unfiltered velocity of HipAngR
   // Low-pass filtering for velocity of HipAngR
-  // HipAngVelR = PreHipAngVelR+lowPassFilter(1,100)*(HipAngVelR - PreHipAngVelR); 
+  HipAngVelR = PreHipAngVelR+lowPassFilter(1,100)*(HipAngVelR - PreHipAngVelR); 
+
   PreHipAngAccR = HipAngAccR;                                                             // Last filtered acceleration
   HipAngAccR = (HipAngVelR - PreHipAngVelR)/looptime*1000;                                // This time unfiltered acceleration of HipAngR
   // Low-pass filtering for acceleration of HipAngR
-  // HipAngAccR = PreHipAngAccR+lowPassFilter(1,100)*(HipAngAccR - PreHipAngAccR);   
-  HipAngVel = (HipAngMeanPre[FilterCycles-1] - HipAngMeanPre[FilterCycles-2])/looptime*1000;
+  HipAngAccR = PreHipAngAccR+lowPassFilter(1,100)*(HipAngAccR - PreHipAngAccR);   
+
+  HipAngVel = (HipAngVelL + HipAngVelR)/2;
+  HipAngVelPre[FilterCycles-1] = abs(HipAngVel);
+  HipAngDiffVel = Value_sign(HipAngVelL - HipAngVelR)*(HipAngVelL - HipAngVelR);
   ThighAngL = HipAngL - TrunkFleAng;
   ThighAngR = HipAngR - TrunkFleAng;
   ThighAngMean = (ThighAngL+ThighAngR)/2;
@@ -383,6 +419,8 @@ double HipAngStdCal(int cycles) {
     HipAngPreR[j] = HipAngPreR[j+1];
     HipAngMeanPre[j] = HipAngMeanPre[j+1];
     HipAngStdPre[j] = HipAngStdPre[j+1];
+    HipAngVelPre[j] = HipAngVelPre[j+1];
+    TrunkFleAngPre[j] = TrunkFleAngPre[j+1];
   }
   HipAngPreL[FilterCycles-1] = HipAngL;
   HipAngPreR[FilterCycles-1] = HipAngR;
@@ -471,22 +509,19 @@ void HL_UserIntentDetect(uint8_t UIDMode) {
   }
   ExitPhase();
   // Reset the recorded state at To and peak moment
-  if((mode == Standing && PreMode == Lifting)||mode == ExitState) {
-    if(RecordStateReset) {
-      HipAngL_T0InitValue = 0;
-      HipAngR_T0InitValue = 0;
-      TrunkFleAng_T0InitValue = 0;
-      TrunkYaw_T0InitValue = 0;
-      ThighAngL_T0InitValue = 0;
-      ThighAngR_T0InitValue = 0;
-      HipAngL_MaxValue = 0;
-      HipAngR_MaxValue = 0;
-      RecordStateReset = false;
-    }
-  }
-  else {
+  if(RecordStateReset) {
+    HipAngL_T0InitValue = 0;
+    HipAngR_T0InitValue = 0;
+    TrunkFleAng_T0InitValue = 0;
+    TrunkYaw_T0InitValue = 0;
+    ThighAngL_T0InitValue = 0;
+    ThighAngR_T0InitValue = 0;
+    HipAngL_MaxValue = 0;
+    HipAngR_MaxValue = 0;
+    TrunkFleAng_MaxValue = 0;
     RecordStateReset = false;
   }
+
   
 }
 
@@ -497,13 +532,12 @@ void HL_UserIntentDetect(uint8_t UIDMode) {
  *   Reference torque generation strategy adjustment indication
  */
 void StandingPhase() {
-  if(abs(HipAngMean) < UID_Subject1.ThrHipAngMean_1 && HipAngStd > UID_Subject1.ThrHipAngStd_1) {
-    if(ConThresReqCheck(UID_Subject1.ThrHipAngDiff_1,HipAngDiffPre,UID_Subject1.StdRange,1)) {
-      mode = Walking;
-      PreMode = Standing;
-    }
+  if(abs(HipAngMean) < UID_Subject1.ThrHipAngMean_1 && abs(HipAngVel) > UID_Subject1.ThrHipVel_1
+     && ConThresReqCheck(UID_Subject1.ThrHipAngDiff_1,HipAngDiffPre,UID_Subject1.StdRange,1) ) {
+    mode = Walking;
+    PreMode = Standing;
   }
-  else if(abs(HipAngMean) > UID_Subject1.ThrHipAngMean_1 && HipAngStd > UID_Subject1.ThrHipAngStd_3) {
+  else if(abs(HipAngMean) > UID_Subject1.ThrHipAngMean_2 && HipAngVel > UID_Subject1.ThrHipVel_3) {
     mode = Lowering;
     PreMode = Standing;
     // Record each angle when starting to lowering
@@ -514,9 +548,9 @@ void StandingPhase() {
     ThighAngL_T0InitValue = ThighAngL;
     ThighAngR_T0InitValue = ThighAngR;
     // When lowering motion is detected, bending tech is classified in the meantime
-    BendTechClassify();
+    // BendTechClassify();
   }
-  else if (abs(HipAngMean) > UID_Subject1.ThrHipAngMean_1*(1+UID_Subject1.RatioTol)) {
+  else if(abs(HipAngMean) > UID_Subject1.ThrHipAngMean_2*(1+UID_Subject1.RatioTol_1)) {
     mode = Lowering;
     PreMode = Standing;
     // Record each angle when starting to lowering
@@ -527,9 +561,12 @@ void StandingPhase() {
     ThighAngL_T0InitValue = ThighAngL;
     ThighAngR_T0InitValue = ThighAngR;
     // When lowering motion is detected, bending tech is classified in the meantime
-    BendTechClassify();
+    // BendTechClassify();
   }
-  else {mode = Standing;}
+  else {
+    mode = Standing;
+  }
+  BendTechClassFlag = false;
 }
 
 /**
@@ -538,11 +575,11 @@ void StandingPhase() {
  *   Reference torque generation strategy adjustment indication
  */
 void WalkingPhase() {
-  if(abs(HipAngMean) < UID_Subject1.ThrHipAngMean_2 && HipAngStd < UID_Subject1.ThrHipAngStd_2) {
-    if(ConThresReqCheck(UID_Subject1.ThrHipAngDiff_1,HipAngDiffPre,UID_Subject1.StdRange,0)) {
-      mode = Standing;
-      PreMode = Walking;
-    }
+  if(abs(HipAngMean) < UID_Subject1.ThrHipAngMean_1 && abs(HipAngVel) < UID_Subject1.ThrHipVel_2
+     && HipAngDiffVel < UID_Subject1.ThrHipAngDiffVel_1
+     && ConThresReqCheck(UID_Subject1.ThrHipAngDiff_1,HipAngDiffPre,UID_Subject1.StdRange,0) ) { 
+    mode = Standing;
+    PreMode = Walking;
   }
   else {mode = Walking;}
 }
@@ -555,14 +592,38 @@ void WalkingPhase() {
 void LoweringPhase() {
   float Auxpara;
   Auxpara = PeakvalueDetect(HipAngMeanPre,1);
-  if(Auxpara != -100 && HipAngStd < UID_Subject1.ThrHipAngStd_4) {
+  // Bending tech classification
+  if(!BendTechClassFlag && abs(HipAngMean) > UID_Subject1.ThrHipAngMean_2*(1+UID_Subject1.RatioTol_1)) {
+    BendTechClassify(UID_Subject1.StdRange);
+    BendTechClassFlag = true;
+  }
+
+  // Transition conditions
+  if(Auxpara != -100 && abs(HipAngMean) > UID_Subject1.ThrHipAngMean_3 && abs(HipAngVel) < UID_Subject1.ThrHipVel_4) {
     mode = Grasping;
     PreMode = Lowering;
-    //Record max hip joint bending angle
-    if(HipAngL > HipAngL_MaxValue) {HipAngL_MaxValue = HipAngL;}
-    if(HipAngR > HipAngR_MaxValue) {HipAngR_MaxValue = HipAngR;}
+  }
+  else if(ConThresReqCheck(UID_Subject1.ThrHipVel_2,HipAngVelPre,UID_Subject1.StdRange,0)) {
+    mode = Grasping;
+    PreMode = Lowering;  
+  }
+  else if(abs(HipAngMean) > UID_Subject1.ThrHipAngMean_2*(1+UID_Subject1.RatioTol_1) 
+          && HipAngVel < -UID_Subject1.ThrHipVel_4) {
+    mode = Lifting;
+    PreMode = Lowering;   
+  }
+  else if(abs(HipAngMean) < UID_Subject1.ThrHipAngMean_3*(1-UID_Subject1.RatioTol_2)) {
+    mode = Lifting;
+    PreMode = Lowering;     
   }
   else {mode = Lowering;}
+
+  // Keep updating the peak value of hip flexion angle
+  if(Auxpara != -100) {
+    if(HipAngL > HipAngL_MaxValue) {HipAngL_MaxValue = HipAngL;}
+    if(HipAngR > HipAngR_MaxValue) {HipAngR_MaxValue = HipAngR;}     
+    if(TrunkFleAng > TrunkFleAng_MaxValue) {TrunkFleAng_MaxValue = TrunkFleAng;}
+  }
 }
 
 /**
@@ -571,20 +632,21 @@ void LoweringPhase() {
  *   Reference torque generation strategy adjustment indication
  */
 void GraspingPhase() {
-  float Auxpara;
-  if(abs(HipAngMean) > UID_Subject1.ThrHipAngMean_1 && HipAngStd > UID_Subject1.ThrHipAngStd_4) {
+  if(abs(HipAngMean) > UID_Subject1.ThrHipAngMean_2*(1+UID_Subject1.RatioTol_1)
+     && HipAngVel < -UID_Subject1.ThrHipVel_4) {
     mode = Lifting;
     PreMode = Grasping;
   }
-  else {
-    mode = Grasping;
-    Auxpara = PeakvalueDetect(HipAngMeanPre,1);
-    if(Auxpara != -100) {
-      //Keep updating max hip joint bending angle
-      if(HipAngL > HipAngL_MaxValue) {HipAngL_MaxValue = HipAngL;}
-      if(HipAngR > HipAngR_MaxValue) {HipAngR_MaxValue = HipAngR;}     
-    }
+  else if(abs(HipAngMean) < UID_Subject1.ThrHipAngMean_3*(1-UID_Subject1.RatioTol_2)) {
+    mode = Lifting;
+    PreMode = Grasping;    
   }
+  else {mode = Grasping;}
+
+  //Keep updating max hip joint bending angle
+  if(HipAngL > HipAngL_MaxValue) {HipAngL_MaxValue = HipAngL;}
+  if(HipAngR > HipAngR_MaxValue) {HipAngR_MaxValue = HipAngR;} 
+  if(TrunkFleAng > TrunkFleAng_MaxValue) {TrunkFleAng_MaxValue = TrunkFleAng;}
 }
 
 /**
@@ -593,13 +655,15 @@ void GraspingPhase() {
  *   Reference torque generation strategy adjustment indication
  */
 void LiftingPhase() {
-  if(abs(HipAngMean) < UID_Subject1.ThrHipAngMean_1 && HipAngStd < UID_Subject1.ThrHipAngStd_2) {
+  if(abs(HipAngMean) < UID_Subject1.ThrHipAngMean_2 && abs(HipAngVel) < UID_Subject1.ThrHipVel_3) {
     mode = Standing;
     PreMode = Lifting;
+    RecordStateReset = true;
   }
-  else if (abs(HipAngMean) < UID_Subject1.ThrHipAngMean_1*(1-UID_Subject1.RatioTol)) {
+  else if (abs(HipAngMean) < UID_Subject1.ThrHipAngMean_2*(1-UID_Subject1.RatioTol_3)) {
     mode = Standing;
     PreMode = Lifting;
+    RecordStateReset = true;
   }  
   else {mode = Lifting;}
 }
@@ -610,34 +674,70 @@ void LiftingPhase() {
  *   Reference torque generation strategy adjustment indication
  */
 void ExitPhase() {
-  if(TrunkFleAng < UID_Subject1.ThrTrunkFleAngEMin || TrunkFleAng > UID_Subject1.ThrTrunkFleAngEMax
-  || ThighAngMean < UID_Subject1.ThrThighAngMeanEMin || ThighAngMean > UID_Subject1.ThrThighAngMeanEMax
-  || HipAngDiffStd > UID_Subject1.ThrHipAngDiffStd) {
-    mode = ExitState;
-  }
   if(mode == ExitState) {
-    if(abs(HipAngMean) < UID_Subject1.ThrHipAngMean_2 && HipAngStd < UID_Subject1.ThrHipAngStd_2) {
-      if(ConThresReqCheck(UID_Subject1.ThrHipAngDiff_1,HipAngDiffPre,UID_Subject1.StdRange,0)) {
-        mode = Standing;
-        PreMode = ExitState;
-      }
+    if(abs(HipAngMean) < UID_Subject1.ThrHipAngMean_1 && abs(HipAngVel) < UID_Subject1.ThrHipVel_2
+       && ConThresReqCheck(UID_Subject1.ThrHipAngDiff_1,HipAngDiffPre,UID_Subject1.StdRange,0)) {
+      mode = Standing;
+      PreMode = ExitState;
     }
+    BendTechClassFlag = false;
+  }
+
+  if(TrunkFleAng < UID_Subject1.ThrTrunkFleAngEMin || TrunkFleAng > UID_Subject1.ThrTrunkFleAngEMax
+     || ThighAngMean < UID_Subject1.ThrThighAngMeanEMin || ThighAngMean > UID_Subject1.ThrThighAngMeanEMax
+     || HipAngDiffVel > UID_Subject1.ThrHipAngDiffVel_2) {
+    PreMode = mode;
+    mode = ExitState;
+    RecordStateReset = true;
   }
 }
 
 /**
  * Bending technique classification
+ * @param int - number of continous requirment satisfied items at once: 1~FilterCycles 
  */
-void BendTechClassify() {
-  if(TrunkFleAng > UID_Subject1.ThrTrunkFleAng_1 && TrunkFleVel > UID_Subject1.ThrThighAngVel
-  && ThighAngMean < UID_Subject1.ThrThighAngMean_1) {
+void BendTechClassify(int Techcycles) {
+  uint8_t Indicator_stoop;
+  uint8_t Indicator_squat;
+  uint8_t TempIndicator_1;
+  Indicator_stoop = 1;
+  Indicator_squat = 1;
+  if(Techcycles > FilterCycles) {
+    Techcycles = FilterCycles;
+  }
+  else if(Techcycles < 1) {
+    Techcycles = 1;
+  }
+
+  // Check if the tech is stoop or not
+  for(int i=FilterCycles-Techcycles; i<FilterCycles; i++) {
+    if(TrunkFleAngPre[i] > UID_Subject1.ThrRatioTech_1*HipAngMeanPre[i]) {TempIndicator_1 = 1;}
+    else {TempIndicator_1 = 0;}
+    Indicator_stoop = Indicator_stoop*TempIndicator_1;
+  }
+  // If not stoop
+  if(!Indicator_stoop) {
+    for(int i=FilterCycles-Techcycles; i<FilterCycles; i++) {
+      if(TrunkFleAngPre[i] < UID_Subject1.ThrRatioTech_2*HipAngMeanPre[i]) {TempIndicator_1 = 1;}
+      else {TempIndicator_1 = 0;}
+      Indicator_squat = Indicator_squat*TempIndicator_1;
+    }    
+  }
+  else {
+    Indicator_squat = 0;
+  }
+
+
+  if(Indicator_stoop) {
     tech = Stoop;
   }
-  else if(TrunkFleAng < UID_Subject1.ThrTrunkFleAng_2 && TrunkFleVel < UID_Subject1.ThrThighAngVel
-  && ThighAngMean > UID_Subject1.ThrThighAngMean_2) {
+  else if(Indicator_squat) {
     tech = Squat;
   }
-  else {tech = SemiSquat;}
+  else {
+    tech = SemiSquat;
+  }
+
 }
 
 /**

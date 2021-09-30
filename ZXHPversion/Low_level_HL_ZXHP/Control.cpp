@@ -20,6 +20,7 @@ float minInterTorqueR;  // restriction of the minimum allowable assistive torque
 bool Control_update = true;    // control update flag
 
 /* Parameters for human motion compensation */
+bool MotionComEnable = true;
 float lastHuMComL;
 float humanMotionComL;
 float deltaHuMComL;
@@ -447,6 +448,12 @@ void Control(uint8_t ContMode) {
     else if(PWM_commandR <= PWMLowerBound*PWMperiod_R) {
       PWM_commandR = PWMLowerBound*PWMperiod_R;
     }
+  }
+  /* Set the PWM duty cycle */
+  // In stop and exit mode the PWM command is forced to set as PWMLowerBound*PWMperiod
+  if(mode == ExitState) {
+    PWM_commandL = PWMLowerBound*PWMperiod_L;
+    PWM_commandR = PWMLowerBound*PWMperiod_R;
   }
   // set the pwm duty cycle  
   MotorPWMoutput(PWM_commandL,PWM_commandR);        

@@ -49,16 +49,16 @@ void HL_ReferTorqueGenerate(uint8_t RTGMode) {
     if(mode == Standing) {
       desiredTorqueL = 0;
       desiredTorqueR = 0;
-      // disable motor control
-      digitalWrite(MotorEnableL,LOW);
-      digitalWrite(MotorEnableR,LOW);
+      // enable motor control
+      digitalWrite(MotorEnableL,HIGH);
+      digitalWrite(MotorEnableR,HIGH);
     }
     else if(mode == Walking) {
       desiredTorqueL = 0;
       desiredTorqueR = 0;
-      // disable motor control
+      // enable motor control
       digitalWrite(MotorEnableL,HIGH);
-      digitalWrite(MotorEnableR,HIGH);      
+      digitalWrite(MotorEnableR,HIGH);     
     }
     else if(mode == ExitState) {
       desiredTorqueL = 0;
@@ -70,8 +70,13 @@ void HL_ReferTorqueGenerate(uint8_t RTGMode) {
       digitalWrite(MotorEnableR,LOW);       
     }
     else {
+      // If tech is not detected yet
+      if(!BendTechClassFlag) {
+        desiredTorqueL = ImpedanceStra(RTG_Subject1.ImpeKp, RTG_Subject1.ImpeKv, HipAngL_T0InitValue, 0, HipAngL, 0);
+        desiredTorqueL = ImpedanceStra(RTG_Subject1.ImpeKp, RTG_Subject1.ImpeKv, HipAngR_T0InitValue, 0, HipAngR, 0);
+      }
       // Stoop: Gravity compensation
-      if(tech == Stoop) {
+      else if(tech == Stoop) {
         desiredTorqueL = 0.5*GraCompenStra(RTG_Subject1.TrunkMass, RTG_Subject1.TrunkHalfLength, TrunkFleAng_T0InitValue, TrunkFleAng, RTG_Subject1.GComRatio);
         desiredTorqueR = desiredTorqueL;
       }
