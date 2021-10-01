@@ -77,8 +77,8 @@ extern bool Control_update;    // control update flag
 extern bool MotionComEnable;
 // These model parameter is set the same for both left and right CSEA system
 // The detialed value can be obtained from system identification
-#define actuationJa 0
-#define actuationBa 0
+#define actuationJa 0.005
+#define actuationBa 0.01
 #define deltaComLimit 5
 extern float lastHuMComL;
 extern float humanMotionComL;

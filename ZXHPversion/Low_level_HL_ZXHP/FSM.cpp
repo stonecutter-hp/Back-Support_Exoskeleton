@@ -75,8 +75,9 @@ float HipAngPreL[FilterCycles];
 float HipAngPreR[FilterCycles];
 float HipAngMeanPre[FilterCycles];
 float HipAngMeanBar;               // Auxiliary parameter X_bar for standard deviation calculation
-// A window store the historical HipAngDiff value of certain cycle for standard deviation calculation
+// A window store the historical HipAngDiff value and its abs value of certain cycle for standard deviation calculation
 float HipAngDiffPre[FilterCycles];
+float AbsHipAngDiffPre[FilterCycles];
 float HipAngDiffBar;               // Auxiliary parameter X_bar for standard deviation calculation
 // A window store the historical HipAngStd value of certain cycle for Finite state machine
 float HipAngStdPre[FilterCycles];
@@ -152,7 +153,7 @@ void UID_Init(void) {
   
   /* Initialize thresholds for specific subject */
   // Parameters for UID strategy
-  UID_Subject1.ThrHipAngMean_1 = 20;   // deg, Threshold 1 for mean value of summation of left and right hip angle
+  UID_Subject1.ThrHipAngMean_1 = 30;   // deg, Threshold 1 for mean value of summation of left and right hip angle
   UID_Subject1.ThrHipAngMean_2 = 21;   // deg, Threshold 2 for mean value of summation of left and right hip angle
   UID_Subject1.ThrHipAngMean_3 = 35;   // deg, Threshold 3 for mean value of summation of left and right hip angle
     
@@ -172,26 +173,27 @@ void UID_Init(void) {
 
   UID_Subject1.StdRange = 5;           // Standard deviation calculation range
 
-  UID_Subject1.RatioTol_1 = 0.2;       // Ratio tolerance related to hip angle for transition between standing and lowering&lifting
+  UID_Subject1.RatioTol_1 = 0.5;       // Ratio tolerance related to hip angle for transition between standing and lowering&lifting
   UID_Subject1.RatioTol_2 = 0.5;       // Ratio tolerance related to hip angle for transition between standing and lowering&lifting
   UID_Subject1.RatioTol_3 = 0.3;       // Ratio tolerance related to hip angle for transition between standing and lowering&lifting
   
-  UID_Subject1.ThrHipAngDiffVel_1 = 5; // deg/s, Threshold 1 for difference of angular velocity between left and right hip angle
+  UID_Subject1.ThrHipAngDiffVel_1 = 5;  // deg/s, Threshold 1 for difference of angular velocity between left and right hip angle
+  UID_Subject1.ThrHipAngDiffVel_2 = 15; // deg/s, Threshold 2 for difference of angular velocity between left and right hip angle
 
-  UID_Subject1.ThrTrunkFleVel = 20;    // deg/s, Threshold for trunk flexion velocity
-  UID_Subject1.ThrThighAngStd = 10;    // deg, Threshold for standard deviation of mean thigh angle
-  UID_Subject1.ThrThighAngVel = 30;    // deg/s, Threshold for mean thigh angle velocity
-  UID_Subject1.ThrHipAngStd = 15;      // deg, Threshold for standard deviation of mean hip angle
+  UID_Subject1.ThrTrunkFleVel = 20;     // deg/s, Threshold for trunk flexion velocity
+  UID_Subject1.ThrThighAngStd = 10;     // deg, Threshold for standard deviation of mean thigh angle
+  UID_Subject1.ThrThighAngVel = 30;     // deg/s, Threshold for mean thigh angle velocity
+  UID_Subject1.ThrHipAngStd = 15;       // deg, Threshold for standard deviation of mean hip angle
   
   // Following threshold setting are mainly for exit state
-  UID_Subject1.ThrHipAngDiffVel_2 = 2000; // deg/s, Threshold 2 for difference of angular velocity between left and right hip angle
+  UID_Subject1.ThrHipAngDiffVel_3 = 2000; // deg/s, Threshold 2 for difference of angular velocity between left and right hip angle
   UID_Subject1.ThrTrunkFleAngEMin = -15;  // deg, Threshold for allowable minimum trunk flexion angle
   UID_Subject1.ThrTrunkFleAngEMax = 140;  // deg, Threshold for allowable maximum trunk flexion angle
   UID_Subject1.ThrThighAngMeanEMin = -15; // deg, Threshold for allowable minimum thigh flexion angle 
   UID_Subject1.ThrThighAngMeanEMax = 140; // deg, Threshold for allowable maximum thigh flexion angle
 
   // Thresholds reasonability condition check
-  if(UID_Subject1.ThrHipAngMean_1 > UID_Subject1.ThrHipAngMean_2) {UID_Subject1.ThrHipAngMean_2 = UID_Subject1.ThrHipAngMean_1 + 5;}
+  // if(UID_Subject1.ThrHipAngMean_1 > UID_Subject1.ThrHipAngMean_2) {UID_Subject1.ThrHipAngMean_2 = UID_Subject1.ThrHipAngMean_1 + 5;}
   if((1+UID_Subject1.RatioTol_1)*UID_Subject1.ThrHipAngMean_2 < UID_Subject1.ThrHipAngMean_2) {UID_Subject1.RatioTol_1 = 0.1;}
   if(UID_Subject1.ThrHipAngMean_2 > UID_Subject1.ThrHipAngMean_3) {UID_Subject1.ThrHipAngMean_3 = UID_Subject1.ThrHipAngMean_2 + 5;}
   if(UID_Subject1.ThrHipVel_4 > UID_Subject1.ThrHipVel_3) {UID_Subject1.ThrHipVel_3 = UID_Subject1.ThrHipVel_4;}
@@ -207,6 +209,7 @@ void UID_Init(void) {
     HipAngPreR[i] = 0;
     HipAngMeanPre[i] = 0;
     HipAngDiffPre[i] = 0;
+    AbsHipAngDiffPre[i] = 0;
     HipAngStdPre[i] = 0;
     HipAngVelPre[i] = 0;
     HipAngDiffStdPre[i] = 0;
@@ -457,9 +460,11 @@ double HipAngDiffStdCal(int cycles) {
   // update the data in the moving window
   for(int j=0; j<FilterCycles-1; j++) {
     HipAngDiffPre[j] = HipAngDiffPre[j+1];
+    AbsHipAngDiffPre[j] = AbsHipAngDiffPre[j+1];
     HipAngDiffStdPre[j] = HipAngDiffStdPre[j+1];
   }
   HipAngDiffPre[FilterCycles-1] = HipAngDiff;
+  AbsHipAngDiffPre[FilterCycles-1] = abs(HipAngDiff);
   // store the last time mean value
   HipAngDiffBar = interMean;
   // calculate standard deviation
@@ -533,11 +538,13 @@ void HL_UserIntentDetect(uint8_t UIDMode) {
  */
 void StandingPhase() {
   if(abs(HipAngMean) < UID_Subject1.ThrHipAngMean_1 && abs(HipAngVel) > UID_Subject1.ThrHipVel_1
-     && ConThresReqCheck(UID_Subject1.ThrHipAngDiff_1,HipAngDiffPre,UID_Subject1.StdRange,1) ) {
+     && HipAngDiffVel >= UID_Subject1.ThrHipAngDiffVel_2
+     && ConThresReqCheck(UID_Subject1.ThrHipAngDiff_1,AbsHipAngDiffPre,UID_Subject1.StdRange,1) ) {
     mode = Walking;
     PreMode = Standing;
   }
-  else if(abs(HipAngMean) > UID_Subject1.ThrHipAngMean_2 && HipAngVel > UID_Subject1.ThrHipVel_3) {
+  else if(abs(HipAngMean) > UID_Subject1.ThrHipAngMean_2 && HipAngVel > UID_Subject1.ThrHipVel_3
+          && HipAngDiffVel < UID_Subject1.ThrHipAngDiffVel_2) {
     mode = Lowering;
     PreMode = Standing;
     // Record each angle when starting to lowering
@@ -577,7 +584,7 @@ void StandingPhase() {
 void WalkingPhase() {
   if(abs(HipAngMean) < UID_Subject1.ThrHipAngMean_1 && abs(HipAngVel) < UID_Subject1.ThrHipVel_2
      && HipAngDiffVel < UID_Subject1.ThrHipAngDiffVel_1
-     && ConThresReqCheck(UID_Subject1.ThrHipAngDiff_1,HipAngDiffPre,UID_Subject1.StdRange,0) ) { 
+     && ConThresReqCheck(UID_Subject1.ThrHipAngDiff_1,AbsHipAngDiffPre,UID_Subject1.StdRange,0) ) { 
     mode = Standing;
     PreMode = Walking;
   }
@@ -676,6 +683,7 @@ void LiftingPhase() {
 void ExitPhase() {
   if(mode == ExitState) {
     if(abs(HipAngMean) < UID_Subject1.ThrHipAngMean_1 && abs(HipAngVel) < UID_Subject1.ThrHipVel_2
+       && HipAngDiffVel < UID_Subject1.ThrHipAngDiffVel_1
        && ConThresReqCheck(UID_Subject1.ThrHipAngDiff_1,HipAngDiffPre,UID_Subject1.StdRange,0)) {
       mode = Standing;
       PreMode = ExitState;
@@ -685,7 +693,7 @@ void ExitPhase() {
 
   if(TrunkFleAng < UID_Subject1.ThrTrunkFleAngEMin || TrunkFleAng > UID_Subject1.ThrTrunkFleAngEMax
      || ThighAngMean < UID_Subject1.ThrThighAngMeanEMin || ThighAngMean > UID_Subject1.ThrThighAngMeanEMax
-     || HipAngDiffVel > UID_Subject1.ThrHipAngDiffVel_2) {
+     || HipAngDiffVel > UID_Subject1.ThrHipAngDiffVel_3) {
     PreMode = mode;
     mode = ExitState;
     RecordStateReset = true;

@@ -80,6 +80,7 @@ typedef struct {
   float RatioTol_3;
 
   float ThrHipAngDiffVel_1;  // deg/s, Threshold 1 for difference of angular velocity between left and right hip angle
+  float ThrHipAngDiffVel_2;  // deg/s, Threshold 2 for difference of angular velocity between left and right hip angle
 
   float ThrTrunkFleVel;      // Threshold for trunk flexion velocity
   float ThrThighAngStd;      // Threshold for standard deviation of mean thigh angle
@@ -87,7 +88,7 @@ typedef struct {
   float ThrHipAngStd;        // Threshold for standard deviation of mean hip angle
 
   /* Thresholds for Exit Phase */ 
-  float ThrHipAngDiffVel_2;  // deg/s, Threshold 2 for difference of angular velocity between left and right hip angle
+  float ThrHipAngDiffVel_3;  // deg/s, Threshold 2 for difference of angular velocity between left and right hip angle
   float ThrTrunkFleAngEMin;  // Threshold for allowable minimum trunk flexion angle
   float ThrTrunkFleAngEMax;  // Threshold for allowable maximum trunk flexion angle
   float ThrThighAngMeanEMin; // Threshold for allowable minimum thigh flexion angle
@@ -164,8 +165,9 @@ extern float HipAngPreL[FilterCycles];
 extern float HipAngPreR[FilterCycles];
 extern float HipAngMeanPre[FilterCycles];
 extern float HipAngMeanBar;               // Auxiliary parameter X_bar for standard deviation calculation
-// A window store the historical HipAngDiff value of certain cycle for standard deviation calculation
+// A window store the historical HipAngDiff value and its abs value of certain cycle for standard deviation calculation
 extern float HipAngDiffPre[FilterCycles];
+extern float AbsHipAngDiffPre[FilterCycles];
 extern float HipAngDiffBar;               // Auxiliary parameter X_bar for standard deviation calculation
 // A window store the historical HipAngStd value of certain cycle for Finite state machine
 extern float HipAngStdPre[FilterCycles];

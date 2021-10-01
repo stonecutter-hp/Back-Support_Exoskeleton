@@ -62,25 +62,38 @@ void humanMotionCompen() {
   lastHuMComL = humanMotionComL;
   lastHuMComR = humanMotionComR;
 
-  if(mode == Lowering) {
-    // Ta = Tpid + (1/1.5 - 1)*Tr
-    humanMotionComL = -0.33*desiredTorqueL;
-    humanMotionComR = -0.33*desiredTorqueR;
-  }
-  else if(mode == Lifting) {
-    // Ta = Tpid + (1/0.5 - 1)*Tr
-    humanMotionComL = 0.45*desiredTorqueL;
-    humanMotionComR = 0.45*desiredTorqueR;    
+  // if(mode == Lowering) {
+  //   // Ta = Tpid + (1/1.5 - 1)*Tr
+  //   humanMotionComL = -0.33*desiredTorqueL;
+  //   humanMotionComR = -0.33*desiredTorqueR;
+  // }
+  // else if(mode == Lifting) {
+  //   // Ta = Tpid + (1/0.5 - 1)*Tr
+  //   humanMotionComL = 0.45*desiredTorqueL;
+  //   humanMotionComR = 0.45*desiredTorqueR;    
+  // }
+  // else if(mode == Walking) {
+  //   humanMotionComL = -actuationJa*CompenHipAccL-actuationBa*CompenHipVelL;
+  //   humanMotionComR = -actuationJa*CompenHipAccR-actuationBa*CompenHipVelR;
+  // }
+  // else {
+  //   humanMotionComL = 0;
+  //   humanMotionComR = 0;
+  // }
+
+  if(mode == Lowering || mode == Lifting) {
+    humanMotionComL = actuationJa*CompenHipAccL+actuationBa*CompenHipVelL;
+    humanMotionComR = actuationJa*CompenHipAccR+actuationBa*CompenHipVelR;
   }
   else if(mode == Walking) {
     humanMotionComL = actuationJa*CompenHipAccL+actuationBa*CompenHipVelL;
-    humanMotionComR = actuationJa*CompenHipAccR+actuationBa*CompenHipVelR;
+    humanMotionComR = actuationJa*CompenHipAccR+actuationBa*CompenHipVelR;  
   }
   else {
     humanMotionComL = 0;
     humanMotionComR = 0;
-  }
-
+  } 
+  
   // limitation of delta_compensation 
   deltaHuMComL = humanMotionComL - lastHuMComL;
   deltaHuMComR = humanMotionComR - lastHuMComR;
