@@ -79,7 +79,7 @@ extern bool MotionComEnable;
 // The detialed value can be obtained from system identification
 #define actuationJa 0.005
 #define actuationBa 0.01
-#define deltaComLimit 5
+#define deltaComLimit 3
 extern float lastHuMComL;
 extern float humanMotionComL;
 extern float deltaHuMComL;

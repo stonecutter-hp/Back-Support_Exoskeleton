@@ -224,7 +224,9 @@ int8_t LLPreproSensorInit() {
   if(ForceSensorR_InitValue > ForceSensorR_CaliValue + ForceSensorR_Tol || ForceSensorR_InitValue < ForceSensorR_CaliValue - ForceSensorR_Tol)
   {SensorReady_4 = 0;}
   else {SensorReady_4 = 1;}
-  SensorReady_3 = 1;  // This is because NO FORCE SENSOR is used at present
+  // This is because NO FORCE SENSOR is used at present
+  SensorReady_3 = 1;  
+  SensorReady_4 = 1;
   SensorReady = SensorReady_1*SensorReady_2*SensorReady_3*SensorReady_4;
 
   if(SensorReady == 0) {
@@ -264,8 +266,8 @@ int8_t PreproSensorInit() {
  * Processing sensor feedback for Low-level closed-loop control
  */
 void sensorFeedbackPro() {
-  MovingAverageFilter(TorqueSensorL,5);
-  MovingAverageFilter(TorqueSensorR,5);
+  MovingAverageFilter(TorqueSensorL,3);
+  MovingAverageFilter(TorqueSensorR,3);
   /* Interation torque feedback info processing for low-level controller */
   // Td feedback from motor driver, here ESCON set 0~4V:-7~7A
   Estimated_TdMotorCurrentL = (Aver_ADC_value[MotorCurrL]-2)*7/2;

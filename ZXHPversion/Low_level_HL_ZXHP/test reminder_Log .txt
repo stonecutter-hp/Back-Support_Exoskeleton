@@ -1,12 +1,12 @@
 Testing reminder
 20210618
-Add a function to reset the recorded T0 initial value and Maximum value in UID strategy for RTG strategy
+Add a function to reset the recorded T0 initial value and Maximum value in UID strategy for RTG strategy  √
 20210816
-Make sure the motor direction is correctly controlled
-The std calculation function shhould be tested
-The hip joint velocity calculation quality should be evaluated compared with velocity from IMU and velocity from motor driver
-The thigh angle, hip joint angle and trunk angle relationship checking
-SendingPC feedback accuracy confirmation
+Make sure the motor direction is correctly controlled  √
+The std calculation function shhould be tested  √
+The hip joint velocity calculation quality should be evaluated compared with velocity from IMU and velocity from motor driver  √
+The thigh angle, hip joint angle and trunk angle relationship checking  √
+SendingPC feedback accuracy confirmation  √
 Enum data assignment   √
 
 

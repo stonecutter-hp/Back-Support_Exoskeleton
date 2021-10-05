@@ -27,7 +27,7 @@ void RTG_Init(void) {
   RTG_Subject1.GComRatio = 0.2;        // Gravity compensation ratio
   RTG_Subject1.TrunkMass = 40;         // kg, Subject's trunk mass
   RTG_Subject1.TrunkHalfLength = 0.295;// m, Half of subject's trunk length
-  RTG_Subject1.ImpeKp = 0.2;           // Nm/deg, Rendered stiffness of Impedance strategy
+  RTG_Subject1.ImpeKp = 0.15;           // Nm/deg, Rendered stiffness of Impedance strategy
   RTG_Subject1.ImpeKv = 0;             // Nm*s/deg, Rendered damping of Impedance strategy   
   
 }
@@ -39,10 +39,6 @@ void RTG_Init(void) {
 void HL_ReferTorqueGenerate(uint8_t RTGMode) {
   float InterTorque;
   InterTorque = 0.0;
-
-  // Update last time's reference torque command
-  PredesiredTorqueL = desiredTorqueL;
-  PredesiredTorqueR = desiredTorqueR;
 
   // User reference torque generation strategy v1 (Referring to the 'Thoughts Keeping notbook')
   if(RTGMode == 1) {
@@ -73,7 +69,7 @@ void HL_ReferTorqueGenerate(uint8_t RTGMode) {
       // If tech is not detected yet
       if(!BendTechClassFlag) {
         desiredTorqueL = ImpedanceStra(RTG_Subject1.ImpeKp, RTG_Subject1.ImpeKv, HipAngL_T0InitValue, 0, HipAngL, 0);
-        desiredTorqueL = ImpedanceStra(RTG_Subject1.ImpeKp, RTG_Subject1.ImpeKv, HipAngR_T0InitValue, 0, HipAngR, 0);
+        desiredTorqueR = ImpedanceStra(RTG_Subject1.ImpeKp, RTG_Subject1.ImpeKv, HipAngR_T0InitValue, 0, HipAngR, 0);
       }
       // Stoop: Gravity compensation
       else if(tech == Stoop) {
@@ -110,6 +106,9 @@ void HL_ReferTorqueGenerate(uint8_t RTGMode) {
     desiredTorqueR = 0;
   }  
   
+  // Update last time's reference torque command
+  PredesiredTorqueL = desiredTorqueL;
+  PredesiredTorqueR = desiredTorqueR;
 }
 
 /**
@@ -148,4 +147,5 @@ float GraCompenStra(float TMass, float HaTLength, float InitPos, float PrePos, f
   }
   // T = Ratio*m*g*sin(delta_alpha)*L
   GraCompTorque = AsRatio*TMass*9.8*sin((PrePos-InitPos)*d2r)*HaTLength;
+  return GraCompTorque;
 }
