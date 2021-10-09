@@ -14,6 +14,41 @@ int8_t PWMSignL;        // to mark the rotation direction of the left motor
 int8_t PWMSignR;        // to mark the rotation direction of the right motor
 bool Control_update = true;  // control update flag
 
+/* Parameters for reference command related compensation */
+float lastTrRelateComL;     
+float TrRelateComL;         // Reference torque related compensation term of left CSEA system
+float deltaTrRelatedComL;
+float lastTrRelateComR;     
+float TrRelateComR;         // Reference torque related compensation term of right CSEA system
+float deltaTrRelatedComR;
+float PredesiredTorqueL; // previous desired assistive torque of left torque transmission system
+float PredesiredTorqueR; // previous desired assistive torque of right torque transmission system
+float desiredTorqueLDot; // variation rate of desired assistive torque of left torque transmission system
+float desiredTorqueRDot; // variation rate of desired assistive torque of right torque transmission system
+float PredesiredTorqueLDot; // previous variation rate of desired assistive torque of left torque transmission system
+float PredesiredTorqueRDot; // previous variation rate of desired assistive torque of right torque transmission system
+float desiredTorqueLDDot;   // second derivative of desired assistive torque of left torque transmission system
+float desiredTorqueRDDot;   // second derivative of desired assistive torque of right torque transmission system
+float PredesiredTorqueLDDot;// previous second derivative of desired assistive torque of left torque transmission system
+float PredesiredTorqueRDDot;// previous second derivative of desired assistive torque of right torque transmission system
+
+/* Parameters for friction compensation */
+unsigned long starttime;
+unsigned long stoptime;
+unsigned long looptime;
+float lastTorqueL;
+float deltaFricComL;
+float fricCoL;
+float fricOffsetL;
+float curveAngleL;
+float fricCompenTermL; // The friction compensation term
+float lastTorqueR;
+float deltaFricComR;
+float fricCoR;
+float fricOffsetR;
+float curveAngleR;
+float fricCompenTermR; // The friction compensation term
+
 /* Intermediate auxiliary parameters directly from sensor processing for controller feedback */
 float HipAngL;                    // deg, Left hip joint angle
 float HipAngL_InitValue;          // deg, Auxiliary parameter for left hip joint angle
@@ -58,23 +93,6 @@ float phaseIndexL;
 // 0~1, 0 for DD and 1 for SEA, operation index of the right actuation system
 float phaseIndexR;
 
-/* Parameters for friction compensation */
-unsigned long starttime;
-unsigned long stoptime;
-unsigned long looptime;
-float lastTorqueL;
-float deltaFricComL;
-float fricCoL;
-float fricOffsetL;
-float curveAngleL;
-float fricCompenTermL; // The friction compensation term
-float lastTorqueR;
-float deltaFricComR;
-float fricCoR;
-float fricOffsetR;
-float curveAngleR;
-float fricCompenTermR; // The friction compensation term
-
 /**
  * Control parameter initialization for Low-level controller
  * Initial parameters including: 
@@ -92,8 +110,6 @@ void Control_Init() {
   PWMSignR = PosSign;
   desiredTorqueL = 0;
   desiredTorqueR = 0;
-  PredesiredTorqueL = 0;
-  PredesiredTorqueR = 0;
   
   /* Initialize the control parameter of left motor */
   pidL.set = desiredTorqueL;
@@ -109,6 +125,9 @@ void Control_Init() {
   pidL.Err = 0;
   pidL.Err_p = 0;
   pidL.Err_pp = 0;
+  // The error used for Pout to avoid delta_limitation effect of incremental type PD Control
+  pidL.Err_Pout = 0;
+  pidL.Err_Pout_p = 0;
 
   /* Initialize the control parameter of right motor */
   pidR.set = desiredTorqueR;
@@ -124,6 +143,9 @@ void Control_Init() {
   pidR.Err = 0;
   pidR.Err_p = 0;
   pidR.Err_pp = 0;
+  // The error used for Pout to avoid delta_limitation effect of incremental type PD Control
+  pidR.Err_Pout = 0;
+  pidR.Err_Pout_p = 0;
 
   /* Parameters for friction compensation */
   lastTorqueL = 0;
@@ -138,6 +160,24 @@ void Control_Init() {
   curveAngleR = 0;     // curveAngleR = M_PI/2;
   fricCompenTermR = 0; // The friction compensation term
   deltaFricComR = fricCompenTermR - lastTorqueR;
+
+  /* Parameters for compensation related to reference torque inside T_ac */
+  lastTrRelateComL = 0;     
+  TrRelateComL = 0;         // Reference torque related compensation term of left CSEA system
+  deltaTrRelatedComL = TrRelateComL - lastTrRelateComL;
+  lastTrRelateComR = 0;     
+  TrRelateComR = 0;         // Reference torque related compensation term of right CSEA system
+  deltaTrRelatedComR = TrRelateComR - lastTrRelateComR;
+  PredesiredTorqueL = 0;
+  PredesiredTorqueR = 0;
+  desiredTorqueLDot = 0; // variation rate of desired assistive torque of left torque transmission system
+  desiredTorqueRDot = 0; // variation rate of desired assistive torque of right torque transmission system
+  PredesiredTorqueLDot = 0; // previous variation rate of desired assistive torque of left torque transmission system
+  PredesiredTorqueRDot = 0; // previous variation rate of desired assistive torque of right torque transmission system
+  desiredTorqueLDDot = 0;   // second derivative of desired assistive torque of left torque transmission system
+  desiredTorqueRDDot = 0;   // second derivative of desired assistive torque of right torque transmission system
+  PredesiredTorqueLDDot = 0;// previous second derivative of desired assistive torque of left torque transmission system
+  PredesiredTorqueRDDot = 0;// previous second derivative of desired assistive torque of right torque transmission system
 }
 
 /**
@@ -338,7 +378,7 @@ int8_t LLPreproSensorInit() {
   {SensorReady_FlxAng = 0;}  
   else {SensorReady_FlxAng = 1;} 
 
-  // Ser last time's sensor feedback to be zero
+  // Set last time's sensor feedback to be zero
   Last_HipAngL = 0;         
   Last_HipAngR = 0;          
   Last_Estimated_TdL = 0;      
@@ -450,7 +490,6 @@ void TrunkYawAngPro() {
     TrunkYawAng = TrunkYawAng+360;
   }
 }
-
 
 /**
  * Update operation status of the actuation system
@@ -613,6 +652,20 @@ void multiFeedbackPro() {
   // Update actuation system operation status index
   phaseIndexL = PhaseIndexUpdate(Feedback_TdL, Critical_TdL, PhaseIndexCo);
   phaseIndexR = PhaseIndexUpdate(Feedback_TdR, Critical_TdR, PhaseIndexCo);  
+}
+
+/**
+ * Low-pass filter 
+ * @param float - cut off frequency of the low-pass filter
+ * @param float - sampling rate
+ * @return float - coefficient of the filter 
+ */
+float lowPassFilter(float cutFre, float samplRate) {
+  float RC = 1/(cutFre*2*M_PI);
+  float dt = 1/samplRate;
+  float alpha = dt/(RC+dt);
+
+  return alpha;
 }
 
 /**
@@ -782,8 +835,8 @@ void frictionCompenCL() {
   lastTorqueR = fricCompenTermR;
   
   /* Left side */
-  // Consider the friction is not a friend only 
-  // (when Tr is increasing) during lifting phase
+  // Consider the friction is not a friend only (when Tr is increasing) during lifting phase
+  // The PredesiredTorqueL is updated at Control()
   deltaTr_L = desiredTorqueL - PredesiredTorqueL;
   // if(mode == Lifting)
   if(mode == Lifting && deltaTr_L > deltaTr_Thre) 
@@ -803,8 +856,8 @@ void frictionCompenCL() {
   fricCompenTermL = (desiredTorqueL/9-fricOffsetL*PulleyRadiusL)/fricComL - desiredTorqueL/9;
 
   /* Right side */
-  // Consider the friction is not a friend only 
-  // (when Tr is increasing) during lifting phase
+  // Consider the friction is not a friend only (when Tr is increasing) during lifting phase
+  // The PredesiredTorqueL is updated at Control()
   deltaTr_R = desiredTorqueR - PredesiredTorqueR;
   // if(mode == Lifting)
   if(mode == Lifting && deltaTr_R > deltaTr_Thre) 
@@ -857,14 +910,10 @@ void Control(uint8_t ContMode) {
     pidL.set = desiredTorqueL;
     pidL.currT = Feedback_TdL;                 // get current toruqe feedback
     pidL.Err = pidL.set - pidL.currT;          // calculate the error of this time
+    pidL.Err_Pout = pidL.Err;                  // calculate the error of this time for Pout
     // P
-    dk1L = pidL.Err - pidL.Err_p;
+    dk1L = pidL.Err_Pout - pidL.Err_Pout_p;
     PoutL = pidL.Kp*dk1L;
-//    // Adjust mechanism of P components
-//    if(Value_sign(PoutL)*PoutL > LimitDelta_KPL) {
-//      PoutL = Value_sign(PoutL)*LimitDelta_KPL;
-//      pidL.Err = PoutL/pidL.Kp+pidL.Err_p;
-//    }
     // I
     IoutL = (pidL.Kp*pidL.Tcontrol)/pidL.Ti;
     IoutL = IoutL*pidL.Err*0;
@@ -874,12 +923,17 @@ void Control(uint8_t ContMode) {
     DoutL = DoutL*dk2L;
     // calculate the delta value of this time
     pidL.Delta_Ta = (PoutL+IoutL+DoutL)+deltaFricComL;
+    
     /* set limitation of sudden variation of control output */
     // If pidL.Delta_Ta = (PoutL+IoutL+DoutL)+deltaFricComL, then total limited for PID and friction simutenuosly
     if((Value_sign(pidL.Delta_Ta)*pidL.Delta_Ta) >= LimitDelta_TaL) {
       pidL.Delta_Ta = LimitDelta_TaL*Value_sign(pidL.Delta_Ta);
+//      // Adjust mechanism of P components
+//      PoutL = (pidL.Delta_Ta - (IoutL+DoutL+deltaFricComL));
+//      pidL.Err_Pout = PoutL/pidL.Kp+pidL.Err_Pout_p;
     }
     pidL.currTa += pidL.Delta_Ta;
+    
     /* set limitation of total controller output */
     // Small torque cannnot extend cable due to friendly friction
     if(pidL.currTa < 0 && pidL.currT < 2) {pidL.currTa = 0;}
@@ -913,19 +967,16 @@ void Control(uint8_t ContMode) {
     //update the error
     pidL.Err_pp = pidL.Err_p;
     pidL.Err_p = pidL.Err;
+    pidL.Err_Pout_p = pidL.Err_Pout;
 
     /************************ PID control for right motor *************************/
     pidR.set = desiredTorqueR;
     pidR.currT = Feedback_TdR;                // get current toruqe feedback
     pidR.Err = pidR.set - pidR.currT;         // calculate the error of this time
+    pidR.Err_Pout = pidR.Err;                 // calculate the error of this time for Pout
     // P
-    dk1R = pidR.Err - pidR.Err_p;
+    dk1R = pidR.Err_Pout - pidR.Err_Pout_p;
     PoutR = pidR.Kp*dk1R;
-//    // Adjust mechanism of P components
-//    if(Value_sign(PoutR)*PoutR > LimitDelta_KPR) {
-//      PoutR = Value_sign(PoutR)*LimitDelta_KPR;
-//      pidR.Err = PoutR/pidR.Kp+pidR.Err_p;
-//    }
     // I
     IoutR = (pidR.Kp*pidR.Tcontrol)/pidR.Ti;
     IoutR = IoutR*pidR.Err*0;
@@ -935,12 +986,17 @@ void Control(uint8_t ContMode) {
     DoutR = DoutR*dk2R;
     // calculate the delta value of this time
     pidR.Delta_Ta = (PoutR+IoutR+DoutR)+deltaFricComR;
+    
     /* set limitation of sudden variation of control output */
     // If pidR.Delta_Ta = (PoutR+IoutR+DoutR)+deltaFricComR, then total limited for PID and friction simutenuosly
     if((Value_sign(pidR.Delta_Ta)*pidR.Delta_Ta) >= LimitDelta_TaR) {
       pidR.Delta_Ta = LimitDelta_TaR*Value_sign(pidR.Delta_Ta);
+//      // Adjust mechanism of P components
+//      PoutR = (pidR.Delta_Ta - (IoutR+DoutR+deltaFricComR));
+//      pidR.Err_Pout = PoutR/pidR.Kp+pidR.Err_Pout_p;
     }
     pidR.currTa += pidR.Delta_Ta;
+    
     /* set limitation of total controller output */
     // Small torque cannnot extend cable due to friendly friction
     if(pidR.currTa < 0 && pidR.currT < 2) {pidR.currTa = 0;}
@@ -974,6 +1030,7 @@ void Control(uint8_t ContMode) {
     //update the error
     pidR.Err_pp = pidR.Err_p;
     pidR.Err_p = pidR.Err;
+    pidR.Err_Pout_p = pidR.Err_Pout;
   }
 
   // Open-loop control
@@ -1002,6 +1059,14 @@ void Control(uint8_t ContMode) {
     PWM_commandR = PWMLowerBound*PWMperiod_R;
   }
   MotorPWMoutput(PWM_commandL,PWM_commandR);        
+
+  /* Update previous reference torque related states */
+  PredesiredTorqueL = desiredTorqueL;
+  PredesiredTorqueR = desiredTorqueR;
+  PredesiredTorqueLDot = desiredTorqueLDot;
+  PredesiredTorqueRDot = desiredTorqueRDot;
+  PredesiredTorqueLDDot = desiredTorqueLDDot;
+  PredesiredTorqueRDDot = desiredTorqueRDDot;
 }
 
 /**

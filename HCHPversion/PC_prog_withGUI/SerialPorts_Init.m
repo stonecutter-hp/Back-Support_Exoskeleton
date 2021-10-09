@@ -79,8 +79,12 @@ end
 
 if flag
     %% Notice that the initial command send to low-level controller during
-    % handshake process indicates that mode = 1 and side = 0
-    TransState = "TL0000TR0000M10";
+    % handshake process indicates that mode = 1 following the initial setting of MotionMode
+    % flush(McuSerial,"input");
+    TransState = 'TL0000TR0000';
+    MotionMode = ExoP.MotionMode(end,:);
+    TransState = [TransState,'M',num2str(MotionMode(2)-1),num2str(MotionMode(3))];
+    TransState = string(TransState);
     writeline(McuSerial,TransState);  % send the data
     outPutStatus(TempApp,'Sucessful Handshake.');
     TempApp.txtMode.Value = ['Last State: Exit',10,'Curr State: Exit',10,'Cycels: 0'];

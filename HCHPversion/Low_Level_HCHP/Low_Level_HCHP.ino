@@ -104,9 +104,12 @@ void loop() {
   if(Control_update) {
     // yawAngleR20(LogicInit, OperaitonAloIMUC);  // Here inside operation is for IMUC address
     sensorFeedbackPro();       // processing sensor feedback for closed-loop control 
-    // enable frictionCompensation according to side indicator
-    if(side >= FricCompFlag) {frictionCompenCL();}
-    Control(1);                // calculate controlled command: PWM duty cycles
+    // no control for StopState and ExitState
+    if(mode != StopState && mode != ExitState) {
+      // enable frictionCompensation according to side indicator
+      if(side >= FricCompFlag) {frictionCompenCL();}
+      Control(1);                // calculate controlled command: PWM duty cycles
+    }
     Control_update = false;
   }
   if(SendPC_update) {

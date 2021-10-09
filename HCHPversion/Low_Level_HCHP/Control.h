@@ -25,6 +25,10 @@ typedef struct
   float Err;    //error
   float Err_p;  // last time error
   float Err_pp; // last last time error
+
+  // The error used for Pout to avoid delta_limitation effect of incremental type PD Control
+  float Err_Pout;   // error
+  float Err_Pout_p; // last time error  
   
   float Kp;       // Propotional coefficient
   float Ti;       // Time constant of integration part
@@ -70,8 +74,47 @@ extern bool Control_update;    // control update flag
 #define PWMUpperBound 0.75    // Upper bound of the PWM cycle duty
 #define PWMLowerBound 0.12    // Lower bound of the PWM cycle duty
 #define LimitInput 25         // Limitation of input command, here for open-loop is Ta, for closed loop is Td
+
 // FOR OPEN-LOOP TESTING ONLY, COMPACTED TO HIGH-LEVEL CONTROL ALREADY
 #define ThreSupportVel 500    // deg/s, threshold for failure torque transmission. 
+
+/* Parameters for reference command related compensation */
+extern float lastTrRelateComL;     
+extern float TrRelateComL;         // Reference torque related compensation term of left CSEA system
+extern float deltaTrRelatedComL;
+extern float lastTrRelateComR;     
+extern float TrRelateComR;         // Reference torque related compensation term of right CSEA system
+extern float deltaTrRelatedComR;
+extern float PredesiredTorqueL; // previous desired assistive torque of left torque transmission system
+extern float PredesiredTorqueR; // previous desired assistive torque of right torque transmission system
+extern float desiredTorqueLDot; // variation rate of desired assistive torque of left torque transmission system
+extern float desiredTorqueRDot; // variation rate of desired assistive torque of right torque transmission system
+extern float PredesiredTorqueLDot; // previous variation rate of desired assistive torque of left torque transmission system
+extern float PredesiredTorqueRDot; // previous variation rate of desired assistive torque of right torque transmission system
+extern float desiredTorqueLDDot;   // second derivative of desired assistive torque of left torque transmission system
+extern float desiredTorqueRDDot;   // second derivative of desired assistive torque of right torque transmission system
+extern float PredesiredTorqueLDDot;// previous second derivative of desired assistive torque of left torque transmission system
+extern float PredesiredTorqueRDDot;// previous second derivative of desired assistive torque of right torque transmission system
+
+/* Parameters for friction compensation */
+// Consider the friction is not a friend only when Tr is increasing during lifting phase
+#define deltaTr_Thre 2   
+extern unsigned long starttime;
+extern unsigned long stoptime;
+extern unsigned long looptime;
+extern float lastTorqueL;
+extern float deltaFricComL;
+extern float fricCoL;
+extern float fricOffsetL;
+extern float curveAngleL;
+extern float fricCompenTermL; // The friction compensation term
+extern float lastTorqueR;
+extern float deltaFricComR;
+extern float fricCoR;
+extern float fricOffsetR;
+extern float curveAngleR;
+extern float fricCompenTermR; // The friction compensation term
+
 /* Transmission system parameters definition */
 // The output ability of the actuation unit with 19:1 gear ratio is better restricted to 0~8.9 Nm (0.0525*9*19)
 // The following parameter may be adjusted after calibrateds
@@ -113,14 +156,14 @@ extern float HipAngL_InitValue;          // deg, Auxiliary parameter for left hi
 extern float Estimated_TdL;              // Nm, Td feedback of left side from torsion spring
 extern float TdL_InitValue;              // Nm, Auxiliary parameter for left Td
 extern float Estimated_FcL;              // N,  Cable force feedback of left side from load cell
-extern float FcL_InitValue;              // N, Auxiliary parameter for left cable forve
+extern float FcL_InitValue;              // N, Auxiliary parameter for left cable force
 
 extern float HipAngR;                    // deg, Right hip joint angle
 extern float HipAngR_InitValue;          // deg, Auxiliary parameter for right hip joint angle
 extern float Estimated_TdR;              // Nm, Td feedback of right side from torsion spring
 extern float TdR_InitValue;              // Nm, Auxiliary parameter for right Td
 extern float Estimated_FcR;              // N,  Cable force feedback of right side from load cell
-extern float FcR_InitValue;              // N, Auxiliary parameter for right cable forve
+extern float FcR_InitValue;              // N, Auxiliary parameter for right cable force
 
 extern float CableTorqueL;               // Nm, Left torque feedback from cable force 
 extern float CableTorqueR;               // Nm, Right torque feedback from cable force 
@@ -153,25 +196,6 @@ extern float PhaseIndexCo;
 extern float phaseIndexL;                
 // 0~1, 0 for DD and 1 for SEA, operation index of the right actuation system
 extern float phaseIndexR; 
-
-/* Parameters for friction compensation */
-// Consider the friction is not a friend only when Tr is increasing during lifting phase
-#define deltaTr_Thre 2   
-extern unsigned long starttime;
-extern unsigned long stoptime;
-extern unsigned long looptime;
-extern float lastTorqueL;
-extern float deltaFricComL;
-extern float fricCoL;
-extern float fricOffsetL;
-extern float curveAngleL;
-extern float fricCompenTermL; // The friction compensation term
-extern float lastTorqueR;
-extern float deltaFricComR;
-extern float fricCoR;
-extern float fricOffsetR;
-extern float curveAngleR;
-extern float fricCompenTermR; // The friction compensation term
 
 /**
  * Control parameter initialization for Low-level controller
@@ -267,6 +291,14 @@ void sensorFeedbackPro(void);
  * Torque feedback and phase index processing for multi operation status control 
  */
 void multiFeedbackPro(void);
+
+/**
+ * Low-pass filter 
+ * @param float - cut off frequency of the low-pass filter
+ * @param float - sampling rate
+ * @return float - coefficient of the filter 
+ */
+float lowPassFilter(float cutFre, float samplRate);
 
 /**
  * ATTENTION: THIS FUNCTION IS SET FOR OPEN-LOOP CONTROL TEST ONLY, THE FRICTION COMPENSATION

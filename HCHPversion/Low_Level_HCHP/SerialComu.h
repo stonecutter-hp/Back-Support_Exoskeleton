@@ -22,14 +22,14 @@ extern bool receiveCompleted;                 // receiving completing flag
 extern bool receiveContinuing;                // receiving continuous flag to avoid the multiple data format in buffer: xx\r\n+xx\r\n+xx...
 extern bool SendPC_update;                    // data sending to PC enable flag
 extern char SwitchFlag;                       // mark if new command have recieved before sending data to PC
+// If the sending info package wants to be adjusted online, the sending buffer should be better defined as a
+// local variable instead of global variable to avoid remaining info when info package is adjusted from long to short
 extern char USART_TX_BUF[USART_TX_LEN];       // sending buffer
 extern int USART_TX_STA;                      // sending number flag
 extern bool SendItemFlag[11];                 // for convinient of adjust feedback item adjust
 /*********************************** Communication receiving data definition **************************/
 extern float desiredTorqueL;    // desired assistive torque of left torque transmission system
 extern float desiredTorqueR;    // desired assistive torque of right torque transmission system
-extern float PredesiredTorqueL; // previous desired assistive torque of left torque transmission system
-extern float PredesiredTorqueR; // previous desired assistive torque of right torque transmission system
 extern uint8_t mode;            // detected motion mode
 extern uint8_t PreMode;         // last time's motion mode
 extern uint8_t side;            // another auxiliary indicator for asymmetric and low-level compensation term from high-level control

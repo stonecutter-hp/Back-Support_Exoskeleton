@@ -19,8 +19,6 @@ bool SendItemFlag[11] = {true, true, true, true, true, true, true, true, true, t
 /*********************************** Communication receiving data definition ************************************/
 float desiredTorqueL;    // desired motor torque of left motor
 float desiredTorqueR;    // desired motor torque of right motor
-float PredesiredTorqueL; // previous desired assistive torque of left torque transmission system
-float PredesiredTorqueR; // previous desired assistive torque of right torque transmission system
 uint8_t mode;            // detected motion mode
 uint8_t PreMode;         // last time's motion mode
 uint8_t side;            // another auxiliary indicator for asymmetric and low-level compensation term from high-level control
@@ -99,8 +97,6 @@ void receivedDataPro(void) {
   if(receiveCompleted && USART_RX_STA == RevievCharNum) {
     // Check if the character is correct
     if(USART_RX_BUF[0] == 'T' && USART_RX_BUF[1] == 'L') {
-      // Update previous reference torque
-      PredesiredTorqueL = desiredTorqueL;
       // Calculate reference torque for left system
       desiredTorqueL = (USART_RX_BUF[2]-48)*10+(USART_RX_BUF[3]-48)*1+(USART_RX_BUF[4]-48)*0.1+(USART_RX_BUF[5]-48)*0.01;
       // Check and limit the reasonable torque range 0~LimitInput
@@ -111,9 +107,7 @@ void receivedDataPro(void) {
         desiredTorqueL = 0;
       } 
     }
-    if(USART_RX_BUF[6] == 'T' && USART_RX_BUF[7] == 'R') {
-      // Update previous reference torque
-      PredesiredTorqueR = desiredTorqueR;      
+    if(USART_RX_BUF[6] == 'T' && USART_RX_BUF[7] == 'R') {     
       // Calculate reference torque for right system
       desiredTorqueR = (USART_RX_BUF[8]-48)*10+(USART_RX_BUF[9]-48)*1+(USART_RX_BUF[10]-48)*0.1+(USART_RX_BUF[11]-48)*0.01;
       // Check and limit the reasonable torque range 0~LimitInput
