@@ -155,15 +155,19 @@ extern float HipAngL;                    // deg, Left hip joint angle
 extern float HipAngL_InitValue;          // deg, Auxiliary parameter for left hip joint angle
 extern float Estimated_TdL;              // Nm, Td feedback of left side from torsion spring
 extern float TdL_InitValue;              // Nm, Auxiliary parameter for left Td
-extern float Estimated_FcL;              // N,  Cable force feedback of left side from load cell
+extern float Estimated_FcL;              // N, Cable force feedback of left side from load cell
 extern float FcL_InitValue;              // N, Auxiliary parameter for left cable force
+extern float MotorCurrentL;              // A, Current feedback of motor L
+extern float MotorVelocityL;             // rpm, Velocity feedback of motor L
 
 extern float HipAngR;                    // deg, Right hip joint angle
 extern float HipAngR_InitValue;          // deg, Auxiliary parameter for right hip joint angle
 extern float Estimated_TdR;              // Nm, Td feedback of right side from torsion spring
 extern float TdR_InitValue;              // Nm, Auxiliary parameter for right Td
-extern float Estimated_FcR;              // N,  Cable force feedback of right side from load cell
+extern float Estimated_FcR;              // N, Cable force feedback of right side from load cell
 extern float FcR_InitValue;              // N, Auxiliary parameter for right cable force
+extern float MotorCurrentR;              // A, Current feedback of motor R
+extern float MotorVelocityR;             // rpm, Velocity feedback of motor R
 
 extern float CableTorqueL;               // Nm, Left torque feedback from cable force 
 extern float CableTorqueR;               // Nm, Right torque feedback from cable force 

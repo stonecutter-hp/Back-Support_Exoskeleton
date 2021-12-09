@@ -54,15 +54,19 @@ float HipAngL;                    // deg, Left hip joint angle
 float HipAngL_InitValue;          // deg, Auxiliary parameter for left hip joint angle
 float Estimated_TdL;              // Nm, Td feedback of left side from torsion spring
 float TdL_InitValue;              // Nm, Auxiliary parameter for left Td
-float Estimated_FcL;              // N,  Cable force feedback of left side from load cell
-float FcL_InitValue;              // N, Auxiliary parameter for left cable forve
+float Estimated_FcL;              // N, Cable force feedback of left side from load cell
+float FcL_InitValue;              // N, Auxiliary parameter for left cable force
+float MotorCurrentL;              // A, Current feedback of motor L
+float MotorVelocityL;             // rpm, Velocity feedback of motor L
 
 float HipAngR;                    // deg, Right hip joint angle
 float HipAngR_InitValue;          // deg, Auxiliary parameter for right hip joint angle
 float Estimated_TdR;              // Nm, Td feedback of right side from torsion spring
 float TdR_InitValue;              // Nm, Auxiliary parameter for right Td
-float Estimated_FcR;              // N,  Cable force feedback of right side from load cell
-float FcR_InitValue;              // N, Auxiliary parameter for right cable forve
+float Estimated_FcR;              // N, Cable force feedback of right side from load cell
+float FcR_InitValue;              // N, Auxiliary parameter for right cable force
+float MotorCurrentR;              // A, Current feedback of motor R
+float MotorVelocityR;             // rpm, Velocity feedback of motor R
 
 float CableTorqueL;               // Nm, Left torque feedback from cable force 
 float CableTorqueR;               // Nm, Right torque feedback from cable force
@@ -206,6 +210,8 @@ void ControlAux_Init() {
   TdL_InitValue = 0;
   Estimated_FcL = 0;
   FcL_InitValue = 0;
+  MotorCurrentL = 0;
+  MotorVelocityL = 0;
 
   HipAngR = 0;
   HipAngR_InitValue = 0;
@@ -213,6 +219,8 @@ void ControlAux_Init() {
   TdR_InitValue = 0;
   Estimated_FcR = 0;
   FcR_InitValue = 0;
+  MotorCurrentR = 0;
+  MotorVelocityR = 0;
 
   TrunkYawAng = 0;             // deg, Trunk yaw angle
   TrunkYaw_InitValue = 0;      // deg, Auxiliary parameter for trunk yaw angle
@@ -576,6 +584,14 @@ void sensorFeedbackPro(void) {
   TrunkFleAng = angleActualC[rollChan] - TrunkFleAng_InitValue;
   TrunkFleVel = velActualC[rollChan];
 
+  /* Motor-related state update: including current and velocity feedback */
+//  // if ESCON set 0~4V:-9~9A
+//  MotorCurrentL = (Aver_ADC_value[MotorCurrL]-2)*9/2;
+//  MotorCurrentR = (Aver_ADC_value[MotorCurrR]-2)*9/2;   
+//  // if ESCON set 0~4V:-4000~4000rpm
+//  MotorVelocityL = (Aver_ADC_value[MotorVeloL]-2)*4000/2;
+//  MotorVelocityR = (Aver_ADC_value[MotorVeloR]-2)*4000/2; 
+
   // /* Prevent outlier */
   // if(HipAngL > Last_HipAngL+Delta_HipAng || HipAngL < Last_HipAngL-Delta_HipAng)
   // {HipAngL = Last_HipAngL+Value_sign(HipAngL-Last_HipAngL)*Delta_HipAng;}
@@ -616,10 +632,6 @@ void sensorFeedbackPro(void) {
   Feedback_TdR = Estimated_TdR;  
   // The following function should be comment out if only SEA status is considered 
   // multiFeedbackPro();
-
-  // Aver_ADC_value[MotorCurrL] = (Aver_ADC_value[MotorCurrL]-2)*9/2;    // when ESCON set 0~4V:-9~9A
-  // Aver_ADC_value[MotorVeloL] = (Aver_ADC_value[MotorVeloL]-2)*4000/2; // when ESCON set 0~4V:-4000~4000rpm
-
 
 }
 

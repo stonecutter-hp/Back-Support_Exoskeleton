@@ -13,8 +13,8 @@ bool SendPC_update = true;            // data sending to PC enable flag
 char SwitchFlag = '0';                // mark if new command have recieved before sending data to PC
 char USART_TX_BUF[USART_TX_LEN];      // sending buffer
 int USART_TX_STA = 0;                 // sending number flag
-// MxTLxxxxLLxxxxALxxxxxTRxxxxLRxxxxARxxxxxPxxxxxYxxxxxVxxxxxCLxxxxCRxxxx\r\n
-bool SendItemFlag[11] = {true, true, true, true, true, true, true, true, true, true, true};
+// MxTLxxxxLLxxxxALxxxxxTRxxxxLRxxxxARxxxxxPxxxxxYxxxxxVxxxxxCLxxxxCRxxxxcLxxxxcRxxxxvLxxxxxvRxxxxx\r\n
+bool SendItemFlag[15] = {true, true, true, true, true, true, true, true, true, true, true, false, false, false, false};
 
 /*********************************** Communication receiving data definition ************************************/
 float desiredTorqueL;    // desired motor torque of left motor
@@ -138,19 +138,20 @@ void receivedDataPro(void) {
 }
 
 /**
- * @ MCU to PC protocol: MxTLxxxxLLxxxxALxxxxxTRxxxxLRxxxxARxxxxxPxxxxxYxxxxxVxxxxxCLxxxxCRxxxx\r\n
+ * @ MCU to PC protocol: MxTLxxxxLLxxxxALxxxxxTRxxxxLRxxxxARxxxxxPxxxxxYxxxxxVxxxxxCLxxxxCRxxxxcLxxxxcRxxxxvLxxxxxvRxxxxx\r\n
  * TL/Rxxxx: (Nm) Torque feedback for left/right transmission system 
  * LL/Rxxxx: (N) Load cell feedback for cable force of left/right transmission system
  * AL/Rxxxxx: (deg) Potentiometer feedback for hip angle feedback
  *                  first number indicate sign: 0 for -, 1 for +
  * Pxxxxx: (deg) Pitch angle for trunk
- *               first number indicate sign: 0 for -, 1 for +
  * Yxxxxx: (deg) yaw angle for trunk
  *               first number indicate sign: 0 for -, 1 for + 
  * Vxxxxx: (deg/s) Pitch angular velocity for trunk
  *                 first number indicate sign: 0 for -, 1 for +
  * CL/Rxxxx: PWM Cycle Duty
  *           first number indicate sign: 0 for -(loosening cable), 1 for +(tighting cable)
+ * cL/Rxxxx: (A) Motor Current Feedback from Driver
+ * vL/Rxxxxx: (rpm) Motor Velocity Feedback from Driver
  * Mx: Marking flag to show if the MCU data is real-time with successful receiving last command from PC
  * Notice: The last two are terminator for PC receiveing '\r\n'
  */
@@ -328,6 +329,78 @@ void sendDatatoPC(void) {
       USART_TX_BUF[position++] = inter+48;
     }
   }
+  // cLxxxx
+  if(SendItemFlag[11] == true) {
+    USART_TX_BUF[position++] = 'c';
+    USART_TX_BUF[position++] = 'L';     
+    // ±x.xx
+    SignMark = Value_sign(MotorCurrentL);
+    if(SignMark == PosSign) {
+      USART_TX_BUF[position++] = PosSign+48;
+    }
+    else {
+      USART_TX_BUF[position++] = NegSign+48;
+    }
+    dec = SignMark*MotorCurrentL*Calcu_Pow(10,2);
+    for(int t=0; t<3; t++) {
+      inter = (dec/Calcu_Pow(10,2-t))%10;
+      USART_TX_BUF[position++] = inter+48;
+    }
+  }
+  // cRxxxx
+  if(SendItemFlag[12] == true) {
+    USART_TX_BUF[position++] = 'c';
+    USART_TX_BUF[position++] = 'R';     
+    // ±x.xx
+    SignMark = Value_sign(MotorCurrentR);
+    if(SignMark == PosSign) {
+      USART_TX_BUF[position++] = PosSign+48;
+    }
+    else {
+      USART_TX_BUF[position++] = NegSign+48;
+    }
+    dec = SignMark*MotorCurrentR*Calcu_Pow(10,2);
+    for(int t=0; t<3; t++) {
+      inter = (dec/Calcu_Pow(10,2-t))%10;
+      USART_TX_BUF[position++] = inter+48;
+    }
+  }    
+  // vLxxxxx
+  if(SendItemFlag[13] == true) {
+    USART_TX_BUF[position++] = 'v';
+    USART_TX_BUF[position++] = 'L';     
+    // ±xxxx
+    SignMark = Value_sign(MotorVelocityL);
+    if(SignMark == PosSign) {
+      USART_TX_BUF[position++] = PosSign+48;
+    }
+    else {
+      USART_TX_BUF[position++] = NegSign+48;
+    }
+    dec = SignMark*MotorVelocityL;
+    for(int t=0; t<4; t++) {
+      inter = (dec/Calcu_Pow(10,3-t))%10;
+      USART_TX_BUF[position++] = inter+48;
+    }
+  }  
+  // vRxxxxx
+  if(SendItemFlag[14] == true) {
+    USART_TX_BUF[position++] = 'v';
+    USART_TX_BUF[position++] = 'R';     
+    // ±xxxx
+    SignMark = Value_sign(MotorVelocityR);
+    if(SignMark == PosSign) {
+      USART_TX_BUF[position++] = PosSign+48;
+    }
+    else {
+      USART_TX_BUF[position++] = NegSign+48;
+    }
+    dec = SignMark*MotorVelocityR;
+    for(int t=0; t<4; t++) {
+      inter = (dec/Calcu_Pow(10,3-t))%10;
+      USART_TX_BUF[position++] = inter+48;
+    }
+  } 
 
   Serial.println(USART_TX_BUF); // Speed up frequency
 

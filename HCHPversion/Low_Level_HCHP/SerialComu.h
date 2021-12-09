@@ -26,7 +26,7 @@ extern char SwitchFlag;                       // mark if new command have reciev
 // local variable instead of global variable to avoid remaining info when info package is adjusted from long to short
 extern char USART_TX_BUF[USART_TX_LEN];       // sending buffer
 extern int USART_TX_STA;                      // sending number flag
-extern bool SendItemFlag[11];                 // for convinient of adjust feedback item adjust
+extern bool SendItemFlag[15];                 // for convinient of adjust feedback item adjust
 /*********************************** Communication receiving data definition **************************/
 extern float desiredTorqueL;    // desired assistive torque of left torque transmission system
 extern float desiredTorqueR;    // desired assistive torque of right torque transmission system
@@ -77,19 +77,20 @@ void receiveDatafromPC(void);
 void receivedDataPro(void);
 
 /**
- * @ MCU to PC protocol: MxTLxxxxLLxxxxALxxxxxTRxxxxLRxxxxARxxxxxPxxxxxYxxxxxVxxxxxCLxxxxCRxxxx\r\n
+ * @ MCU to PC protocol: MxTLxxxxLLxxxxALxxxxxTRxxxxLRxxxxARxxxxxPxxxxxYxxxxxVxxxxxCLxxxxCRxxxxcLxxxxcRxxxxvLxxxxxvRxxxxx\r\n
  * TL/Rxxxx: (Nm) Torque feedback for left/right transmission system 
  * LL/Rxxxx: (N) Load cell feedback for cable force of left/right transmission system
  * AL/Rxxxxx: (deg) Potentiometer feedback for hip angle feedback
  *                  first number indicate sign: 0 for -, 1 for +
  * Pxxxxx: (deg) Pitch angle for trunk
- *               first number indicate sign: 0 for -, 1 for +
  * Yxxxxx: (deg) yaw angle for trunk
  *               first number indicate sign: 0 for -, 1 for + 
  * Vxxxxx: (deg/s) Pitch angular velocity for trunk
  *                 first number indicate sign: 0 for -, 1 for +
  * CL/Rxxxx: PWM Cycle Duty
  *           first number indicate sign: 0 for -(loosening cable), 1 for +(tighting cable)
+ * cL/Rxxxx: (A) Motor Current Feedback from Driver
+ * vL/Rxxxxx: (rpm) Motor Velocity Feedback from Driver
  * Mx: Marking flag to show if the MCU data is real-time with successful receiving last command from PC
  * Notice: The last two are terminator for PC receiveing '\r\n'
  */
