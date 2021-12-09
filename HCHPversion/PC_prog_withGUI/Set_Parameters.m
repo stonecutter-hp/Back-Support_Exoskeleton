@@ -46,8 +46,8 @@ P.fricEnable = 0;
 % info ON and 0 for item info OFF
 % The order of item corresponds to each marker follows communication
 % protocol of MCU2PC:
-%          MxTLxxxxLLxxxxALxxxxxTRxxxxLRxxxxARxxxxxPxxxxxYxxxxxVxxxxxCLxxxxCRxxxx\r\n 
-P.RecItem = [1,    1,    1,     1,    1,    1,     1,    1,    1,    1,    1];
+%          MxTLxxxxLLxxxxALxxxxxTRxxxxLRxxxxARxxxxxPxxxxxYxxxxxVxxxxxCLxxxxCRxxxxcLxxxxcRxxxxvLxxxxxvRxxxxx\r\n 
+P.RecItem = [1,    1,    1,     1,    1,    1,     1,    1,    1,    1,    1,    0,    0,    0,     0];
 P.torqueTL = [];    % torque feedback of left torsion spring
 P.forceLL = [];     % left cable force feedback
 P.angleAL = [];     % angle of left hip
@@ -58,6 +58,12 @@ P.angleP = [];      % pitch angle of turnk bending motion
 P.angleY = [];      % yaw angle of trunk bending motion
 P.PWM_L = [];       % left motor PWM command
 P.PWM_R = [];       % right motor PWM command
+P.CurrL = [];       % (A) left motor current
+P.CurrR = [];       % (A) right motor current
+P.MotorVelL = [];   % (rpm) left motor velocity
+P.MotorVelR = [];   % (rpm) right motor velocity
+
+
 % Can be obtained directly from IMU, can also be calculated on PC or on MCU
 P.adotPV = [];      % angular velocity of trunk motion in pitch direction from MCU
 % Calculated from sensor feedback

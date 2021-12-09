@@ -19,21 +19,22 @@ end
 
 %% Decompose the data from MCU from characters to numbers
 % Here the specific form for recieved data is designed as: 
-% MxTLxxxxLLxxxxALxxxxxTRxxxxLRxxxxARxxxxxPxxxxxYxxxxxVxxxxxCLxxxxCRxxxx\r\n
-% Mx: Marking flag to show if the MCU data is real-time with successful 
-%     receiving last command from PC
-% TL/Rxxxx: (Nm) Torsion spring torque for left/right transmission system 
-% LL/Rxxxx: (N) Load cell for cable force of left/right transmission system
-% AL/Rxxxxx: (deg) Potentiometer feedback for hip angle
-%            first number indicate sign: 0 for -, 1 for +
+% MxTLxxxxLLxxxxALxxxxxTRxxxxLRxxxxARxxxxxPxxxxxYxxxxxVxxxxxCLxxxxCRxxxxcLxxxxcRxxxxvLxxxxxvRxxxxx\r\n
+% TL/Rxxxx: (Nm) Torque feedback for left/right transmission system 
+% LL/Rxxxx: (N) Load cell feedback for cable force of left/right transmission system
+% AL/Rxxxxx: (deg) Potentiometer feedback for hip angle feedback
+%                  first number indicate sign: 0 for -, 1 for +
 % Pxxxxx: (deg) Pitch angle for trunk
-%               first number indicate sign: 0 for -, 1 for +
-% Yxxxxx: (deg) Yaw angle for trunk
-%               first number indicate sign: 0 for -, 1 for +
+% Yxxxxx: (deg) yaw angle for trunk
+%               first number indicate sign: 0 for -, 1 for + 
 % Vxxxxx: (deg/s) Pitch angular velocity for trunk
 %                 first number indicate sign: 0 for -, 1 for +
 % CL/Rxxxx: PWM Cycle Duty
 %           first number indicate sign: 0 for -(loosening cable), 1 for +(tighting cable)
+% cL/Rxxxx: (A) Motor Current Feedback from Driver
+% vL/Rxxxxx: (rpm) Motor Velocity Feedback from Driver
+% Mx: Marking flag to show if the MCU data is real-time with successful receiving last command from PC
+% Notice: The last two are terminator for PC receiveing '\r\n'
 
 position = 3;
 flag = true;
@@ -240,10 +241,78 @@ if(Control_Update && flag)
             Send_Update = 0;
             flag = false;
         end
+        position = position+6;
     else
         TransPWMR = 0;
     end
-
+    %cLxxxx
+    if(ExoP.RecItem(12) == 1 && flag)
+        if(TransState(position) == 'c' && TransState(position+1) == 'L')
+            TransCurrL = (TransState(position+3)-48)*1+(TransState(position+4)-48)*0.1+...
+                        (TransState(position+5)-48)*0.01;
+            if(TransState(position+2) == '0')
+                TransCurrL = -1*TransCurrL;
+            end
+        else
+            Control_Update = 0;
+            Send_Update = 0;
+            flag = false;
+        end
+        position = position+6;
+    else
+        TransCurrL = 0;
+    end
+    %cRxxxx
+    if(ExoP.RecItem(13) == 1 && flag)
+        if(TransState(position) == 'c' && TransState(position+1) == 'R')
+            TransCurrR = (TransState(position+3)-48)*1+(TransState(position+4)-48)*0.1+...
+                        (TransState(position+5)-48)*0.01;
+            if(TransState(position+2) == '0')
+                TransCurrR = -1*TransCurrR;
+            end
+        else
+            Control_Update = 0;
+            Send_Update = 0;
+            flag = false;
+        end
+        position = position+6;
+    else
+        TransCurrR = 0;
+    end
+    %vLxxxxx
+    if(ExoP.RecItem(14) == 1 && flag)
+        if(TransState(position) == 'v' && TransState(position+1) == 'L')
+            TransMotorVelL = (TransState(position+3)-48)*1000+(TransState(position+4)-48)*100+...
+                             (TransState(position+5)-48)*10+(TransState(position+6)-48)*1;
+            if(TransState(position+2) == '0')
+                TransMotorVelL = -1*TransMotorVelL;
+            end
+        else
+            Control_Update = 0;
+            Send_Update = 0;
+            flag = false;
+        end
+        position = position+7;
+    else
+        TransMotorVelL = 0;
+    end  
+    %vRxxxxx
+    if(ExoP.RecItem(15) == 1 && flag)
+        if(TransState(position) == 'v' && TransState(position+1) == 'R')
+            TransMotorVelR = (TransState(position+3)-48)*1000+(TransState(position+4)-48)*100+...
+                             (TransState(position+5)-48)*10+(TransState(position+6)-48)*1;
+            if(TransState(position+2) == '0')
+                TransMotorVelR = -1*TransMotorVelR;
+            end
+        else
+            Control_Update = 0;
+            Send_Update = 0;
+            flag = false;
+        end
+    else
+        TransMotorVelR = 0;
+    end
+    
 end
 
 if flag
@@ -259,6 +328,10 @@ if flag
     ExoP.adotPV = [ExoP.adotPV; TransVeloV];
     ExoP.PWM_L = [ExoP.PWM_L; TransPWML];
     ExoP.PWM_R = [ExoP.PWM_R; TransPWMR];
+    ExoP.CurrL = [ExoP.CurrL; TransCurrL];       % (A) left motor current
+    ExoP.CurrR = [ExoP.CurrR; TransCurrR];       % (A) right motor current
+    ExoP.MotorVelL = [ExoP.MotorVelL; TransMotorVelL];   % (rpm) left motor velocity
+    ExoP.MotorVelR = [ExoP.MotorVelR; TransMotorVelR];   % (rpm) right motor velocity
     % JUST NEEDED FOR SOME STRATEGY: Other info from calculaion
     if size(ExoP.adotPV,1) == 1 % Fisrt cycle
         Trans_tdotTL = 0;
