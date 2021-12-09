@@ -64,16 +64,16 @@ if flag
     flush(McuSerial,"input");
     pause(5/1000);
     tic
-    while ~strcmp(Transtate,ExoP.ReadyFlag)
+    while flag && ~strcmp(Transtate,ExoP.ReadyFlag)
         Transtate = char(readline(McuSerial));
         TempApp.txtInfo.Value = Transtate;
-        if(toc > 30)
+        if(toc > 30 || ExoP.stopButton == 1)
             ExoP.stopFlag = 3;
             delete(McuSerial);
             clear McuSerial;
             stopStateDis();
             flag = false;
-        end
+        end            
     end
 end
 
