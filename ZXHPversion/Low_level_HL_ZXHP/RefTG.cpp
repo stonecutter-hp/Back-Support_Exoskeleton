@@ -40,6 +40,10 @@ void HL_ReferTorqueGenerate(uint8_t RTGMode) {
   float InterTorque;
   InterTorque = 0.0;
 
+  // Update last time's reference torque command
+  PredesiredTorqueL = desiredTorqueL;
+  PredesiredTorqueR = desiredTorqueR;
+
   // User reference torque generation strategy v1 (Referring to the 'Thoughts Keeping notbook')
   if(RTGMode == 1) {
     if(mode == Standing) {
@@ -106,9 +110,6 @@ void HL_ReferTorqueGenerate(uint8_t RTGMode) {
     desiredTorqueR = 0;
   }  
   
-  // Update last time's reference torque command
-  PredesiredTorqueL = desiredTorqueL;
-  PredesiredTorqueR = desiredTorqueR;
 }
 
 /**

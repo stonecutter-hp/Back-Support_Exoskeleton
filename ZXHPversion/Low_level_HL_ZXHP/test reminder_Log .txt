@@ -10,6 +10,6 @@ SendingPC feedback accuracy confirmation  √
 Enum data assignment   √
 
 
-
-Testing Log:
-
+20210323
+Notice
+   The ID gain of PID controller are set under the intrinsic assumption of Tcontrol = 1s instead of real control period for de/dt = (e(k) - e(k-1))/Tcontrol
