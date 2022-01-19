@@ -45,7 +45,7 @@ void ADC_Init(void) {
   AD7173.set_channel_config(CH5, false, SETUP0, AIN5, REF_NEG);    //MotorVeloL
   AD7173.set_channel_config(CH6, false, SETUP0, AIN6, REF_NEG);    //MotorCurrL
   AD7173.set_channel_config(CH7, false, SETUP0, AIN7, REF_NEG);    //MotorVeloR
-  AD7173.set_channel_config(CH8, false, SETUP0, AIN8, REF_NEG);    //MotorCurrL
+  AD7173.set_channel_config(CH8, false, SETUP0, AIN8, REF_NEG);    //MotorCurrR
   AD7173.set_channel_config(CH9, false, SETUP0, AIN9, REF_NEG);
   AD7173.set_channel_config(CH10, true, SETUP0, AIN10, REF_NEG);   //left torsion spring potentiometer
   AD7173.set_channel_config(CH11, true, SETUP0, AIN11, REF_NEG);   //left hip angle
@@ -122,10 +122,10 @@ void MovingAverageFilter(int channel, int cycles) {
   // get this times filtered results
   Aver_ADC_value[channel] = Aver_ADC_value_Prev[channel] + (Aver_ADC_value[channel] - Aver_ADC_value_unfiltered[channel][FilterCycles-cycles])/cycles;
   // update the data in the moving window
-  for(int j=0; j<cycles-1; j++) {
+  for(int j=0; j<FilterCycles-1; j++) {
     Aver_ADC_value_unfiltered[channel][j] = Aver_ADC_value_unfiltered[channel][j+1];
   }
-  Aver_ADC_value_unfiltered[channel][cycles-1] = interValue;
+  Aver_ADC_value_unfiltered[channel][FilterCycles-1] = interValue;
   // store this time's results for next calculation
   Aver_ADC_value_Prev[channel] = Aver_ADC_value[channel];
 }
