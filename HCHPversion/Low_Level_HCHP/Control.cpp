@@ -122,6 +122,7 @@ void Control_Init() {
   pidL.pwm_cycle = PWMperiod_L;
   pidL.currpwm = pidL.pwm_cycle*(pidL.currCurrent*0.8/MotorMaximumCurrent+0.1);     
   pidL.Tcontrol = TIM3_OverflowValue;  // corresopnding to timer3, unit:us while prescale coefficient = 72
+  pidL.ResDelta_Ta = 0;                // Residual delta control output
   pidL.Kp = KP_L;                      // should be adjusted
   pidL.Td = pidL.Tcontrol*KD_L/KP_L;   // should be adjusted, unit:us
   pidL.Ti = pidL.Tcontrol*KP_L/KI_L;   // should be adjusted, unit:us
@@ -129,9 +130,6 @@ void Control_Init() {
   pidL.Err = 0;
   pidL.Err_p = 0;
   pidL.Err_pp = 0;
-  // The error used for Pout to avoid delta_limitation effect of incremental type PD Control
-  pidL.Err_Pout = 0;
-  pidL.Err_Pout_p = 0;
 
   /* Initialize the control parameter of right motor */
   pidR.set = desiredTorqueR;
@@ -140,6 +138,7 @@ void Control_Init() {
   pidR.pwm_cycle = PWMperiod_R;
   pidR.currpwm = pidR.pwm_cycle*(pidR.currCurrent*0.8/MotorMaximumCurrent+0.1);     
   pidR.Tcontrol = TIM3_OverflowValue;  // corresopnding to timer3, unit:us while prescale coefficient = 72
+  pidR.ResDelta_Ta = 0;                // Residual delta control output
   pidR.Kp = KP_R;                      // should be adjusted
   pidR.Td = pidR.Tcontrol*KD_R/KP_R;   // should be adjusted, unit:us
   pidR.Ti = pidR.Tcontrol*KP_R/KI_R;   // should be adjusted, unit:us
@@ -147,9 +146,6 @@ void Control_Init() {
   pidR.Err = 0;
   pidR.Err_p = 0;
   pidR.Err_pp = 0;
-  // The error used for Pout to avoid delta_limitation effect of incremental type PD Control
-  pidR.Err_Pout = 0;
-  pidR.Err_Pout_p = 0;
 
   /* Parameters for friction compensation */
   lastTorqueL = 0;
@@ -922,9 +918,8 @@ void Control(uint8_t ContMode) {
     pidL.set = desiredTorqueL;
     pidL.currT = Feedback_TdL;                 // get current toruqe feedback
     pidL.Err = pidL.set - pidL.currT;          // calculate the error of this time
-    pidL.Err_Pout = pidL.Err;                  // calculate the error of this time for Pout
     // P
-    dk1L = pidL.Err_Pout - pidL.Err_Pout_p;
+    dk1L = pidL.Err - pidL.Err_p;
     PoutL = pidL.Kp*dk1L;
     // I
     IoutL = (pidL.Kp*pidL.Tcontrol)/pidL.Ti;
@@ -934,16 +929,16 @@ void Control(uint8_t ContMode) {
     DoutL = (pidL.Kp*pidL.Td)/pidL.Tcontrol;
     DoutL = DoutL*dk2L;
     // calculate the delta value of this time
+//    pidL.Delta_Ta = (PoutL+IoutL+DoutL)+deltaFricComL+pidL.ResDelta_Ta;   // to avoid delta_limitation effect of incremental type PD Control
     pidL.Delta_Ta = (PoutL+IoutL+DoutL)+deltaFricComL;
     
     /* set limitation of sudden variation of control output */
     // If pidL.Delta_Ta = (PoutL+IoutL+DoutL)+deltaFricComL, then total limited for PID and friction simutenuosly
     if((Value_sign(pidL.Delta_Ta)*pidL.Delta_Ta) >= LimitDelta_TaL) {
+      pidL.ResDelta_Ta = pidL.Delta_Ta - LimitDelta_TaL*Value_sign(pidL.Delta_Ta);
       pidL.Delta_Ta = LimitDelta_TaL*Value_sign(pidL.Delta_Ta);
-//      // Adjust mechanism of P components
-//      PoutL = (pidL.Delta_Ta - (IoutL+DoutL+deltaFricComL));
-//      pidL.Err_Pout = PoutL/pidL.Kp+pidL.Err_Pout_p;
     }
+    else {pidL.ResDelta_Ta = 0;}
     pidL.currTa += pidL.Delta_Ta;
     
     /* set limitation of total controller output */
@@ -979,15 +974,13 @@ void Control(uint8_t ContMode) {
     //update the error
     pidL.Err_pp = pidL.Err_p;
     pidL.Err_p = pidL.Err;
-    pidL.Err_Pout_p = pidL.Err_Pout;
 
     /************************ PID control for right motor *************************/
     pidR.set = desiredTorqueR;
     pidR.currT = Feedback_TdR;                // get current toruqe feedback
     pidR.Err = pidR.set - pidR.currT;         // calculate the error of this time
-    pidR.Err_Pout = pidR.Err;                 // calculate the error of this time for Pout
     // P
-    dk1R = pidR.Err_Pout - pidR.Err_Pout_p;
+    dk1R = pidR.Err - pidR.Err_p;
     PoutR = pidR.Kp*dk1R;
     // I
     IoutR = (pidR.Kp*pidR.Tcontrol)/pidR.Ti;
@@ -997,16 +990,16 @@ void Control(uint8_t ContMode) {
     DoutR = (pidR.Kp*pidR.Td)/pidR.Tcontrol;
     DoutR = DoutR*dk2R;
     // calculate the delta value of this time
+//    pidR.Delta_Ta = (PoutR+IoutR+DoutR)+deltaFricComR+pidR.ResDelta_Ta;   // to avoid delta_limitation effect of incremental type PD Control
     pidR.Delta_Ta = (PoutR+IoutR+DoutR)+deltaFricComR;
     
     /* set limitation of sudden variation of control output */
     // If pidR.Delta_Ta = (PoutR+IoutR+DoutR)+deltaFricComR, then total limited for PID and friction simutenuosly
     if((Value_sign(pidR.Delta_Ta)*pidR.Delta_Ta) >= LimitDelta_TaR) {
+      pidR.ResDelta_Ta = pidR.Delta_Ta - LimitDelta_TaR*Value_sign(pidR.Delta_Ta);
       pidR.Delta_Ta = LimitDelta_TaR*Value_sign(pidR.Delta_Ta);
-//      // Adjust mechanism of P components
-//      PoutR = (pidR.Delta_Ta - (IoutR+DoutR+deltaFricComR));
-//      pidR.Err_Pout = PoutR/pidR.Kp+pidR.Err_Pout_p;
     }
+    else {pidR.ResDelta_Ta = 0;}
     pidR.currTa += pidR.Delta_Ta;
     
     /* set limitation of total controller output */
@@ -1042,7 +1035,6 @@ void Control(uint8_t ContMode) {
     //update the error
     pidR.Err_pp = pidR.Err_p;
     pidR.Err_p = pidR.Err;
-    pidR.Err_Pout_p = pidR.Err_Pout;
   }
 
   // Open-loop control

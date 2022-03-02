@@ -24,11 +24,7 @@ typedef struct
 
   float Err;    //error
   float Err_p;  // last time error
-  float Err_pp; // last last time error
-
-  // The error used for Pout to avoid delta_limitation effect of incremental type PD Control
-  float Err_Pout;   // error
-  float Err_Pout_p; // last time error  
+  float Err_pp; // last last time error 
   
   float Kp;       // Propotional coefficient
   float Ti;       // Time constant of integration part
@@ -36,6 +32,7 @@ typedef struct
   float Tcontrol; // Control period, every Tcontrol MCU update once output command
   
   float Delta_Ta;       // PID control output of actuation torque
+  float ResDelta_Ta;    // Residual delta control output
   float Delta_Current;  // PID control output of corresponding motor current 
   float Delta_PWM;      // Calculation results
   float currpwm;        // Current PWM duty width
