@@ -942,13 +942,25 @@ void Control(uint8_t ContMode) {
     pidL.currTa += pidL.Delta_Ta;
     
     /* set limitation of total controller output */
-    // Small torque cannnot extend cable due to friendly friction
-    if(pidL.currTa < 0 && pidL.currT < 2) {pidL.currTa = 0;}
-    // Prevent unnormal motor input when there is no friction compensation
-    if(pidL.set < 0.9 && pidL.currTa > 0.7) {pidL.currTa = pidL.currTa-0.04;}
     // Bounded control output
     if((Value_sign(pidL.currTa)*pidL.currTa) >= LimitTotal_TaL) {
+      pidL.ResDelta_Ta = pidL.ResDelta_Ta + pidL.currTa - LimitTotal_TaL*Value_sign(pidL.currTa);
       pidL.currTa = LimitTotal_TaL*Value_sign(pidL.currTa);
+    }
+    // Small torque cannnot extend cable due to friendly friction
+    if(pidL.currTa < 0 && pidL.currT < 2) {
+      pidL.currTa = 0;
+      pidL.ResDelta_Ta = 0;
+    }
+    // Prevent unnormal motor input when there is no friction compensation
+    if(pidL.set < 0.9 && pidL.currTa > 0.7) {
+      pidL.currTa = pidL.currTa-0.04;
+      pidL.ResDelta_Ta = 0;
+    }
+    // Restrict reversing
+    if(pidL.currTa < LimitReverse_TaL) {
+      pidL.currTa = LimitReverse_TaL;
+      pidL.ResDelta_Ta = 0;
     }
     // determine motor rotation direction
     if(pidL.currTa >= 0) {
@@ -957,7 +969,6 @@ void Control(uint8_t ContMode) {
     }
     else if(pidL.currTa < 0) {
       PWMSignL = NegSign;
-      if(pidL.currTa < LimitReverse_TaL) {pidL.currTa = LimitReverse_TaL;}
       digitalWrite(MotorRotationL,LOW);
     }
 
@@ -1003,13 +1014,25 @@ void Control(uint8_t ContMode) {
     pidR.currTa += pidR.Delta_Ta;
     
     /* set limitation of total controller output */
-    // Small torque cannnot extend cable due to friendly friction
-    if(pidR.currTa < 0 && pidR.currT < 2) {pidR.currTa = 0;}
-    // Prevent unnormal motor input when there is no friction compensation
-    if(pidR.set < 0.9 && pidR.currTa > 0.7) {pidR.currTa = pidR.currTa-0.04;}
     // Bounded control output
     if((Value_sign(pidR.currTa)*pidR.currTa) >= LimitTotal_TaR) {
+      pidR.ResDelta_Ta = pidR.ResDelta_Ta + pidR.currTa - LimitTotal_TaR*Value_sign(pidR.currTa);
       pidR.currTa = LimitTotal_TaR*Value_sign(pidR.currTa);
+    }
+    // Small torque cannnot extend cable due to friendly friction
+    if(pidR.currTa < 0 && pidR.currT < 2) {
+      pidR.currTa = 0;
+      pidR.ResDelta_Ta = 0;
+    }
+    // Prevent unnormal motor input when there is no friction compensation
+    if(pidR.set < 0.9 && pidR.currTa > 0.7) {
+      pidR.currTa = pidR.currTa-0.04;
+      pidR.ResDelta_Ta = 0;
+    }
+    // Restrict reversing
+    if(pidR.currTa < LimitReverse_TaR) {
+      pidR.currTa = LimitReverse_TaR;
+      pidR.ResDelta_Ta = 0;
     }
     // determine motor rotation direction
     if(pidR.currTa >= 0) {
@@ -1018,7 +1041,6 @@ void Control(uint8_t ContMode) {
     }
     else if(pidR.currTa < 0) {
       PWMSignR = NegSign;
-      if(pidR.currTa < LimitReverse_TaR) {pidR.currTa = LimitReverse_TaR;}
       digitalWrite(MotorRotationR,HIGH);
     }
     

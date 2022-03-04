@@ -3,7 +3,7 @@ function P = HongPengData()
 % Data set refers to the P1C draft
 P.TrunkM = 41;           % unit: kg
 P.ArmM = 5;              % unit: kg
-P.TrunkHalfL = 0.255;    % unit: m
+P.TrunkHalfL = 0.26;     % unit: m
 P.ShoulderHalfL = 0.155; % unit: m
 P.ArmL = 0.24;           % unit: m
 P.Df = 0.05;             % moment arm for flexion spinal force
