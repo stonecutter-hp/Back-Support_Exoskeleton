@@ -12,7 +12,7 @@
 #define MotorCurrentFlagL PB11 //Left Motor Detection Flag
 #define MotorEnableR PB3       //Right Motor Enable pin
 #define MotorRotationR PB4     //Right Motor Rotation Direction pin
-#define MotorCurrentFlagL PB5  //Right Motor Detection Flag
+#define MotorCurrentFlagR PB5  //Right Motor Detection Flag
 #define LED0 PB0               //PB0-green light
 #define LED1 PB1               //PB1-red light
 
