@@ -7,6 +7,8 @@ if UIDMode == 1
 elseif UIDMode == 2
     % P = DevelopedUIDStrategy_Init();
     P = [];
+elseif UIDMode == 0
+    P = BasicUIDStrategy_Init();
 else
     P = [];
 end

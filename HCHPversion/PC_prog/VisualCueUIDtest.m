@@ -1,4 +1,4 @@
-function mode = VisualCueUIDtest()
+function VisualCueUIDtest()
 % This function is to change the Visual Cue according to certain experiment
 % protocol for UID strategy testing
 global ExoP;
@@ -13,14 +13,16 @@ if ExoP.VCClickFlag
             ExoP.VCStatus = ExoP.Lifting;
         case ExoP.Lifting
             ExoP.VCStatus = ExoP.Standing;
-            ExoP.BendCycle = ExoP.BendCycle+1;
+            ExoP.VCCBendCycle = ExoP.VCCBendCycle+1;
         otherwise
             ExoP.VCStatus = ExoP.Standing;
     end
-    mode = [ExoP.StateTrans, ExoP.Exit, ExoP.None+ExoP.fricEnable*ExoP.fricCompen];
     ExoP.VCClickFlag = 0;
+%     mode = [ExoP.StateTrans, ExoP.Exit, ExoP.None+ExoP.asyEnable*ExoP.asyCompen];
+    ExoP.VCClickHis = [ExoP.VCClickHis; 1];
 else
-    mode = [ExoP.NoTrans, ExoP.Exit, ExoP.None+ExoP.fricEnable*ExoP.fricCompen];
+    ExoP.VCClickHis = [ExoP.VCClickHis; 0];
 end
+ExoP.VCCMode = [ExoP.VCCMode;ExoP.VCStatus];
 
 end

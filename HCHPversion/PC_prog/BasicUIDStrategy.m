@@ -75,13 +75,14 @@ mode(1,1:2) = BasicUID_ExitCondition(HipMeanAngle,HipDiffAngle,HipStdAngle,HipSt
 
 %% Conduction basic UID strategy: Asymmetric side classification and friction compensation selection
 % Initial classification of left/right asymmetric. Notice that it also
-% indicates if the friction compensation is enabled or not
+% indicates if the asymmetric compensation is enabled or not to determine
+% if the RTG consider the asymmetric compensation or not
 if sign(Beta) == 0 
-    mode(1,3) = ExoP.None + ExoP.fricEnable*ExoP.fricCompen;        % no aysmmetric
+    mode(1,3) = ExoP.None + ExoP.asyEnable*ExoP.asyCompen;        % no aysmmetric
 elseif sign(Beta) > 0
-    mode(1,3) = ExoP.LeftAsy + ExoP.fricEnable*ExoP.fricCompen;     % left
+    mode(1,3) = ExoP.LeftAsy + ExoP.asyEnable*ExoP.asyCompen;     % left
 else
-    mode(1,3) = ExoP.RightAsy + ExoP.fricEnable*ExoP.fricCompen;    % right
+    mode(1,3) = ExoP.RightAsy + ExoP.asyEnable*ExoP.asyCompen;    % right
 end
 
 %% Processing for certain state transition

@@ -4,9 +4,9 @@ function testHighLevelDis()
 global ExoP;
 global TempApp;
 
-if ExoP.MotionMode(end,1) == ExoP.StateTrans
+if ExoP.VCClickHis(end,1) == 1
    TempApp.txtMode.Value = ['Curr State: ',ExoP.MotionModeDis(ExoP.VCStatus),...
-                            'Cycles: ',num2str(ExoP.BendCycle)];
+                            'Cycles: ',num2str(ExoP.VCCBendCycle)];
 end
 
 end

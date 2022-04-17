@@ -9,11 +9,12 @@ switch ExoP.UIDStrategy
     case 2  % Developed UID Strategy
         % Can be replaced for future developed UID strategy by 
         % mode = DevelopedUIDStrategy();
-        mode = [ExoP.NoTrans, ExoP.Exit, ExoP.None+ExoP.fricEnable*ExoP.fricCompen];      % ONLY FOR INDICATION
+        mode = [ExoP.NoTrans, ExoP.Exit, ExoP.None+ExoP.asyEnable*ExoP.asyCompen];      % ONLY FOR INDICATION
     case 0  % Test mode
-        mode = VisualCueUIDtest();
+        VisualCueUIDtest();
+        mode = BasicUIDStrategy();
     otherwise
-        mode = [ExoP.NoTrans, ExoP.Exit, ExoP.None+ExoP.fricEnable*ExoP.fricCompen];      % ONLY FOR INDICATION       
+        mode = [ExoP.NoTrans, ExoP.Exit, ExoP.None+ExoP.asyEnable*ExoP.asyCompen];      % ONLY FOR INDICATION       
 end
 
 %% Conducting corresponding RTG strategy as selected in GUI
@@ -27,7 +28,8 @@ switch ExoP.RTGStrategy
     case 3  % Velocity-based RTG Strategy
         DesiredTorque = RTGVelBasedStra();
     case 0  % Test Mode
-        DesiredTorque = [0, 0];  % ONLY FOR INDICATION
+%         DesiredTorque = [0, 0];  % ONLY FOR INDICATION
+        DesiredTorque = RTGImpedanceStra(mode);
     otherwise
         DesiredTorque = [0, 0];  % ONLY FOR INDICATION
 end

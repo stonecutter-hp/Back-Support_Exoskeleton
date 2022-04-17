@@ -39,7 +39,7 @@ P.RTGStrategy = 1;
 % Subject selection
 P.SubjectNum = 1;
 % Friction compensation enable flag: 0-disable, 1-enable
-P.fricEnable = 0;   
+P.asyEnable = 0;   
 
 %% For storage of sensor information recieving from MCU
 % RecItem marker which should be the same as MCU config with 1 for item
@@ -47,7 +47,7 @@ P.fricEnable = 0;
 % The order of item corresponds to each marker follows communication
 % protocol of MCU2PC:
 % MxTLxxxxLLxxxxALxxxxxTRxxxxLRxxxxARxxxxxPxxxxxYxxxxxVxxxxxCLxxxxCRxxxxcLxxxxcRxxxxvLxxxxxvRxxxxx\r\n 
-P.RecItem = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0];
+P.RecItem = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1];
 P.torqueTL = [];    % torque feedback of left torsion spring
 P.forceLL = [];     % left cable force feedback
 P.angleAL = [];     % angle of left hip
@@ -85,7 +85,7 @@ P.adotAR = [];      % velocity of right hip
 
 % Total number of char received from MCU, this number should be coincided
 % with the MCU2PC communication protocol (include terminator \r\n)
-P.ReceiveDataNum = 72;   
+P.ReceiveDataNum = 98;   
 % Total number of char send to MCU, this number should be coincided with
 % the PC2MCU communication protocol (exclude terminator \r\n) which is
 % TLxxxxTRxxxxMxx\r\n (0x0D,0x0A)
@@ -148,9 +148,9 @@ P.MotionModeDis = ["Stop","Exit","Standing","Walking","Lowering","Grasping","Lif
 P.None = 0;
 P.LeftAsy = 1;
 P.RightAsy = 2;
-P.fricCompen = 3;
+P.asyCompen = 3;
 % Here there is a initial state assigned as mode = Exit and side = None
-P.MotionMode = [P.NoTrans, P.Exit, P.None+P.fricEnable*P.fricCompen];
+P.MotionMode = [P.NoTrans, P.Exit, P.None+P.asyEnable*P.asyCompen];
 % From raw sensor feedback without any processing like abs()
 P.HipMeanAngle = [];     % (left hip angle + right hip angle)/2
 P.HipDiffAngle = [];     % left hip angle - right hip angle
@@ -191,7 +191,10 @@ P.RTGUpperBound = 30;
 %   0-No click; 1-Clicked
 P.VCClickFlag = 0; 
 % To decide what should be shown for the visual cue
-P.VCStatus = P.Exit;    
-
+P.VCStatus = P.Exit;
+P.VCCBendCycle = 0;
+% Mark down the time point when the VCC button is clicked
+P.VCClickHis = [];
+P.VCCMode = [];
 
 end
