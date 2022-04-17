@@ -19,7 +19,6 @@ double Aver_ADC_value_unfiltered[ENABLED_CH][FilterCycles];
 double Aver_ADC_value_Prev[ENABLED_CH];
 
 
-
 /**
  * ADC initialization for channel mode configuration
  */
@@ -42,10 +41,10 @@ void ADC_Init(void) {
   AD7173.set_channel_config(CH2, false, SETUP0, AIN2, REF_NEG);
   AD7173.set_channel_config(CH3, false, SETUP0, AIN3, REF_NEG);
   AD7173.set_channel_config(CH4, false, SETUP0, AIN4, REF_NEG);
-  AD7173.set_channel_config(CH5, false, SETUP0, AIN5, REF_NEG);    //MotorVeloL
-  AD7173.set_channel_config(CH6, false, SETUP0, AIN6, REF_NEG);    //MotorCurrL
-  AD7173.set_channel_config(CH7, false, SETUP0, AIN7, REF_NEG);    //MotorVeloR
-  AD7173.set_channel_config(CH8, false, SETUP0, AIN8, REF_NEG);    //MotorCurrR
+  AD7173.set_channel_config(CH5, true, SETUP0, AIN5, REF_NEG);    //MotorVeloL
+  AD7173.set_channel_config(CH6, true, SETUP0, AIN6, REF_NEG);    //MotorCurrL
+  AD7173.set_channel_config(CH7, true, SETUP0, AIN7, REF_NEG);    //MotorVeloR
+  AD7173.set_channel_config(CH8, true, SETUP0, AIN8, REF_NEG);    //MotorCurrL
   AD7173.set_channel_config(CH9, false, SETUP0, AIN9, REF_NEG);
   AD7173.set_channel_config(CH10, true, SETUP0, AIN10, REF_NEG);   //left torsion spring potentiometer
   AD7173.set_channel_config(CH11, true, SETUP0, AIN11, REF_NEG);   //left hip angle

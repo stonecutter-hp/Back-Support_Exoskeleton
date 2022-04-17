@@ -53,7 +53,7 @@ extern double IMU_value_Prev[3][3];                     // store last time angle
 /* IMU feedback calibration value definition */
 // Expected initial value range (CaliValue +- Tol) of sensor feedback for initial calibration
 // the initial values should be adjusted along with prototype design
-#define TrunkFleAng_CaliValue 10
+#define TrunkFleAng_CaliValue 4
 #define TrunkFleAng_Tol 10
 #define TrunkFleYaw_CaliValue 0
 #define TrunkFleYaw_Tol 1000

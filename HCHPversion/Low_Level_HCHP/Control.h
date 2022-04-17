@@ -24,7 +24,7 @@ typedef struct
 
   float Err;    //error
   float Err_p;  // last time error
-  float Err_pp; // last last time error 
+  float Err_pp; // last last time error
   
   float Kp;       // Propotional coefficient
   float Ti;       // Time constant of integration part
@@ -32,7 +32,7 @@ typedef struct
   float Tcontrol; // Control period, every Tcontrol MCU update once output command
   
   float Delta_Ta;       // PID control output of actuation torque
-  float ResDelta_Ta;    // Residual delta control output
+  float ResDelta_Ta;    // Residual delta control output  
   float Delta_Current;  // PID control output of corresponding motor current 
   float Delta_PWM;      // Calculation results
   float currpwm;        // Current PWM duty width
@@ -62,10 +62,10 @@ extern bool Control_update;    // control update flag
 #define KD_R 0.0028           // Kd for PID control of motor R
 #define LimitDelta_KPL 15     // Limitation of delta pid's PoutL
 #define LimitDelta_KPR 15     // Limitation of delta pid's PoutR
-#define LimitDelta_TaL 0.2    // Limitation of delta control command of motor L
+#define LimitDelta_TaL 1.5    // Limitation of delta control command of motor L
 #define LimitTotal_TaL 7      // Limitation of total control command of motor L
 #define LimitReverse_TaL -2   // Limitation of the cable loosening direction control command of motor L
-#define LimitDelta_TaR 0.2    // Limitation of delta control command of motor R
+#define LimitDelta_TaR 1.5    // Limitation of delta control command of motor R
 #define LimitTotal_TaR 7      // Limitation of total control command of motor R
 #define LimitReverse_TaR -2   // Limitation of the cable loosening direction control command of motor R
 #define PWMUpperBound 0.75    // Upper bound of the PWM cycle duty
@@ -132,18 +132,20 @@ extern float fricCompenTermR; // The friction compensation term
 /* Sensor feedback calibration value definition */
 // Expected initial value range (CaliValue +- Tol) of sensor feedback for initial calibration
 // the initial values should be adjusted along with prototype design
-#define TdL_CaliValue 83
-#define TdL_Tol 2  // 2000 for no motor involved testing
-#define TdR_CaliValue 61
-#define TdR_Tol 2
-#define HipAngL_CaliValue 173.5
+#define TdL_CaliValue 98
+#define TdL_Tol 3  // 2000 for no motor involved testing
+#define TdR_CaliValue 69
+#define TdR_Tol 3
+//#define HipAngL_CaliValue 173.5
+//#define HipAngL_Tol 5
+#define HipAngL_CaliValue 176
 #define HipAngL_Tol 5
-#define HipAngR_CaliValue 219
+#define HipAngR_CaliValue 214
 #define HipAngR_Tol 5
 #define FcL_CaliValue 0
-#define FcL_Tol 10  // 2000 for no motor involved testing
+#define FcL_Tol 8  // 2000 for no motor involved testing
 #define FcR_CaliValue 0
-#define FcR_Tol 10  // 2000 for no motor involved testing
+#define FcR_Tol 8  // 2000 for no motor involved testing
 #define Theta0_L 0             // deg, Iniital angle between left suppport beam and human back
 #define Theta0_R 0             // deg, Iniital angle between right suppport beam and human back
 

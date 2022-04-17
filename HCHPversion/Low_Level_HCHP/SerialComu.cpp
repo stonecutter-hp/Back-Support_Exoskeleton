@@ -14,7 +14,7 @@ char SwitchFlag = '0';                // mark if new command have recieved befor
 char USART_TX_BUF[USART_TX_LEN];      // sending buffer
 int USART_TX_STA = 0;                 // sending number flag
 // MxTLxxxxLLxxxxALxxxxxTRxxxxLRxxxxARxxxxxPxxxxxYxxxxxVxxxxxCLxxxxCRxxxxcLxxxxcRxxxxvLxxxxxvRxxxxx\r\n
-bool SendItemFlag[15] = {true, true, true, true, true, true, true, true, true, true, true, false, false, false, false};
+bool SendItemFlag[15] = {true, true, true, true, true, true, true, true, true, true, true, true, true, true, true};
 
 /*********************************** Communication receiving data definition ************************************/
 float desiredTorqueL;    // desired motor torque of left motor
@@ -107,7 +107,7 @@ void receivedDataPro(void) {
         desiredTorqueL = 0;
       } 
     }
-    if(USART_RX_BUF[6] == 'T' && USART_RX_BUF[7] == 'R') {     
+    if(USART_RX_BUF[6] == 'T' && USART_RX_BUF[7] == 'R') {
       // Calculate reference torque for right system
       desiredTorqueR = (USART_RX_BUF[8]-48)*10+(USART_RX_BUF[9]-48)*1+(USART_RX_BUF[10]-48)*0.1+(USART_RX_BUF[11]-48)*0.01;
       // Check and limit the reasonable torque range 0~LimitInput

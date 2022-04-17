@@ -122,7 +122,7 @@ void Control_Init() {
   pidL.pwm_cycle = PWMperiod_L;
   pidL.currpwm = pidL.pwm_cycle*(pidL.currCurrent*0.8/MotorMaximumCurrent+0.1);     
   pidL.Tcontrol = TIM3_OverflowValue;  // corresopnding to timer3, unit:us while prescale coefficient = 72
-  pidL.ResDelta_Ta = 0;                // Residual delta control output
+  pidL.ResDelta_Ta = 0;                // Residual delta control output  
   pidL.Kp = KP_L;                      // should be adjusted
   pidL.Td = pidL.Tcontrol*KD_L/KP_L;   // should be adjusted, unit:us
   pidL.Ti = pidL.Tcontrol*KP_L/KI_L;   // should be adjusted, unit:us
@@ -130,8 +130,8 @@ void Control_Init() {
   pidL.Err = 0;
   pidL.Err_p = 0;
   pidL.Err_pp = 0;
-
-  /* Initialize the control parameter of right motor */
+  
+  /* initialize the control parameter of right motor */
   pidR.set = desiredTorqueR;
   pidR.currTa = 0;
   pidR.currCurrent = pidR.currTa/MotorCurrentConstant;
@@ -146,7 +146,7 @@ void Control_Init() {
   pidR.Err = 0;
   pidR.Err_p = 0;
   pidR.Err_pp = 0;
-
+    
   /* Parameters for friction compensation */
   lastTorqueL = 0;
   fricCoL = 0;
@@ -223,7 +223,7 @@ void ControlAux_Init() {
   TrunkFleAng = 0;             // deg, Trunk flexion angle
   TrunkFleAng_InitValue = 0;   // deg, Auxiliary parameter for trunk pitch angle
   TrunkFleVel = 0;             // deg/s, Trunk flexion angular velocity
-
+  
   CableTorqueL = 0;
   CableTorqueR = 0;
   Feedback_TdL = 0;
@@ -314,9 +314,10 @@ int8_t VF_LLPreproSensorInit() {
   {SensorReady_FlxAng = 0;
    Serial.print("P ");}  
   else {SensorReady_FlxAng = 1;} 
-
+  
   SensorReady = SensorReady_TdL*SensorReady_TdR*SensorReady_HipAngL*SensorReady_HipAngR;
   SensorReady = SensorReady*SensorReady_FcL*SensorReady_FcR*SensorReady_FlxAng;
+//  SensorReady = 1;
   if(SensorReady == 0) {
     Serial.println("NotReady.");  
   } 
@@ -394,6 +395,7 @@ int8_t LLPreproSensorInit() {
   
   SensorReady = SensorReady_TdL*SensorReady_TdR*SensorReady_HipAngL*SensorReady_HipAngR;
   SensorReady = SensorReady*SensorReady_FcL*SensorReady_FcR*SensorReady_FlxAng;
+//  SensorReady = 1;
   if(SensorReady == 0) {
     Serial.println("NotReady.");  
   } 
@@ -465,7 +467,7 @@ void yawAngleR20(uint8_t yawInitmode, IMUAlo aloMode){
     }
   }
   else {
-    if(mode == 0 && PreMode > 3) {
+    if(mode <= 3) {
       if(aloMode == IMU9Axis) {
         getIMUangleT();
         TrunkYaw_InitValue = angleActualC[yawChan];
@@ -478,6 +480,7 @@ void yawAngleR20(uint8_t yawInitmode, IMUAlo aloMode){
         TrunkYaw_InitValue = 0;        
       }
     }
+    else {getIMUangleT();}
   }
 }
 
@@ -559,9 +562,9 @@ float sinofangleBetweenCableHB_R() {
 void sensorFeedbackPro(void) {
   /* Interation torque feedback info processing */
   // Estimated_ImuAssistiveTorqueL = (angleActualA[0]-SupportBeamAngleL_InitValue)*TorsionStiffnessL;
-  Estimated_TdL = Aver_ADC_value[PotentioLP1]/PotentioLP1_Sensitivity*TorsionStiffnessL - TdL_InitValue; 
+  Estimated_TdL = -Aver_ADC_value[PotentioLP1]/PotentioLP1_Sensitivity*TorsionStiffnessL + TdL_InitValue; 
   if(Estimated_TdL < 0)  {Estimated_TdL = 0;}
-  Estimated_TdR = Aver_ADC_value[PotentioRP3]/PotentioLP3_Sensitivity*TorsionStiffnessR - TdR_InitValue; 
+  Estimated_TdR = -Aver_ADC_value[PotentioRP3]/PotentioLP3_Sensitivity*TorsionStiffnessR + TdR_InitValue; 
   if(Estimated_TdR < 0)  {Estimated_TdR = 0;}
   
   /* Cable force feedback info processing */
@@ -582,26 +585,27 @@ void sensorFeedbackPro(void) {
 
   /* Motor-related state update: including current and velocity feedback */
 //  // if ESCON set 0~4V:-9~9A
-//  MotorCurrentL = (Aver_ADC_value[MotorCurrL]-2)*9/2;
-//  MotorCurrentR = (Aver_ADC_value[MotorCurrR]-2)*9/2;   
+  MotorCurrentL = (Aver_ADC_value[MotorCurrL]-2)*9/2;
+  MotorCurrentR = (Aver_ADC_value[MotorCurrR]-2)*9/2;   
 //  // if ESCON set 0~4V:-4000~4000rpm
-//  MotorVelocityL = (Aver_ADC_value[MotorVeloL]-2)*4000/2;
-//  MotorVelocityR = (Aver_ADC_value[MotorVeloR]-2)*4000/2; 
+  MotorVelocityL = (Aver_ADC_value[MotorVeloL]-2)*4000/2;
+  MotorVelocityR = (Aver_ADC_value[MotorVeloR]-2)*4000/2; 
 
-  // /* Prevent outlier */
-  // if(HipAngL > Last_HipAngL+Delta_HipAng || HipAngL < Last_HipAngL-Delta_HipAng)
-  // {HipAngL = Last_HipAngL+Value_sign(HipAngL-Last_HipAngL)*Delta_HipAng;}
-  // if(HipAngR > Last_HipAngR+Delta_HipAng || HipAngR < Last_HipAngR-Delta_HipAng)
-  // {HipAngR = Last_HipAngR+Value_sign(HipAngR-Last_HipAngR)*Delta_HipAng;}
-  // if(Estimated_TdL > Last_Estimated_TdL+Delta_Estimated_Td || Estimated_TdL < Last_Estimated_TdL-Delta_Estimated_Td)
-  // {Estimated_TdL = Last_Estimated_TdL+Value_sign(Estimated_TdL-Last_Estimated_TdL)*Delta_Estimated_Td;}
-  // if(Estimated_TdR > Last_Estimated_TdR+Delta_Estimated_Td || Estimated_TdR < Last_Estimated_TdR-Delta_Estimated_Td)
-  // {Estimated_TdR = Last_Estimated_TdR+Value_sign(Estimated_TdR-Last_Estimated_TdR)*Delta_Estimated_Td;}
-  // if(Estimated_FcL > Last_Estimated_FcL+Delta_Estimated_Fc || Estimated_FcL < Last_Estimated_FcL-Delta_Estimated_Fc)
-  // {Estimated_FcL = Last_Estimated_FcL+Value_sign(Estimated_FcL-Last_Estimated_FcL)*Delta_Estimated_Fc;}
-  // if(Estimated_FcR > Last_Estimated_FcR+Delta_Estimated_Fc || Estimated_FcR < Last_Estimated_FcR-Delta_Estimated_Fc)
-  // {Estimated_FcR = Last_Estimated_FcR+Value_sign(Estimated_FcR-Last_Estimated_FcR)*Delta_Estimated_Fc;}
-  
+
+//  /* Prevent outlier */
+//  if(HipAngL > Last_HipAngL+Delta_HipAng || HipAngL < Last_HipAngL-Delta_HipAng)
+//  {HipAngL = Last_HipAngL+Value_sign(HipAngL-Last_HipAngL)*Delta_HipAng;}
+//  if(HipAngR > Last_HipAngR+Delta_HipAng || HipAngR < Last_HipAngR-Delta_HipAng)
+//  {HipAngR = Last_HipAngR+Value_sign(HipAngR-Last_HipAngR)*Delta_HipAng;}
+//  if(Estimated_TdL > Last_Estimated_TdL+Delta_Estimated_Td || Estimated_TdL < Last_Estimated_TdL-Delta_Estimated_Td)
+//  {Estimated_TdL = Last_Estimated_TdL+Value_sign(Estimated_TdL-Last_Estimated_TdL)*Delta_Estimated_Td;}
+//  if(Estimated_TdR > Last_Estimated_TdR+Delta_Estimated_Td || Estimated_TdR < Last_Estimated_TdR-Delta_Estimated_Td)
+//  {Estimated_TdR = Last_Estimated_TdR+Value_sign(Estimated_TdR-Last_Estimated_TdR)*Delta_Estimated_Td;}
+//  if(Estimated_FcL > Last_Estimated_FcL+Delta_Estimated_Fc || Estimated_FcL < Last_Estimated_FcL-Delta_Estimated_Fc)
+//  {Estimated_FcL = Last_Estimated_FcL+Value_sign(Estimated_FcL-Last_Estimated_FcL)*Delta_Estimated_Fc;}
+//  if(Estimated_FcR > Last_Estimated_FcR+Delta_Estimated_Fc || Estimated_FcR < Last_Estimated_FcR-Delta_Estimated_Fc)
+//  {Estimated_FcR = Last_Estimated_FcR+Value_sign(Estimated_FcR-Last_Estimated_FcR)*Delta_Estimated_Fc;}
+
   /* Prevent outlier */
   if(HipAngL > Last_HipAngL+Delta_HipAng || HipAngL < Last_HipAngL-Delta_HipAng)
   {HipAngL = Last_HipAngL;}
@@ -929,8 +933,8 @@ void Control(uint8_t ContMode) {
     DoutL = (pidL.Kp*pidL.Td)/pidL.Tcontrol;
     DoutL = DoutL*dk2L;
     // calculate the delta value of this time
-//    pidL.Delta_Ta = (PoutL+IoutL+DoutL)+deltaFricComL+pidL.ResDelta_Ta;   // to avoid delta_limitation effect of incremental type PD Control
-    pidL.Delta_Ta = (PoutL+IoutL+DoutL)+deltaFricComL;
+    pidL.Delta_Ta = (PoutL+IoutL+DoutL)+deltaFricComL+pidL.ResDelta_Ta;  // to avoid delta_limitation effect of incremental type PD Control
+//    pidL.Delta_Ta = (PoutL+IoutL+DoutL)+deltaFricComL;
     
     /* set limitation of sudden variation of control output */
     // If pidL.Delta_Ta = (PoutL+IoutL+DoutL)+deltaFricComL, then total limited for PID and friction simutenuosly
@@ -940,7 +944,7 @@ void Control(uint8_t ContMode) {
     }
     else {pidL.ResDelta_Ta = 0;}
     pidL.currTa += pidL.Delta_Ta;
-    
+
     /* set limitation of total controller output */
     // Bounded control output
     if((Value_sign(pidL.currTa)*pidL.currTa) >= LimitTotal_TaL) {
@@ -948,20 +952,20 @@ void Control(uint8_t ContMode) {
       pidL.currTa = LimitTotal_TaL*Value_sign(pidL.currTa);
     }
     // Small torque cannnot extend cable due to friendly friction
-    if(pidL.currTa < 0 && pidL.currT < 2) {
+    if(pidL.currTa < 0 && pidL.currT < 0.5) {
       pidL.currTa = 0;
       pidL.ResDelta_Ta = 0;
     }
-    // Prevent unnormal motor input when there is no friction compensation
-    if(pidL.set < 0.9 && pidL.currTa > 0.7) {
-      pidL.currTa = pidL.currTa-0.04;
-      pidL.ResDelta_Ta = 0;
-    }
-    // Restrict reversing
-    if(pidL.currTa < LimitReverse_TaL) {
-      pidL.currTa = LimitReverse_TaL;
-      pidL.ResDelta_Ta = 0;
-    }
+//    // Prevent unnormal motor input when there is no friction compensation
+//    if(pidL.set < 0.9 && pidL.currTa > 0.7) {
+//      pidL.currTa = pidL.currTa-0.04;
+//      pidL.ResDelta_Ta = 0;
+//    }
+//    // Restrict reversing
+//    if(pidL.currTa < LimitReverse_TaL) {
+//      pidL.currTa = LimitReverse_TaL;
+//      pidL.ResDelta_Ta = 0;
+//    }
     // determine motor rotation direction
     if(pidL.currTa >= 0) {
       PWMSignL = PosSign;
@@ -971,7 +975,7 @@ void Control(uint8_t ContMode) {
       PWMSignL = NegSign;
       digitalWrite(MotorRotationL,LOW);
     }
-
+    
     pidL.currCurrent = Value_sign(pidL.currTa)*pidL.currTa/GearRatio/MotorCurrentConstant;
     pidL.currpwm = pidL.pwm_cycle*(pidL.currCurrent*0.8/MotorMaximumCurrent+0.1);
     // set limitation of PWM duty cycle
@@ -1001,10 +1005,10 @@ void Control(uint8_t ContMode) {
     DoutR = (pidR.Kp*pidR.Td)/pidR.Tcontrol;
     DoutR = DoutR*dk2R;
     // calculate the delta value of this time
-//    pidR.Delta_Ta = (PoutR+IoutR+DoutR)+deltaFricComR+pidR.ResDelta_Ta;   // to avoid delta_limitation effect of incremental type PD Control
-    pidR.Delta_Ta = (PoutR+IoutR+DoutR)+deltaFricComR;
+    pidR.Delta_Ta = (PoutR+IoutR+DoutR)+deltaFricComR+pidR.ResDelta_Ta;  // to avoid delta_limitation effect of incremental type PD Control
+//    pidR.Delta_Ta = (PoutR+IoutR+DoutR)+deltaFricComR;
     
-    /* set limitation of sudden variation of control output */
+    /* set limitation of sudden variation of control output */ 
     // If pidR.Delta_Ta = (PoutR+IoutR+DoutR)+deltaFricComR, then total limited for PID and friction simutenuosly
     if((Value_sign(pidR.Delta_Ta)*pidR.Delta_Ta) >= LimitDelta_TaR) {
       pidR.ResDelta_Ta = pidR.Delta_Ta - LimitDelta_TaR*Value_sign(pidR.Delta_Ta);
@@ -1020,20 +1024,20 @@ void Control(uint8_t ContMode) {
       pidR.currTa = LimitTotal_TaR*Value_sign(pidR.currTa);
     }
     // Small torque cannnot extend cable due to friendly friction
-    if(pidR.currTa < 0 && pidR.currT < 2) {
+    if(pidR.currTa < 0 && pidR.currT < 0.5) {
       pidR.currTa = 0;
       pidR.ResDelta_Ta = 0;
     }
-    // Prevent unnormal motor input when there is no friction compensation
-    if(pidR.set < 0.9 && pidR.currTa > 0.7) {
-      pidR.currTa = pidR.currTa-0.04;
-      pidR.ResDelta_Ta = 0;
-    }
-    // Restrict reversing
-    if(pidR.currTa < LimitReverse_TaR) {
-      pidR.currTa = LimitReverse_TaR;
-      pidR.ResDelta_Ta = 0;
-    }
+//    // Prevent unnormal motor input when there is no friction compensation
+//    if(pidR.set < 0.9 && pidR.currTa > 0.7) {
+//      pidR.currTa = pidR.currTa-0.04;
+//      pidR.ResDelta_Ta = 0;
+//    }
+//    // Restrict reversing
+//    if(pidR.currTa < LimitReverse_TaR) {
+//      pidR.currTa = LimitReverse_TaR;
+//      pidR.ResDelta_Ta = 0;
+//    }
     // determine motor rotation direction
     if(pidR.currTa >= 0) {
       PWMSignR = PosSign;
@@ -1084,7 +1088,7 @@ void Control(uint8_t ContMode) {
     PWM_commandL = PWMLowerBound*PWMperiod_L;
     PWM_commandR = PWMLowerBound*PWMperiod_R;
   }
-  MotorPWMoutput(PWM_commandL,PWM_commandR);        
+  MotorPWMoutput(PWM_commandL,PWM_commandR);  
 
   /* Update previous reference torque related states */
   PredesiredTorqueL = desiredTorqueL;
