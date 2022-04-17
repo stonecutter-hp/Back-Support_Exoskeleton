@@ -7,7 +7,9 @@
 #include "SerialComu.h"
 #include "Timers.h"
 
-/*  Program for the low-level control of HCHP version exoskelton prototype
+/*  Program try 1 for the low-level control of HCHP version exoskelton 
+    prototype which is aiming to run at test bench with only one side
+    of torque transmission system
 Log
 20201123
   Creating based on the logical of "test_serial_ADC_timer.ino"
@@ -95,19 +97,19 @@ void loop() {
   lowLevelStateMgr();
   if(ADC_update) {
     getADCaverage(1);          // get ADC value
-    getIMUangleT();            // get human trunk flexion angle
+    // getIMUangleT();         // get human trunk flexion angle
+    yawAngleR20(LogicInit, OperaitonAloIMUC);  // Here inside operation is for IMUC address
     getIMUvelT();              // get human trunk flexion velocity
     // MovingAverFilterIMUC(rollChan,3);   // Averaged moving filtering for flexion angle from IMU
     // MovingAverageFilter(LoadCellL,3);   // Avergaed moving filtering for force feedback from load cell
     ADC_update = false;
   }
   if(Control_update) {
-    // yawAngleR20(LogicInit, OperaitonAloIMUC);  // Here inside operation is for IMUC address
     sensorFeedbackPro();       // processing sensor feedback for closed-loop control 
     // no control for StopState and ExitState
     if(mode != StopState && mode != ExitState) {
       // enable frictionCompensation according to side indicator
-      if(side >= FricCompFlag) {frictionCompenCL();}
+      // if(side >= FricCompFlag) {frictionCompenCL();}
       Control(1);                // calculate controlled command: PWM duty cycles
     }
     Control_update = false;
