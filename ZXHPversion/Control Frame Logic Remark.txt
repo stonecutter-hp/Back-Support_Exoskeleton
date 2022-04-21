@@ -13,3 +13,8 @@ Logic:
 20210521
 For prototype operation logic:
   Referring to system description document
+
+20220421
+  The interface for GUI function supporting is added for the controller
+      To enable the GUI interface: upperControlFlag should be set as true in the MCU control program
+  The GUI program only serves as data collection and visual UID testing and no UID and RTG strategies are implemented in it. 
