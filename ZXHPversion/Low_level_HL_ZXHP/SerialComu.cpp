@@ -120,7 +120,7 @@ void receivedDataPro(void) {
       else if(tempMode == 4) {mode = Lowering;}
       else if(tempMode == 5) {mode = Grasping;}
       else if(tempMode == 6) {mode = Lifting;}
-      else {mode = ExitState;}
+      else {mode = StopState;}
       // AsymSide
       tempSide = USART_RX_BUF[14]-48;
       if(tempSide == 1) {side = left;}
