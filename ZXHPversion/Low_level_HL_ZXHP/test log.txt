@@ -1,0 +1,47 @@
+20210921
+A TM experiments is conducted with P=2.7 D=0.1
+- A chattering is observed for TM during late lifting or fast lowering-lifting transition
+  -- A smaller P and a larger D
+  -- A smaller delta_P compensation and adjustment of e
+  -- Check the noisy level of the torque sensor
+
+20210922
+The feedback of torque sensor is smooth
+
+The chattering of TM is eliminated by
+  -- Set a smaller P and a larger D (P2/D0.2; P2.3/D1.3)
+  -- The delta_P compensation and adjustment of e seems not as helpful as adjusting the PD parameters
+
+When a smaller P is set for AM, chattering may also happened like (P2/D0.2; even P2/D1)
+  -- A large P should be combined with a large D
+  -- P1.8/D0.3 with delta_Ta 15 no P is effective without chattering
+
+The compensation effect of AM is not working well for prototype operation with human subject
+  -- The compensation of the inertia effect should be changed to a model-based term
+
+A large P+D seems degrade the control effect from comparsion between P1.8/D0.3 and P2.4/D1
+  -- The PD may set between this two like P2~2.2/D0.4~0.6
+
+20211001
+The walking is mis-classified as lowering
+-- Add A threshold of HipDiffAngVel for standing --> lowering/walking
+The Stoop is mis-classified Semi-squat
+The Squat posture is hard to conduct and can easily turn to semi-squat during late/large bending
+-- A trade-off between the tech classification timing and the difference of the features
+
+20211005
+It is observed shaking with P2.1/D0.5 and model-based compensation and the tracking effect is still not very good
+Meanwhile, less shaking compared with very simple compensation
+-- The P2.1/D0.5 can be adjusted more gentle like ~P1.9/D0.3 while the model-based motion compensation term should be precisly identified
+
+The overcurrent error happened to left motor
+-- A fine identified motion compensation term and a fine tuned PD controller
+-- Maybe the P gain of the driver current PI controller should be further lower
+
+The stride standing to lowering happen to happened but can not be detected at present
+-- The logic of stride-->bending can be add in the future
+
+20210419
+The basic UID is tested for project review presentation, showing that the transition for assisted bending motion are not sensitive enough with large delay
+
+

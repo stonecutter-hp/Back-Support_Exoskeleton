@@ -27,7 +27,7 @@ void RTG_Init(void) {
   RTG_Subject1.GComRatio = 0.2;        // Gravity compensation ratio
   RTG_Subject1.TrunkMass = 40;         // kg, Subject's trunk mass
   RTG_Subject1.TrunkHalfLength = 0.295;// m, Half of subject's trunk length
-  RTG_Subject1.ImpeKp = 0.15;           // Nm/deg, Rendered stiffness of Impedance strategy
+  RTG_Subject1.ImpeKp = 0.15;          // Nm/deg, Rendered stiffness of Impedance strategy
   RTG_Subject1.ImpeKv = 0;             // Nm*s/deg, Rendered damping of Impedance strategy   
   
 }
@@ -60,7 +60,7 @@ void HL_ReferTorqueGenerate(uint8_t RTGMode) {
       digitalWrite(MotorEnableL,HIGH);
       digitalWrite(MotorEnableR,HIGH);     
     }
-    else if(mode == ExitState) {
+    else if(mode == ExitState || mode == StopState) {
       desiredTorqueL = 0;
       desiredTorqueR = 0;
       // Reset controller

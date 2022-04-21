@@ -81,7 +81,7 @@ void humanMotionCompen() {
   //   humanMotionComR = 0;
   // }
 
-  if(mode == Lowering || mode == Lifting) {
+  if(mode == Lowering || mode == Lifting || mode == Grasping) {
     humanMotionComL = actuationJa*CompenHipAccL+actuationBa*CompenHipVelL;
     humanMotionComR = actuationJa*CompenHipAccR+actuationBa*CompenHipVelR;
   }
@@ -107,6 +107,7 @@ void humanMotionCompen() {
   }  
 
 }
+
 
 /**
  * Control parameter initialization for Low-level controller
@@ -229,6 +230,13 @@ int8_t LLPreproSensorInit() {
   SensorReady_4 = 1;
   SensorReady = SensorReady_1*SensorReady_2*SensorReady_3*SensorReady_4;
 
+  /* This is for sensor initial value checking */
+//  Serial.print("TL")
+//  Serial.print(TorqueL_InitValue);
+//  Serial.print("TR")
+//  Serial.print(TorqueR_InitValue);
+  SensorReady = 1;
+
   if(SensorReady == 0) {
     Serial.println("Sensor NotReady for Low-level Controller.");
   }
@@ -270,12 +278,12 @@ void sensorFeedbackPro() {
   MovingAverageFilter(TorqueSensorR,3);
   /* Interation torque feedback info processing for low-level controller */
   // Td feedback from motor driver, here ESCON set 0~4V:-7~7A
-  Estimated_TdMotorCurrentL = (Aver_ADC_value[MotorCurrL]-2)*7/2;
-  Estimated_TdMotorCurrentR = (Aver_ADC_value[MotorCurrR]-2)*7/2;
+//  Estimated_TdMotorCurrentL = (Aver_ADC_value[MotorCurrL]-2)*7/2;
+//  Estimated_TdMotorCurrentR = (Aver_ADC_value[MotorCurrR]-2)*7/2;
   // Td feedback from Torque sensor                                            
   Estimated_TdTorqueL = (Aver_ADC_value[TorqueSensorL]-TorqueSensorL_Offset)*TorqueSensorL_Sensitivity - TorqueL_InitValue;
   Estimated_TdTorqueR = (Aver_ADC_value[TorqueSensorR]-TorqueSensorR_Offset)*TorqueSensorR_Sensitivity - TorqueR_InitValue;
-//  // Td feedback from Force sensor
+  // Td feedback from Force sensor
 //  Estimated_TdForceSensorL = Aver_ADC_value[ForceSensorL]/ForceSensorL_Sensitivity - ForceSensorL_Sensitivity;  
 //  Estimated_TdForceSensorR = Aver_ADC_value[ForceSensorR]/ForceSensorR_Sensitivity - ForceSensorR_Sensitivity; 
   // Td feedback used for low-level closed-loop control
@@ -309,7 +317,7 @@ void Control(uint8_t ContMode) {
     // P
     dk1L = pidL.Err - pidL.Err_p;
     PoutL = pidL.Kp*dk1L;
-//    // Adjust mechanism of P components
+    // Adjust mechanism of P components
 //    if(Value_sign(PoutL)*PoutL > LimitDelta_KPL) {
 //      PoutL = Value_sign(PoutL)*LimitDelta_KPL;
 //      pidL.Err = PoutL/pidL.Kp+pidL.Err_p;
@@ -333,7 +341,7 @@ void Control(uint8_t ContMode) {
     }
     // limited delta Ta
     if((Value_sign(pidL.Delta_Ta)*pidL.Delta_Ta) >= LimitDelta_TaL) {
-      pidL.Delta_Ta = LimitDelta_TaL*Value_sign(pidL.Delta_Ta);
+    	pidL.Delta_Ta = LimitDelta_TaL*Value_sign(pidL.Delta_Ta);
     }
     pidL.currTa += pidL.Delta_Ta;
     /* set limitation of total controller output */
@@ -347,7 +355,7 @@ void Control(uint8_t ContMode) {
     }
     // Bounded control output
     if((Value_sign(pidL.currTa)*pidL.currTa) >= LimitTotal_TaL) {
-      pidL.currTa = LimitTotal_TaL*Value_sign(pidL.currTa);
+    	pidL.currTa = LimitTotal_TaL*Value_sign(pidL.currTa);
     }
     // determine motor rotation direction
     if(pidL.currTa >= 0) {
@@ -358,7 +366,7 @@ void Control(uint8_t ContMode) {
       PWMSignL = NegSign;
       digitalWrite(MotorRotationL,HIGH);
     }
-
+    
     pidL.currCurrent = Value_sign(pidL.currTa)*pidL.currTa/GearRatio/MotorCurrentConstant;
     pidL.currpwm = pidL.pwm_cycle*(pidL.currCurrent*0.8/MotorMaximumCurrent+0.1);
     // set limitation of PWM duty cycle
@@ -380,7 +388,7 @@ void Control(uint8_t ContMode) {
     // P
     dk1R = pidR.Err - pidR.Err_p;
     PoutR = pidR.Kp*dk1R;
-//    // Adjust mechanism of P components
+    // Adjust mechanism of P components
 //    if(Value_sign(PoutR)*PoutR > LimitDelta_KPR) {
 //      PoutR = Value_sign(PoutR)*LimitDelta_KPR;
 //      pidR.Err = PoutR/pidR.Kp+pidR.Err_p;
@@ -404,7 +412,7 @@ void Control(uint8_t ContMode) {
     }
     // limited delta Ta
     if((Value_sign(pidR.Delta_Ta)*pidR.Delta_Ta) >= LimitDelta_TaR) {
-      pidR.Delta_Ta = LimitDelta_TaR*Value_sign(pidR.Delta_Ta);
+    	pidR.Delta_Ta = LimitDelta_TaR*Value_sign(pidR.Delta_Ta);
     }
     pidR.currTa += pidR.Delta_Ta;
     /* set limitation of total controller output */
@@ -429,7 +437,7 @@ void Control(uint8_t ContMode) {
       PWMSignR = NegSign;
       digitalWrite(MotorRotationR,LOW);
     }
-
+        
     pidR.currCurrent = Value_sign(pidR.currTa)*pidR.currTa/GearRatio/MotorCurrentConstant;
     pidR.currpwm = pidR.pwm_cycle*(pidR.currCurrent*0.8/MotorMaximumCurrent+0.1);
     // set limitation of PWM duty cycle
@@ -471,7 +479,7 @@ void Control(uint8_t ContMode) {
     PWM_commandR = PWMLowerBound*PWMperiod_R;
   }
   // set the pwm duty cycle  
-  MotorPWMoutput(PWM_commandL,PWM_commandR);        
+  MotorPWMoutput(PWM_commandL,PWM_commandR);         
 }
 
 /**

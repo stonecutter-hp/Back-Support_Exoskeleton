@@ -5,6 +5,7 @@
 #include "SerialComu.h"
 
 /*********************************** Serial communication definition ************************************/
+bool upperControlFlag = true;        // mark if the upper computer is used for tethered operation or not 
 char USART_RX_BUF[USART_REC_LEN];     // receiving buffer
 int USART_RX_STA = 0;                 // recieving number flag
 bool receiveCompleted = false;        // receiving completing flag
@@ -131,8 +132,21 @@ void receivedDataPro(void) {
       else if(tempTech == 2) {tech = SemiSquat;}
       else {tech = Squat;}      
     }
-    // Here add more process for data decomposition ...    
+
+     /* ONLY FOR MOTOR TESTING */
+//    // Enable motor
+//    if(side == left || side == right) {
+//      // Enable left and right
+//      digitalWrite(MotorEnableL,HIGH);   
+//      digitalWrite(MotorEnableR,HIGH);     
+//    }
+//    else if(side == none) {
+//      // Disable left and right 
+//      digitalWrite(MotorEnableL,LOW);     
+//      digitalWrite(MotorEnableR,LOW);     
+//    } 
   }
+  
   // Mark unsuccessful command receive from PC
   else if(USART_RX_STA != RevievCharNum) {
     receiveCompleted = false;
@@ -153,7 +167,7 @@ void receivedDataPro(void) {
  * VL/Rxxxxx: (deg/s) Hip angular velocity feedback
  *                    first number indicate sign: 0 for -, 1 for +
  * HL/Rxxxxx: (deg/s^2) Hip angular acceleration feedback
- *                      first number indicate sign: 0 for -, 1 for +
+ *                    first number indicate sign: 0 for -, 1 for +  
  * Pxxxxx: (deg) Pitch angle for trunk
  *               first number indicate sign: 0 for -, 1 for +
  * Yxxxxx: (deg) yaw angle for trunk

@@ -1,2 +1,32 @@
 20210816
 For the high-level and low-level all in MCU version, there is no StopState but only ExitState
+
+20210930
+The command form is TLxxxxTRxxxxMxxx\r\n
+TL/Rxxxx is Torque command of the motor actuation unit
+
+Mxxx:
+  first character--Motion Status
+  ExitState = 1,
+  Standing = 2,
+  Walking = 3,
+  Lowering = 4,
+  Grasping = 5,
+  Lifting = 6.
+
+  second character--Asymmetric side but now for MotorEnableFlag: 
+        1/2(Left/Right) both enable; 
+        0(none) both disable
+
+  third character--Bending Tech
+  Stoop = 0,
+  Squat = 1,
+  SemiSquat = 2
+
+20211210
+Attention the pid.Tcontrol is not the practical control period but assumed 1 seconds
+
+20220421
+After long term idleness of system, the sensor initial value should be recalibrated before operation.  
+
+

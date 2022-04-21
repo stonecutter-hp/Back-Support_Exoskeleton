@@ -145,8 +145,9 @@ void UID_Init(void) {
   HipAngDiffStd = 0;               // Std(HipAngDiff) within certain time range
   HipAngDiffVel = 0;               // abs(HipAngVelL - HipAngVelR)
   
-  /* Initialize UID status flags */  
-  mode = ExitState;   // Motion detection mode, default is Stop state
+  /* Initialize UID status flags */
+  if(upperControlFlag) {mode = StopState;}
+  else {mode = ExitState;}  
   PreMode = mode;
   tech = Stoop;       // BendingTech mode, default is stoop bending
   side = none;        // Asymmetric side, default is no asymmetric
@@ -166,7 +167,7 @@ void UID_Init(void) {
 
   UID_Subject1.ThrTrunkFleAng_1 = 12;  // deg, Threshold 1 for trunk flexion angle
   UID_Subject1.ThrTrunkFleAng_2 = 3;   // deg, Threshold 2 for trunk flexion angle
-  UID_Subject1.ThrThighAngMean_1 = 3;  // deg, Threshold 2 for mean thigh angle
+  UID_Subject1.ThrThighAngMean_1 = 3;  // deg, Threshold 1 for mean thigh angle
   UID_Subject1.ThrThighAngMean_2 = 12; // deg, Threshold 2 for mean thigh angle
   UID_Subject1.ThrRatioTech_1 = 0.6;   // ratio_1 for bending tech classification
   UID_Subject1.ThrRatioTech_2 = 0.4;   // ratio_2 for bending tech classification
@@ -257,6 +258,14 @@ int8_t HLPreproSensorInit() {
   else {SensorReady_3 = 1;}
   SensorReady = SensorReady_1*SensorReady_2*SensorReady_3;
 
+  /* This is for sensor initial value checking */
+//  Serial.print("HL")
+//  Serial.print(HipAngL_InitValue);
+//  Serial.print("HR")
+//  Serial.print(HipAngR_InitValue);
+//  Serial.print("P")
+//  Serial.println(TrunkFleAng_InitValue);
+  SensorReady = 1;
   if(SensorReady == 0) {
     Serial.println("Sensor NotReady for High-level Controller.");
   }
@@ -512,7 +521,13 @@ void HL_UserIntentDetect(uint8_t UIDMode) {
       LiftingPhase();
     }
   }
-  ExitPhase();
+  if(mode != StopState) {
+    ExitPhase();
+  }
+  else {
+    PreMode = mode;
+    mode = StopState;
+  }
   // Reset the recorded state at To and peak moment
   if(RecordStateReset) {
     HipAngL_T0InitValue = 0;

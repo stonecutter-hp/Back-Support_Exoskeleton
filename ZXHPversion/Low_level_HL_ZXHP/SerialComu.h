@@ -12,6 +12,7 @@
 #include "IMU.h"
 
 /*********************************** Serial communication definition ************************************/
+extern bool upperControlFlag;                 // mark if the upper computer is used for tethered operation or not 
 #define USART_REC_LEN 200                     // define the maximum number of received bytes
 #define USART_TX_LEN 200                      // define the maximum number of sending bytes
 #define RevievCharNum 16                      // correct recieveing char number exclude terminator

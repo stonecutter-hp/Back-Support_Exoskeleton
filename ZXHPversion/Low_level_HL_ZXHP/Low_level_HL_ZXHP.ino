@@ -8,7 +8,7 @@
 #include "SerialComu.h"
 #include "Timers.h"
 
-/*  Program try 1 for the low-level control of ZXHP version exoskelton prototype 
+/*  Program try 1 for the low-level control of ZXHP version exoskeleton prototype 
     
 Log
 20210416
@@ -81,16 +81,19 @@ void setup() {
   delay(5);
   
   /****************************** Initial status checking ******************************/
-  // Make sure the initial status is standing mode
-  while(mode != Standing) {
-    getADCaverage(1);
-    // Collect info from IMUC including: TrunkAng, TrunkVel
-    getIMUangleT();
-    getIMUvelT();   
-    HLsensorFeedbackPro();
-    HL_UserIntentDetect(1);
+  if(!upperControlFlag) {
+    // Make sure the initial status is standing mode
+    while(mode != Standing) {
+      getADCaverage(1);
+      // Collect info from IMUC including: TrunkAng, TrunkVel
+      getIMUangleT();
+      getIMUvelT();   
+      HLsensorFeedbackPro();
+      HL_UserIntentDetect(1);
+    }    
   }
- Serial.println("Initial position is Standing now.");
+
+//  Serial.println("Initial position is Standing now.");
   // resume all the timers
   Timer1.resume();     // Motor L PWM
   Timer2.resume();     // Motor R PWM
@@ -102,8 +105,11 @@ void setup() {
 
 
 void loop() {
-  receiveDatafromPC();         // receive data from PC
-  receivedDataPro();           // decomposite data received from PC
+  receiveDatafromPC();                         // receive data from PC
+  receivedDataPro();                           // decomposite data received from PC
+  // Keep checking sensor initial value for handshaking with the upper computer
+  // StopState only appears when upperControlFlag is enabled and no StopState will appear in the pure MCU operation mode (No tethered)
+  if(mode == StopState) {PreproSensorInit();}  
   if(ADC_update) {
     getADCaverage(1);                          // get ADC value
     getIMUangleT();                            // get human trunk flexion angle
@@ -120,21 +126,24 @@ void loop() {
     // Therefore, Yaw angle will be reset to zero immediately if this time trigger event others --> Standing is detected 
     // if yawAngleR20() is place after HLControl()
 //    yawAngleR20(LogicInit, OperaitonAloIMUC);  // Here inside operation is for IMUC address
-    HLsensorFeedbackPro();                     // processing sensor feedback for high-level control
-    HLControl(1,1);                            // At present the frequency of high-level control is the same as data sending frequency  
+    HLsensorFeedbackPro();                       // processing sensor feedback for high-level control
+    HLControl(1,1);                              // At present the frequency of high-level control is the same as data sending frequency    
     HLControl_update = false;
   }
   if(Control_update) {
-    sensorFeedbackPro();                       // processing sensor feedback for low-level closed-loop control
+    sensorFeedbackPro();                        // processing sensor feedback for low-level closed-loop control
+//    // FOR TM TESTING ONLY
+//    desiredTorqueL = 0;
+//    desiredTorqueR = 0;
     // no control for ExitState
-    if(mode != ExitState) {
-      if(MotionComEnable) humanMotionCompen();                       // inertia compensation
+    if(mode != ExitState && mode != StopState) {
+      if(MotionComEnable) {humanMotionCompen()}; // inertia compensation
       Control(1);                                // calculate controlled command: PWM duty cycles
     }
-    Control_update = false;                    // At present the frequency of low-level control is the same as ADC sensor feedback update frequency
+    Control_update = false;                      // At present the frequency of low-level control is the same as ADC sensor feedback update frequency
   }
   if(SendPC_update) {
-    sendDatatoPC();                            // send sensor data to PC and allow next receiving cycle
+    sendDatatoPC();                              // send sensor data to PC and allow next receiving cycle
     SendPC_update = false;
   }
   receiveContinuing = true;  // Enable next time's recieving

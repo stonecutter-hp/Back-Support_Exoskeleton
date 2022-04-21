@@ -56,12 +56,12 @@ extern bool Control_update;    // control update flag
  
 // Previously workable Kp/Ki/Kd for test bench with large torsion spring:
 // 0.58/0/0.28  0.68/0/0.3
-#define KP_L 2.2              // Kp for PID control of motor L
+#define KP_L 1.9              // Kp for PID control of motor L
 #define KI_L 0.0000002        // Ki for PID control of motor L
-#define KD_L 0.5              // Kd for PID control of motor L
-#define KP_R 2.2              // Kp for PID control of motor R
+#define KD_L 0.3              // Kd for PID control of motor L
+#define KP_R 1.9              // Kp for PID control of motor R
 #define KI_R 0.0000002        // Ki for PID control of motor R
-#define KD_R 0.5              // Kd for PID control of motor R
+#define KD_R 0.3              // Kd for PID control of motor R
 #define LimitDelta_KPL 15     // Limitation of delta pid's PoutL
 #define LimitDelta_KPR 15     // Limitation of delta pid's PoutR
 #define LimitDelta_TaL 15     // Limitation of delta control command of motor L
@@ -77,7 +77,7 @@ extern bool Control_update;    // control update flag
 extern bool MotionComEnable;
 // These model parameter is set the same for both left and right CSEA system
 // The detialed value can be obtained from system identification
-#define actuationJa 0.005
+#define actuationJa 0.004
 #define actuationBa 0.01
 #define deltaComLimit 3
 extern float lastHuMComL;

@@ -16,12 +16,14 @@ extern float HLUpdateFre;       // high-level control frequency
 
 /* Motion type define */
 typedef enum {
+  StopState = 0,
   ExitState = 1,
   Standing = 2,
   Walking = 3,
   Lowering = 4,
   Grasping = 5,
-  Lifting = 6
+  Lifting = 6,
+  Holding = 7
 } MotionType;
 
 /* Asymmetric bending side type define */
@@ -81,7 +83,7 @@ typedef struct {
 
   float ThrHipAngDiffVel_1;  // deg/s, Threshold 1 for difference of angular velocity between left and right hip angle
   float ThrHipAngDiffVel_2;  // deg/s, Threshold 2 for difference of angular velocity between left and right hip angle
-
+  
   float ThrTrunkFleVel;      // Threshold for trunk flexion velocity
   float ThrThighAngStd;      // Threshold for standard deviation of mean thigh angle
   float ThrThighAngVel;      // Threshold for mean thigh angle velocity
@@ -99,11 +101,11 @@ extern UIDCont UID_Subject1;    // UID strategy parameters for specific subjects
 /* High-level controller related sensor feedback calibration value definition */
 // Expected initial value range (CaliValue +- Tol) of sensor feedback for initial calibration
 // the initial values should be adjusted along with prototype design
-#define HipAngL_CaliValue 41
+#define HipAngL_CaliValue 52
 #define HipAngL_Tol 10
-#define HipAngR_CaliValue 214
+#define HipAngR_CaliValue 205
 #define HipAngR_Tol 10
-#define TrunkFleAng_CaliValue 0
+#define TrunkFleAng_CaliValue 2
 #define TrunkFleAng_Tol 10
 #define TrunkFleYaw_CaliValue 0
 #define TrunkFleYaw_Tol 1000
