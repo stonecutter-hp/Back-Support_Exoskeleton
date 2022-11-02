@@ -137,7 +137,7 @@ void loop() {
 //    desiredTorqueR = 0;
     // no control for ExitState
     if(mode != ExitState && mode != StopState) {
-      if(MotionComEnable) {humanMotionCompen()}; // inertia compensation
+      if(MotionComEnable) {humanMotionCompen();} // inertia compensation
       Control(1);                                // calculate controlled command: PWM duty cycles
     }
     Control_update = false;                      // At present the frequency of low-level control is the same as ADC sensor feedback update frequency
