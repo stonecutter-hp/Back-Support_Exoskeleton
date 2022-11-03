@@ -35,9 +35,9 @@ typedef struct
   float Delta_Ta;       // PID control output of actuation torque
   float Delta_Current;  // PID control output of corresponding motor current 
   float Delta_PWM;      // Calculation results
-  float currpwm;        // Current PWM duty width
+  float currpwm;        // Current PWM duty cycle
   float currTa;         // Current actuation torque
-  float currCurrent;    // Current motor driving curren
+  float currCurrent;    // Current motor driving current
   uint16_t pwm_cycle;   // The whole period of PWM
 }PID;    // PID parameter structure
 
